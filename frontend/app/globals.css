@@ -1,0 +1,336 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), sans-serif;
+  --font-heading: var(--font-heading), "Plus Jakarta Sans", sans-serif;
+  --font-mono: var(--font-jetbrains), monospace;
+}
+
+@layer base {
+  :root {
+    --bg-cream: #FFFFE3;
+    --primary-dark: #4A4A4A;
+    --secondary-gray: #CBCBCB;
+    --accent-blue: #6D8196;
+    --accent-hover: #56687B;
+  }
+
+  body {
+    background-color: #FFFFE3;
+    color: #4A4A4A;
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  html.dark body {
+    background-color: #181818;
+    color: #FFFFE3;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: var(--font-heading), "Plus Jakarta Sans", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .font-mono-numbers {
+    font-family: var(--font-jetbrains), monospace;
+    font-feature-settings: "tnum" 1, "zero" 1;
+  }
+}
+
+/* Skeuomorphic Light Utilities */
+.skeuo-panel {
+  background-color: #CBCBCB;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-bottom-color: rgba(74, 74, 74, 0.25);
+  border-right-color: rgba(74, 74, 74, 0.2);
+  box-shadow: 
+    3px 3px 8px rgba(74, 74, 74, 0.15),
+    -2px -2px 6px rgba(255, 255, 255, 0.8),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.9);
+  border-radius: 0.5rem;
+}
+
+.skeuo-card-cream {
+  background-color: #FFFFE3;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-bottom-color: rgba(74, 74, 74, 0.18);
+  border-right-color: rgba(74, 74, 74, 0.15);
+  box-shadow: 
+    4px 4px 10px rgba(74, 74, 74, 0.12),
+    -3px -3px 8px rgba(255, 255, 255, 0.9),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.95);
+  border-radius: 0.625rem;
+}
+
+.skeuo-inset {
+  background-color: #F4F4D6;
+  border: 1px solid rgba(74, 74, 74, 0.2);
+  border-top-color: rgba(74, 74, 74, 0.35);
+  border-left-color: rgba(74, 74, 74, 0.3);
+  box-shadow: 
+    inset 2px 2px 4px rgba(74, 74, 74, 0.18),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.7);
+  border-radius: 0.375rem;
+}
+
+.skeuo-inset-gray {
+  background-color: #BEBEBE;
+  border: 1px solid rgba(74, 74, 74, 0.25);
+  border-top-color: rgba(74, 74, 74, 0.4);
+  border-left-color: rgba(74, 74, 74, 0.35);
+  box-shadow: 
+    inset 2px 2px 5px rgba(0, 0, 0, 0.2),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.5);
+  border-radius: 0.375rem;
+}
+
+.skeuo-button-primary {
+  background-color: #6D8196;
+  color: #FFFFE3;
+  border: 1px solid #7E93A9;
+  border-bottom-color: #4B5A6A;
+  border-right-color: #536475;
+  box-shadow: 
+    2px 3px 6px rgba(74, 74, 74, 0.25),
+    inset 0px 1px 1px rgba(255, 255, 255, 0.35);
+  border-radius: 0.375rem;
+  transition: all 0.12s ease-in-out;
+}
+
+.skeuo-button-primary:hover {
+  background-color: #56687B;
+  box-shadow: 
+    3px 4px 8px rgba(74, 74, 74, 0.3),
+    inset 0px 1px 1px rgba(255, 255, 255, 0.45);
+}
+
+.skeuo-button-primary:active {
+  transform: translateY(1px);
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.35),
+    0px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.skeuo-button-secondary {
+  background-color: #CBCBCB;
+  color: #4A4A4A;
+  border: 1px solid #E2E2E2;
+  border-bottom-color: #A0A0A0;
+  border-right-color: #B0B0B0;
+  box-shadow: 
+    2px 2px 5px rgba(74, 74, 74, 0.15),
+    inset 0px 1px 1px rgba(255, 255, 255, 0.8);
+  border-radius: 0.375rem;
+  transition: all 0.12s ease-in-out;
+}
+
+.skeuo-button-secondary:hover {
+  background-color: #D6D6D6;
+  box-shadow: 
+    2px 3px 6px rgba(74, 74, 74, 0.2),
+    inset 0px 1px 1px rgba(255, 255, 255, 0.9);
+}
+
+.skeuo-button-secondary:active {
+  transform: translateY(1px);
+  box-shadow: 
+    inset 2px 2px 4px rgba(74, 74, 74, 0.25),
+    0px 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.skeuo-sidebar {
+  background-color: #4A4A4A;
+  color: #FFFFE3;
+  border-right: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 
+    4px 0px 10px rgba(0, 0, 0, 0.15),
+    inset -1px 0px 1px rgba(255, 255, 255, 0.1);
+}
+
+.skeuo-nav-active {
+  background-color: #3A3A3A;
+  color: #FFFFE3;
+  border: 1px solid #2B2B2B;
+  border-top-color: #202020;
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.4),
+    inset -1px -1px 2px rgba(255, 255, 255, 0.08);
+}
+
+.skeuo-nav-inactive {
+  color: #CBCBCB;
+  transition: all 0.15s ease;
+}
+
+.skeuo-nav-inactive:hover {
+  background-color: rgba(255, 255, 227, 0.08);
+  color: #FFFFE3;
+}
+
+.skeuo-input {
+  background-color: #FFFFE3;
+  color: #4A4A4A;
+  border: 1px solid #A8A88F;
+  border-top-color: #7A7A66;
+  border-left-color: #8C8C75;
+  box-shadow: 
+    inset 2px 2px 3px rgba(74, 74, 74, 0.15),
+    inset -1px -1px 2px rgba(255, 255, 255, 0.8);
+  border-radius: 0.375rem;
+}
+
+.skeuo-input:focus {
+  outline: none;
+  border-color: #6D8196;
+  box-shadow: 
+    inset 2px 2px 3px rgba(74, 74, 74, 0.2),
+    0 0 0 2px rgba(109, 129, 150, 0.3);
+}
+
+/* Badges */
+.skeuo-badge-positive {
+  background-color: #E2ECD8;
+  color: #2D4E2A;
+  border: 1px solid #B4CE9F;
+  border-bottom-color: #8AA873;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.skeuo-badge-negative {
+  background-color: #F8E2E2;
+  color: #612727;
+  border: 1px solid #E6B0B0;
+  border-bottom-color: #C47A7A;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.skeuo-badge-neutral {
+  background-color: #ECECEC;
+  color: #4A4A4A;
+  border: 1px solid #CBCBCB;
+  border-bottom-color: #A0A0A0;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.skeuo-badge-accent {
+  background-color: #DDE5EC;
+  color: #374756;
+  border: 1px solid #B0C4D6;
+  border-bottom-color: #889EB2;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* ======================================================== */
+/* DARK MODE SKEUOMORPHIC OVERRIDES (.dark)                 */
+/* ======================================================== */
+
+html.dark .skeuo-panel {
+  background-color: #262626;
+  color: #FFFFE3;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom-color: rgba(0, 0, 0, 0.5);
+  border-right-color: rgba(0, 0, 0, 0.4);
+  box-shadow: 
+    4px 4px 12px rgba(0, 0, 0, 0.5),
+    -1px -1px 3px rgba(255, 255, 255, 0.08),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.12);
+}
+
+html.dark .skeuo-card-cream {
+  background-color: #202020;
+  color: #FFFFE3;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom-color: rgba(0, 0, 0, 0.5);
+  box-shadow: 
+    4px 4px 12px rgba(0, 0, 0, 0.45),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.08);
+}
+
+html.dark .skeuo-inset {
+  background-color: #141414;
+  color: #FFFFE3;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  border-top-color: rgba(0, 0, 0, 0.8);
+  box-shadow: 
+    inset 2px 2px 6px rgba(0, 0, 0, 0.7),
+    inset -1px -1px 2px rgba(255, 255, 255, 0.04);
+}
+
+html.dark .skeuo-button-secondary {
+  background-color: #383838;
+  color: #FFFFE3;
+  border: 1px solid #555555;
+  border-bottom-color: #222222;
+  box-shadow: 
+    2px 2px 6px rgba(0, 0, 0, 0.4),
+    inset 0px 1px 1px rgba(255, 255, 255, 0.15);
+}
+
+html.dark .skeuo-button-secondary:hover {
+  background-color: #454545;
+}
+
+html.dark .skeuo-input {
+  background-color: #1C1C1C;
+  color: #FFFFE3;
+  border: 1px solid #444444;
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+html.dark .skeuo-badge-positive {
+  background-color: #1E3821;
+  color: #A3E635;
+  border: 1px solid #2D5A32;
+}
+
+html.dark .skeuo-badge-negative {
+  background-color: #3D1A1A;
+  color: #F87171;
+  border: 1px solid #5E2626;
+}
+
+html.dark .skeuo-badge-neutral {
+  background-color: #333333;
+  color: #CBCBCB;
+  border: 1px solid #4A4A4A;
+}
+
+html.dark .skeuo-badge-accent {
+  background-color: #253342;
+  color: #93C5FD;
+  border: 1px solid #374756;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FFFFE3;
+  box-shadow: inset 1px 1px 3px rgba(74, 74, 74, 0.1);
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: #181818;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBCBCB;
+  border-radius: 4px;
+  border: 1px solid #A0A0A0;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #3A3A3A;
+  border-color: #555555;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4A4A4A;
+}
