@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
-import { ThemeProvider } from "@/components/context/ThemeContext";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -37,10 +36,8 @@ export default function RootLayout({
       lang="en"
       className={`${plusJakarta.variable} ${inter.variable} ${jetbrains.variable} h-full antialiased`}
     >
-      <body className="min-h-full font-sans bg-[#FFFFE3] dark:bg-[#1A1A1A] text-[#4A4A4A] dark:text-[#FFFFE3] transition-colors duration-200">
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+      <body className="min-h-full font-sans bg-[#FFFFE3] text-[#4A4A4A]">
+        {children}
       </body>
     </html>
   );
