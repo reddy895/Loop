@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { SentimentBadge, ThemeBadge } from '@/components/ui/Badges';
 import { mockInitialChatMessages, mockRetrievedSources } from '@/lib/mockData';
+import { useFeedbackContext } from '@/context/FeedbackContext';
 import { ChatMessage, RetrievedSource } from '@/types';
 import {
   Send,
@@ -15,10 +16,12 @@ import {
   RefreshCw,
   ExternalLink,
   Layers,
-  HelpCircle
+  HelpCircle,
+  FileSpreadsheet
 } from 'lucide-react';
 
 export default function AskLoopPage() {
+  const { isRetrieved, openRetrieveModal } = useFeedbackContext();
   const [messages, setMessages] = useState<ChatMessage[]>(mockInitialChatMessages);
   const [inputQuery, setInputQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -33,6 +36,7 @@ export default function AskLoopPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
 
   const handleSendMessage = (queryText?: string) => {
     const textToSend = queryText || inputQuery;
@@ -90,15 +94,28 @@ export default function AskLoopPage() {
           </div>
         </div>
 
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setMessages(mockInitialChatMessages.slice(0, 1))}
-          icon={<RefreshCw className="w-3.5 h-3.5" />}
-        >
-          Reset Session
-        </Button>
+        <div className="flex items-center gap-2">
+          {!isRetrieved && (
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<FileSpreadsheet className="w-4 h-4" />}
+              onClick={openRetrieveModal}
+            >
+              Retrieve CSV
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setMessages(mockInitialChatMessages.slice(0, 1))}
+            icon={<RefreshCw className="w-3.5 h-3.5" />}
+          >
+            Reset Session
+          </Button>
+        </div>
       </div>
+
 
       {/* Main Split Layout: Left Chat Stream, Right Retrieved Sources Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">

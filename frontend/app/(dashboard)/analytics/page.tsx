@@ -13,13 +13,7 @@ import {
   ThemeComparisonBarChart,
   SentimentDistributionChart
 } from '@/components/charts/AnalyticsCharts';
-import {
-  mockChannelSentimentData,
-  mockWeeklySentimentTrend,
-  mockThemeComparisonData,
-  mockSentimentDistributionData,
-  mockChannelPerformanceList
-} from '@/lib/mockData';
+import { useFeedbackContext } from '@/context/FeedbackContext';
 import {
   BarChart3,
   TrendingUp,
@@ -28,10 +22,25 @@ import {
   Download,
   CheckCircle2,
   Layers,
-  Clock
+  Clock,
+  FileSpreadsheet,
+  DownloadCloud
 } from 'lucide-react';
 
 export default function AnalyticsPage() {
+  const {
+    isRetrieved,
+    datasetName,
+    stats,
+    channelSentimentData,
+    weeklySentimentTrend,
+    themeComparisonData,
+    sentimentDistributionData,
+    channelPerformanceList,
+    openRetrieveModal
+  } = useFeedbackContext();
+
+
   const [timeRange, setTimeRange] = useState('30d');
   const [channel, setChannel] = useState('');
   const [sentiment, setSentiment] = useState('');
@@ -49,10 +58,32 @@ export default function AnalyticsPage() {
           </p>
         </div>
 
-        <Button variant="secondary" size="sm" icon={<Download className="w-4 h-4" />}>
-          Export Analytics PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          {!isRetrieved && (
+            <Button variant="primary" size="sm" icon={<FileSpreadsheet className="w-4 h-4" />} onClick={openRetrieveModal}>
+              Retrieve CSV
+            </Button>
+          )}
+          <Button variant="secondary" size="sm" icon={<Download className="w-4 h-4" />}>
+            Export Analytics PDF
+          </Button>
+        </div>
       </div>
+
+      {!isRetrieved && (
+        <div className="skeuo-panel bg-[#6D8196]/10 p-4 border-l-4 border-l-[#6D8196] flex items-center justify-between gap-3 font-sans animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <DownloadCloud className="w-5 h-5 text-[#6D8196]" />
+            <div>
+              <p className="text-xs font-bold text-[#4A4A4A]">Analytics Initialized at 0 (New User Session)</p>
+              <p className="text-xs text-[#4A4A4A]/80">Retrieve a CSV dataset to generate multi-channel analytics and CSAT intelligence matrices.</p>
+            </div>
+          </div>
+          <Button variant="primary" size="sm" icon={<FileSpreadsheet className="w-4 h-4" />} onClick={openRetrieveModal}>
+            Retrieve CSV Dataset
+          </Button>
+        </div>
+      )}
 
       {/* Analytics Filter Bar */}
       <div className="skeuo-panel p-4 grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-3 items-end">
@@ -109,34 +140,34 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Customer CSAT Index"
-          value="8.4 / 10"
-          change="+0.6 score improvement"
-          trend="up"
-          description="Based on 1,482 reviews"
+          value={isRetrieved ? (stats.csat || "8.4 / 10") : "0.0 / 10"}
+          change={isRetrieved ? "+0.6 score improvement" : "0 baseline"}
+          trend={isRetrieved ? "up" : "neutral"}
+          description={isRetrieved ? `Based on ${stats.totalFeedback.toLocaleString()} reviews` : "No CSV data retrieved"}
           icon={<Zap className="w-5 h-5 text-amber-600" />}
         />
         <StatsCard
           title="Net Sentiment Score"
-          value="+48.0 NPS"
-          change="+6.2 vs last month"
-          trend="up"
-          description="% Positive minus % Negative"
+          value={isRetrieved ? (stats.nps || "+48.0 NPS") : "0.0 NPS"}
+          change={isRetrieved ? "+6.2 vs last month" : "0 baseline"}
+          trend={isRetrieved ? "up" : "neutral"}
+          description={isRetrieved ? "% Positive minus % Negative" : "No CSV data retrieved"}
           icon={<TrendingUp className="w-5 h-5 text-green-700" />}
         />
         <StatsCard
           title="AI Tagging Precision"
-          value="96.4%"
-          change="+1.8% accuracy boost"
-          trend="up"
-          description="Automated vector classification"
+          value={isRetrieved ? "96.4%" : "0.0%"}
+          change={isRetrieved ? "+1.8% accuracy boost" : "0 baseline"}
+          trend={isRetrieved ? "up" : "neutral"}
+          description={isRetrieved ? "Automated vector classification" : "No CSV data retrieved"}
           icon={<ShieldCheck className="w-5 h-5 text-blue-700" />}
         />
         <StatsCard
           title="SLA Resolution Velocity"
-          value="3.2 hrs avg"
-          change="-45 mins faster response"
-          trend="up"
-          description="78.5% ticket resolution rate"
+          value={isRetrieved ? "3.2 hrs avg" : "0 hrs avg"}
+          change={isRetrieved ? "-45 mins faster response" : "0 baseline"}
+          trend={isRetrieved ? "up" : "neutral"}
+          description={isRetrieved ? "78.5% ticket resolution rate" : "No CSV data retrieved"}
           icon={<Clock className="w-5 h-5" />}
         />
       </div>
@@ -145,18 +176,18 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartContainer
           title="Sentiment Breakdown by Channel"
-          description="Proportional split of positive, neutral, and negative feedback tickets per source"
+          description={isRetrieved ? "Proportional split of positive, neutral, and negative feedback tickets per source" : "Channel breakdown (0 baseline)"}
           height={320}
         >
-          <ChannelSentimentBarChart data={mockChannelSentimentData} />
+          <ChannelSentimentBarChart data={channelSentimentData} />
         </ChartContainer>
 
         <ChartContainer
           title="6-Week Sentiment Trend Velocity"
-          description="Weekly tracking of positive vs negative sentiment percentage trajectory"
+          description={isRetrieved ? "Weekly tracking of positive vs negative sentiment percentage trajectory" : "Sentiment velocity (0 baseline)"}
           height={320}
         >
-          <SentimentTrendLineChart data={mockWeeklySentimentTrend} />
+          <SentimentTrendLineChart data={weeklySentimentTrend} />
         </ChartContainer>
       </div>
 
@@ -164,18 +195,18 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartContainer
           title="Month-over-Month Theme Volume (August vs July)"
-          description="Comparative analysis of theme ticket counts across current and previous months"
+          description={isRetrieved ? "Comparative analysis of theme ticket counts across current and previous months" : "Theme comparison (0 baseline)"}
           height={320}
         >
-          <ThemeComparisonBarChart data={mockThemeComparisonData} />
+          <ThemeComparisonBarChart data={themeComparisonData} />
         </ChartContainer>
 
         <ChartContainer
           title="Sentiment Score Spread Distribution (0–100)"
-          description="Statistical distribution of extracted sentiment scores across all feedback items"
+          description={isRetrieved ? "Statistical distribution of extracted sentiment scores across all feedback items" : "Score distribution (0 baseline)"}
           height={320}
         >
-          <SentimentDistributionChart data={mockSentimentDistributionData} />
+          <SentimentDistributionChart data={sentimentDistributionData} />
         </ChartContainer>
       </div>
 
@@ -189,7 +220,7 @@ export default function AnalyticsPage() {
             </h3>
           </div>
           <span className="text-[10px] font-mono-numbers px-2 py-0.5 rounded bg-[#6D8196] text-[#FFFFE3]">
-            5 Active Connectors
+            {isRetrieved ? "5 Active Connectors" : "0 Connectors Active"}
           </span>
         </div>
 
@@ -205,7 +236,7 @@ export default function AnalyticsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockChannelPerformanceList.map((ch, idx) => (
+            {channelPerformanceList.map((ch, idx) => (
               <TableRow key={idx}>
                 <TableCell className="font-bold text-xs whitespace-nowrap">
                   {ch.channel}

@@ -1,27 +1,28 @@
 'use client';
 
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useMemo, Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
 import { SentimentBadge, StatusBadge, ThemeBadge } from '@/components/ui/Badges';
 import { FilterBar } from '@/components/ui/SearchFilterBars';
 import { Pagination } from '@/components/ui/Pagination';
-import { EmptyState, CSVUploadCard, LoadingSkeleton } from '@/components/ui/FeedbackStates';
+import { EmptyState, CSVRetrieveCard, LoadingSkeleton } from '@/components/ui/FeedbackStates';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import { mockFeedbackList } from '@/lib/mockData';
+import { useFeedbackContext } from '@/context/FeedbackContext';
 import { FeedbackItem, FeedbackStatus, SentimentType, FeedbackTheme, FeedbackChannel } from '@/types';
 import {
-  Upload,
+  FileSpreadsheet,
   Plus,
   RefreshCw,
-  FileSpreadsheet,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Inbox
 } from 'lucide-react';
 
 function FeedbackInboxContent() {
   const searchParams = useSearchParams();
+  const { isRetrieved, feedbackList, openRetrieveModal, addFeedbackItem, retrieveCSV } = useFeedbackContext();
 
   // State filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,11 +34,7 @@ function FeedbackInboxContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
 
-  // Local feedback items state
-  const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>(mockFeedbackList);
-
   // Modals state
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(searchParams.get('modal') === 'upload');
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isSimulatingSync, setIsSimulatingSync] = useState(false);
@@ -50,6 +47,12 @@ function FeedbackInboxContent() {
   const [newFeedback, setNewFeedback] = useState('');
   const [newTheme, setNewTheme] = useState<FeedbackTheme>('UX Performance');
   const [newSentiment, setNewSentiment] = useState<SentimentType>('Neutral');
+
+  useEffect(() => {
+    if (searchParams.get('modal') === 'upload' || searchParams.get('modal') === 'retrieve') {
+      openRetrieveModal();
+    }
+  }, [searchParams, openRetrieveModal]);
 
   // Filtered dataset calculation
   const filteredData = useMemo(() => {
@@ -71,7 +74,7 @@ function FeedbackInboxContent() {
     });
   }, [feedbackList, searchQuery, statusFilter, sentimentFilter, themeFilter, channelFilter, dateFilter]);
 
-  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredData.slice(start, start + pageSize);
@@ -105,7 +108,7 @@ function FeedbackInboxContent() {
       features: ['Manual Entry']
     };
 
-    setFeedbackList([newItem, ...feedbackList]);
+    addFeedbackItem(newItem);
     setIsManualModalOpen(false);
     // Reset form
     setNewCustomer('');
@@ -117,7 +120,8 @@ function FeedbackInboxContent() {
     setIsSimulatingSync(true);
     setTimeout(() => {
       setIsSimulatingSync(false);
-      setImportSuccessMsg('Successfully synced 14 new customer tickets from Zendesk & Intercom!');
+      retrieveCSV();
+      setImportSuccessMsg('Successfully retrieved & synced 14 new customer tickets from Zendesk & Intercom!');
       setTimeout(() => setImportSuccessMsg(''), 4000);
       setIsImportModalOpen(false);
     }, 1500);
@@ -148,16 +152,16 @@ function FeedbackInboxContent() {
           </Button>
 
           <Button
-            variant="secondary"
+            variant="primary"
             size="sm"
-            icon={<Upload className="w-4 h-4" />}
-            onClick={() => setIsUploadModalOpen(true)}
+            icon={<FileSpreadsheet className="w-4 h-4" />}
+            onClick={openRetrieveModal}
           >
-            Upload CSV
+            Retrieve CSV
           </Button>
 
           <Button
-            variant="primary"
+            variant="secondary"
             size="sm"
             icon={<Plus className="w-4 h-4" />}
             onClick={() => setIsManualModalOpen(true)}
@@ -194,8 +198,14 @@ function FeedbackInboxContent() {
 
       {/* Main Enterprise Table Container */}
       <div className="skeuo-panel p-4 space-y-4">
-        {paginatedData.length === 0 ? (
-          <EmptyState onAction={handleClearFilters} />
+        {!isRetrieved || paginatedData.length === 0 ? (
+          <div className="py-6 space-y-6">
+            {!isRetrieved ? (
+              <CSVRetrieveCard onRetrieveClick={openRetrieveModal} />
+            ) : (
+              <EmptyState onAction={handleClearFilters} />
+            )}
+          </div>
         ) : (
           <>
             <Table>
@@ -261,22 +271,7 @@ function FeedbackInboxContent() {
         )}
       </div>
 
-      {/* Modal 1: CSV Upload */}
-      <Modal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        title="Upload CSV Feedback Dataset"
-        description="Select a .csv spreadsheet file containing customer feedback columns"
-      >
-        <CSVUploadCard
-          onUploadClick={() => {
-            setImportSuccessMsg('CSV file uploaded! Analyzed 48 records with AI sentiment tagging.');
-            setIsUploadModalOpen(false);
-          }}
-        />
-      </Modal>
-
-      {/* Modal 2: Manual Entry Form */}
+      {/* Manual Entry Form */}
       <Modal
         isOpen={isManualModalOpen}
         onClose={() => setIsManualModalOpen(false)}
@@ -293,7 +288,7 @@ function FeedbackInboxContent() {
           </>
         }
       >
-        <form onSubmit={handleAddManualFeedback} className="space-y-3">
+        <form onSubmit={handleAddManualFeedback} className="space-y-3 font-sans">
           <div>
             <label className="block text-xs font-semibold text-[#4A4A4A] mb-1">Customer Name</label>
             <input
@@ -375,11 +370,11 @@ function FeedbackInboxContent() {
         </form>
       </Modal>
 
-      {/* Modal 3: Simulated Channel Import */}
+      {/* Simulated Channel Import */}
       <Modal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
-        title="Simulate Channel Import"
+        title="Simulate Channel Sync"
         description="Trigger live API webhook import simulation across external integrations"
         footer={
           <Button
@@ -393,8 +388,8 @@ function FeedbackInboxContent() {
           </Button>
         }
       >
-        <div className="space-y-3">
-          <p className="text-xs text-[#4A4A4A]/80 font-sans">
+        <div className="space-y-3 font-sans">
+          <p className="text-xs text-[#4A4A4A]/80">
             Select integration channels to fetch newly submitted customer support tickets:
           </p>
           <div className="space-y-2">

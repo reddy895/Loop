@@ -77,7 +77,11 @@ export const ErrorState: React.FC<{
   );
 };
 
-export const CSVUploadCard: React.FC<{ onUploadClick: () => void }> = ({ onUploadClick }) => {
+export const CSVRetrieveCard: React.FC<{ onRetrieveClick: () => void; title?: string; description?: string }> = ({
+  onRetrieveClick,
+  title = 'Retrieve CSV Feedback Dataset',
+  description = 'Fetch batch customer feedback records from CSV to generate real-time AI sentiment analytics and dashboards.'
+}) => {
   return (
     <Card variant="panel" className="border-dashed border-2 border-[#6D8196]/40 hover:border-[#6D8196] transition-all">
       <div className="flex flex-col items-center text-center py-6">
@@ -85,15 +89,18 @@ export const CSVUploadCard: React.FC<{ onUploadClick: () => void }> = ({ onUploa
           <FileSpreadsheet className="w-8 h-8" />
         </div>
         <h3 className="font-heading text-base font-bold text-[#4A4A4A]">
-          Batch Import Feedback via CSV
+          {title}
         </h3>
         <p className="text-xs text-[#4A4A4A]/70 font-sans max-w-md mt-1 mb-4">
-          Upload spreadsheets containing customer tickets, App Store reviews, or survey submissions to trigger AI sentiment extraction.
+          {description}
         </p>
-        <Button variant="primary" size="sm" icon={<Upload className="w-4 h-4" />} onClick={onUploadClick}>
-          Upload CSV Dataset
+        <Button variant="primary" size="sm" icon={<FileSpreadsheet className="w-4 h-4" />} onClick={onRetrieveClick}>
+          Retrieve CSV & Generate Dashboards
         </Button>
       </div>
     </Card>
   );
 };
+
+export const CSVUploadCard = CSVRetrieveCard;
+
