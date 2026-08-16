@@ -1,0 +1,96 @@
+// This is your Prisma schema file for PostgreSQL database integration
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  password      String
+  jobTitle      String?   @default("Product Lead")
+  role          String    @default("ADMIN")
+  avatar        String?
+  emailAlerts   Boolean   @default(true)
+  weeklyDigest  Boolean   @default(true)
+  aiAutoTagging Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Workspace {
+  id            String   @id @default(uuid())
+  name          String
+  code          String
+  ownerId       String
+  details       String?
+  settings      String?
+  membersCount  Int      @default(1)
+  feedbackCount Int      @default(0)
+  reportsCount  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("workspaces")
+}
+
+model Member {
+  id          String   @id @default(uuid())
+  workspaceId String
+  userId      String?
+  email       String
+  role        String   @default("MEMBER")
+  status      String   @default("ACTIVE")
+  name        String
+  createdAt   DateTime @default(now())
+
+  @@map("members")
+}
+
+model Feedback {
+  id             String   @id @default(uuid())
+  workspaceId    String
+  content        String
+  customerEmail  String?
+  sentiment      String
+  sentimentScore Float
+  source         String
+  themeId        String?
+  status         String   @default("NEW")
+  createdAt      DateTime @default(now())
+
+  @@map("feedbacks")
+}
+
+model Theme {
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  color       String
+  description String?
+  trend       String   @default("STABLE")
+  createdAt   DateTime @default(now())
+
+  @@map("themes")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}

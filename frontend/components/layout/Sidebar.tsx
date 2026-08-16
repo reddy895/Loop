@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { LoopLogoIcon } from '@/components/ui/LoopLogo';
+import { useAuth } from '@/context/AuthContext';
 import {
   LayoutDashboard,
   Inbox,
@@ -26,6 +27,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   const mainMenuItems = [
     { label: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -39,12 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
   const adminMenuItems = [
     { label: 'Workspace', href: '/workspace', icon: Building2 },
     { label: 'Members', href: '/workspace?tab=members', icon: Users },
-    { label: 'Settings', href: '/profile?tab=settings', icon: Settings }
-  ];
-
-  const userMenuItems = [
-    { label: 'Profile', href: '/profile', icon: User },
-    { label: 'Logout', href: '/login', icon: LogOut }
+    { label: 'Settings', href: '/settings', icon: Settings }
   ];
 
   const renderNavLink = (item: { label: string; href: string; icon: any; badge?: string }) => {
@@ -75,6 +72,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
         )}
       </Link>
     );
+  };
+
+  const getInitials = (nameStr?: string) => {
+    if (!nameStr) return 'PK';
+    const parts = nameStr.trim().split(' ');
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return nameStr.substring(0, 2).toUpperCase();
   };
 
   return (
@@ -126,26 +130,51 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
             User Account
           </span>
           <div className="space-y-1">
-            {userMenuItems.map(renderNavLink)}
+            <Link
+              href="/profile"
+              onClick={onMobileClose}
+              className={cn(
+                'flex items-center justify-between px-3 py-2 rounded-md font-sans text-xs font-medium transition-all duration-150 relative',
+                pathname === '/profile' ? 'skeuo-nav-active' : 'skeuo-nav-inactive'
+              )}
+            >
+              <div className="flex items-center gap-2.5">
+                <User className={cn('w-4 h-4', pathname === '/profile' ? 'text-[#FFFFE3]' : 'text-[#CBCBCB]')} />
+                <span>Profile</span>
+              </div>
+            </Link>
+
+            <button
+              onClick={() => {
+                if (onMobileClose) onMobileClose();
+                logout();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-md font-sans text-xs font-medium transition-all duration-150 text-[#CBCBCB] hover:text-[#FFFFE3] hover:bg-[#3D3D3D]"
+            >
+              <div className="flex items-center gap-2.5">
+                <LogOut className="w-4 h-4 text-[#CBCBCB]" />
+                <span>Logout</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Bottom Profile Summary */}
       <div className="p-3 border-t border-[#3A3A3A] bg-[#3D3D3D]">
-        <div className="skeuo-inset-gray p-2.5 flex items-center gap-2.5">
+        <Link href="/settings" className="skeuo-inset-gray p-2.5 flex items-center gap-2.5 block hover:opacity-90 transition-opacity">
           <div className="w-8 h-8 rounded bg-[#6D8196] text-[#FFFFE3] font-bold text-xs flex items-center justify-center border border-[#7E93A9]">
-            PK
+            {getInitials(user?.name)}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-[#FFFFE3] truncate font-sans">
-              Praveen Kumar
+              {user?.name || 'Praveen Kumar'}
             </p>
             <p className="text-[10px] text-[#CBCBCB] truncate font-mono-numbers">
-              Enterprise Admin
+              {user?.role || 'Enterprise Admin'}
             </p>
           </div>
-        </div>
+        </Link>
       </div>
     </aside>
   );

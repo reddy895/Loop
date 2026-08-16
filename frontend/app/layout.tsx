@@ -21,6 +21,8 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
+import { AuthProvider } from "@/context/AuthContext";
+
 export const metadata: Metadata = {
   title: "LOOP – AI Customer Feedback Intelligence Platform",
   description: "Enterprise SaaS Customer Feedback Intelligence Platform",
@@ -37,8 +39,9 @@ export default function RootLayout({
       className={`${plusJakarta.variable} ${inter.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans bg-[#FFFFE3] text-[#4A4A4A]">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
 }
+

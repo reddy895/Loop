@@ -5,16 +5,34 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
-import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState('praveen@acmesaas.com');
   const [password, setPassword] = useState('••••••••••••');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/');
+    setErrorMsg('');
+    setSubmitting(true);
+
+    try {
+      const res = await login(email, password);
+      if (res.success) {
+        router.push('/');
+      } else {
+        setErrorMsg(res.error || 'Failed to authenticate. Please check credentials.');
+      }
+    } catch {
+      setErrorMsg('An unexpected error occurred during login.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -27,6 +45,13 @@ export default function LoginPage() {
       </CardHeader>
 
       <CardContent>
+        {errorMsg && (
+          <div className="mb-4 p-3 rounded bg-red-100 border-l-4 border-red-500 text-red-800 text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-[#4A4A4A] mb-1.5 font-sans">
@@ -71,10 +96,11 @@ export default function LoginPage() {
             type="submit"
             variant="primary"
             size="lg"
+            disabled={submitting}
             className="w-full mt-2"
             icon={<ArrowRight className="w-4 h-4" />}
           >
-            Sign In to Dashboard
+            {submitting ? 'Authenticating...' : 'Sign In to Dashboard'}
           </Button>
         </form>
 
