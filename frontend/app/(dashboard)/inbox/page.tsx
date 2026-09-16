@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, Suspense, useEffect } from 'react';
+import React, { useState, useMemo, Suspense, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
 import { SentimentBadge, StatusBadge, ThemeBadge } from '@/components/ui/Badges';
@@ -17,12 +17,14 @@ import {
   RefreshCw,
   CheckCircle2,
   Sparkles,
-  Inbox
+  Inbox,
+  Database,
+  Loader2
 } from 'lucide-react';
 
 function FeedbackInboxContent() {
   const searchParams = useSearchParams();
-  const { isRetrieved, feedbackList, openRetrieveModal, addFeedbackItem, retrieveCSV } = useFeedbackContext();
+  const { isRetrieved, feedbackList, openRetrieveModal, addFeedbackItem, retrieveCSV, isServerMode } = useFeedbackContext();
 
   // State filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,7 +34,14 @@ function FeedbackInboxContent() {
   const [channelFilter, setChannelFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = 20; // Server handles pagination efficiently for big datasets
+
+  // Server-side mode state (for large uploaded CSVs)
+  const [serverData, setServerData] = useState<any[]>([]);
+  const [serverTotal, setServerTotal] = useState(0);
+  const [serverTotalPages, setServerTotalPages] = useState(1);
+  const [serverLoading, setServerLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Modals state
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
@@ -54,8 +63,52 @@ function FeedbackInboxContent() {
     }
   }, [searchParams, openRetrieveModal]);
 
-  // Filtered dataset calculation
+  // Server-side fetch for big data mode (debounced 300ms)
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  useEffect(() => {
+    if (!isServerMode) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setServerLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.set('page', String(currentPage));
+        params.set('limit', String(pageSize));
+        if (searchQuery) params.set('search', searchQuery);
+        if (statusFilter) params.set('status', statusFilter.toUpperCase().replace(' ', '_'));
+        if (sentimentFilter) params.set('sentiment', sentimentFilter.toUpperCase());
+        if (channelFilter) params.set('channel', channelFilter);
+        if (themeFilter) params.set('themeId', themeFilter);
+        const res = await fetch(`${BACKEND_URL}/api/feedback?${params.toString()}`);
+        if (res.ok) {
+          const json = await res.json();
+          const items = (json.data?.items || json.items || []).map((f: any) => ({
+            id: f.id,
+            customerName: f.customerLabel || 'Customer',
+            customerEmail: f.customerEmail || '',
+            channel: f.channel,
+            feedback: f.content,
+            sentiment: f.sentiment ? (f.sentiment.charAt(0).toUpperCase() + f.sentiment.slice(1).toLowerCase()) : 'Neutral',
+            sentimentScore: f.sentimentScore || 50,
+            theme: f.themeName || 'UX Performance',
+            status: f.status ? (f.status.charAt(0).toUpperCase() + f.status.slice(1).toLowerCase().replace('_', ' ')) : 'New',
+            date: f.createdAt?.split('T')[0] || '',
+            features: []
+          }));
+          const pagination = json.data?.pagination || json.pagination || {};
+          setServerData(items);
+          setServerTotal(pagination.totalItems || items.length);
+          setServerTotalPages(pagination.totalPages || 1);
+        }
+      } catch { /* silently fail */ }
+      setServerLoading(false);
+    }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [isServerMode, currentPage, searchQuery, statusFilter, sentimentFilter, channelFilter, themeFilter]);
+
+  // Filtered dataset — client-side for preset datasets, server-side for big data
   const filteredData = useMemo(() => {
+    if (isServerMode) return serverData;
     return feedbackList.filter((item) => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -72,13 +125,16 @@ function FeedbackInboxContent() {
       if (dateFilter && item.date !== dateFilter) return false;
       return true;
     });
-  }, [feedbackList, searchQuery, statusFilter, sentimentFilter, themeFilter, channelFilter, dateFilter]);
+  }, [feedbackList, serverData, isServerMode, searchQuery, statusFilter, sentimentFilter, themeFilter, channelFilter, dateFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+  const totalPages = isServerMode ? serverTotalPages : Math.max(1, Math.ceil(filteredData.length / pageSize));
   const paginatedData = useMemo(() => {
+    if (isServerMode) return serverData; // already paginated by server
     const start = (currentPage - 1) * pageSize;
     return filteredData.slice(start, start + pageSize);
-  }, [filteredData, currentPage]);
+  }, [filteredData, serverData, isServerMode, currentPage, pageSize]);
+
+  const displayedTotal = isServerMode ? serverTotal : filteredData.length;
 
   const handleClearFilters = () => {
     setSearchQuery('');
@@ -196,6 +252,24 @@ function FeedbackInboxContent() {
         onClearFilters={handleClearFilters}
       />
 
+      {/* Server Mode Banner */}
+      {isServerMode && (
+        <div className="skeuo-panel bg-blue-50 p-3 border-l-4 border-l-blue-500 flex items-center gap-3">
+          <div className="p-1.5 bg-blue-500 rounded text-white">
+            <Database className="w-3.5 h-3.5" />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-blue-900">
+              Big Data Mode — Server-Side Filtering
+            </p>
+            <p className="text-[11px] text-blue-700 font-sans">
+              {serverLoading ? 'Fetching from database…' : `${serverTotal.toLocaleString()} total records stored in database. Filters and pagination are handled server-side.`}
+            </p>
+          </div>
+          {serverLoading && <Loader2 className="w-4 h-4 text-blue-500 animate-spin shrink-0" />}
+        </div>
+      )}
+
       {/* Main Enterprise Table Container */}
       <div className="skeuo-panel p-4 space-y-4">
         {!isRetrieved || paginatedData.length === 0 ? (
@@ -248,7 +322,7 @@ function FeedbackInboxContent() {
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <div className="flex flex-wrap gap-1">
-                        {item.features.map((feat, i) => (
+                        {(item.features || []).map((feat: string, i: number) => (
                           <span key={i} className="px-1.5 py-0.5 text-[10px] rounded bg-[#CBCBCB] text-[#4A4A4A] border border-[#A0A0A0]">
                             {feat}
                           </span>

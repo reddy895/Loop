@@ -404,8 +404,13 @@ export const zendeskReports: CustomerReport[] = [
 // -------------------------------------------------------------
 // 3. Custom CSV Dynamic Parser & Calculator
 // -------------------------------------------------------------
+// Max rows to parse client-side. Beyond this, streaming upload (streamingCsvUploader.ts) should be used.
+export const MAX_CLIENT_SIDE_ROWS = 10_000;
+
 export function parseCustomCsvContent(csvText: string): FeedbackItem[] {
   if (!csvText || !csvText.trim()) return [];
+  // Detect streaming upload sentinel — data is already in DB
+  if (csvText === '__server__' || csvText.startsWith('[Large file selected:')) return [];
 
   const lines = csvText
     .split(/\r?\n/)
@@ -413,6 +418,19 @@ export function parseCustomCsvContent(csvText: string): FeedbackItem[] {
     .filter((l) => l.length > 0);
 
   if (lines.length === 0) return [];
+
+  // Safety cap: client-side parsing is limited to MAX_CLIENT_SIDE_ROWS data rows
+  // Larger files should use the streaming uploader in streamingCsvUploader.ts
+  const dataRowCount = lines.length - 1; // subtract header
+  if (dataRowCount > MAX_CLIENT_SIDE_ROWS) {
+    console.warn(
+      `[datasetGenerator] CSV has ${dataRowCount.toLocaleString()} rows — exceeds client-side limit of ${MAX_CLIENT_SIDE_ROWS.toLocaleString()}. ` +
+      'Only the first 10,000 rows will be parsed. Use streaming upload for large files.'
+    );
+    lines.splice(MAX_CLIENT_SIDE_ROWS + 1); // keep header + first 10k rows
+  }
+
+
 
   // Helper to parse line handling quotes
   const parseLine = (line: string): string[] => {

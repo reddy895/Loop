@@ -13,9 +13,9 @@ export const LoopLogoIcon: React.FC<LoopLogoProps> = ({
   variant = 'dark'
 }) => {
   const colorMap = {
-    dark: '#4A4A4A',
-    light: '#FFFFE3',
-    cream: '#FFFFE3'
+    dark: '#000000',
+    light: '#FFFFFF',
+    cream: '#FFFFFF'
   };
 
   const strokeColor = colorMap[variant] || colorMap.dark;
@@ -60,16 +60,16 @@ export const LoopBrand: React.FC<{
   variant?: 'light' | 'dark';
   className?: string;
 }> = ({ showTagline = true, variant = 'dark', className }) => {
-  const textColor = variant === 'dark' ? 'text-[#4A4A4A]' : 'text-[#FFFFE3]';
-  const taglineColor = variant === 'dark' ? 'text-[#4A4A4A]/70' : 'text-[#CBCBCB]/70';
+  const textColor = variant === 'dark' ? 'text-neutral-900' : 'text-white';
+  const taglineColor = variant === 'dark' ? 'text-neutral-500' : 'text-neutral-400';
 
   return (
     <div className={cn('flex items-center gap-3 select-none', className)}>
       <div className={cn(
-        'p-2 rounded-xl border flex items-center justify-center shadow-md transition-all',
+        'p-2 rounded-xl border flex items-center justify-center transition-all',
         variant === 'dark'
-          ? 'bg-[#4A4A4A] border-[#CBCBCB] text-[#FFFFE3]'
-          : 'bg-[#FFFFE3] border-[#4A4A4A]/20 text-[#4A4A4A]'
+          ? 'bg-black border-neutral-800 text-white shadow-xs'
+          : 'bg-white border-neutral-200 text-neutral-900 shadow-xs'
       )}>
         <LoopLogoIcon size={24} variant={variant === 'dark' ? 'light' : 'dark'} />
       </div>

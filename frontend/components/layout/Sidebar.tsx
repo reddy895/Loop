@@ -54,21 +54,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
         href={item.href}
         onClick={onMobileClose}
         className={cn(
-          'flex items-center justify-between px-3 py-2 rounded-md font-sans text-xs font-medium transition-all duration-150 relative',
+          'flex items-center justify-between px-3 py-2 rounded-lg font-sans text-xs font-medium transition-all duration-150 relative',
           isActive ? 'skeuo-nav-active' : 'skeuo-nav-inactive'
         )}
       >
         <div className="flex items-center gap-2.5">
-          <Icon className={cn('w-4 h-4', isActive ? 'text-[#FFFFE3]' : 'text-[#CBCBCB]')} />
+          <Icon className={cn('w-4 h-4', isActive ? 'text-blue-700' : 'text-neutral-500')} />
           <span>{item.label}</span>
         </div>
         {item.badge && (
-          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-[#6D8196] text-[#FFFFE3] border border-[#7E93A9] shadow-xs">
+          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-blue-50 text-blue-600 border border-blue-200">
             {item.badge}
           </span>
         )}
         {isActive && (
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-[#6D8196] rounded-l" />
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-blue-600 rounded-l" />
         )}
       </Link>
     );
@@ -89,16 +89,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
       )}
     >
       {/* Brand Header with New LOOP Logo */}
-      <div className="p-4 border-b border-[#3A3A3A] flex items-center justify-between">
+      <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group select-none">
-          <div className="p-2 rounded-xl bg-[#3A3A3A] border border-[#5A5A5A] text-[#FFFFE3] shadow-inner group-hover:bg-[#6D8196] transition-colors flex items-center justify-center">
-            <LoopLogoIcon size={26} variant="light" />
+          <div className="p-2 rounded-xl bg-neutral-100 border border-neutral-200 text-neutral-900 shadow-xs group-hover:bg-neutral-200 transition-colors flex items-center justify-center">
+            <LoopLogoIcon size={26} variant="dark" />
           </div>
           <div>
-            <h1 className="font-heading text-xl font-extrabold tracking-wider text-[#FFFFE3]">
+            <h1 className="font-heading text-xl font-extrabold tracking-wider text-neutral-900">
               LOOP
             </h1>
-            <span className="text-[9px] uppercase font-mono-numbers text-[#CBCBCB]/70 tracking-widest block">
+            <span className="text-[9px] uppercase font-mono-numbers text-neutral-400 tracking-widest block">
               Feedback Engine
             </span>
           </div>
@@ -108,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
       {/* Navigation Sections */}
       <div className="px-3 py-4 flex-1 overflow-y-auto space-y-6">
         <div>
-          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#CBCBCB]/60 block mb-2 font-mono-numbers">
+          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-2 font-mono-numbers">
             Core Intelligence
           </span>
           <div className="space-y-1">
@@ -117,7 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
         </div>
 
         <div>
-          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#CBCBCB]/60 block mb-2 font-mono-numbers">
+          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-2 font-mono-numbers">
             Organization
           </span>
           <div className="space-y-1">
@@ -126,7 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
         </div>
 
         <div>
-          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#CBCBCB]/60 block mb-2 font-mono-numbers">
+          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-2 font-mono-numbers">
             User Account
           </span>
           <div className="space-y-1">
@@ -134,12 +134,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
               href="/profile"
               onClick={onMobileClose}
               className={cn(
-                'flex items-center justify-between px-3 py-2 rounded-md font-sans text-xs font-medium transition-all duration-150 relative',
+                'flex items-center justify-between px-3 py-2 rounded-lg font-sans text-xs font-medium transition-all duration-150 relative',
                 pathname === '/profile' ? 'skeuo-nav-active' : 'skeuo-nav-inactive'
               )}
             >
               <div className="flex items-center gap-2.5">
-                <User className={cn('w-4 h-4', pathname === '/profile' ? 'text-[#FFFFE3]' : 'text-[#CBCBCB]')} />
+                <User className={cn('w-4 h-4', pathname === '/profile' ? 'text-blue-700' : 'text-neutral-500')} />
                 <span>Profile</span>
               </div>
             </Link>
@@ -149,10 +149,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
                 if (onMobileClose) onMobileClose();
                 logout();
               }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-md font-sans text-xs font-medium transition-all duration-150 text-[#CBCBCB] hover:text-[#FFFFE3] hover:bg-[#3D3D3D]"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg font-sans text-xs font-medium transition-all duration-150 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100"
             >
               <div className="flex items-center gap-2.5">
-                <LogOut className="w-4 h-4 text-[#CBCBCB]" />
+                <LogOut className="w-4 h-4 text-neutral-400" />
                 <span>Logout</span>
               </div>
             </button>
@@ -161,16 +161,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
       </div>
 
       {/* Bottom Profile Summary */}
-      <div className="p-3 border-t border-[#3A3A3A] bg-[#3D3D3D]">
-        <Link href="/settings" className="skeuo-inset-gray p-2.5 flex items-center gap-2.5 block hover:opacity-90 transition-opacity">
-          <div className="w-8 h-8 rounded bg-[#6D8196] text-[#FFFFE3] font-bold text-xs flex items-center justify-center border border-[#7E93A9]">
+      <div className="p-3 border-t border-neutral-200 bg-neutral-50">
+        <Link href="/settings" className="bg-white border border-neutral-200 rounded-lg p-2.5 flex items-center gap-2.5 hover:bg-neutral-50 transition-colors">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
             {getInitials(user?.name)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-[#FFFFE3] truncate font-sans">
+            <p className="text-xs font-bold text-neutral-900 truncate font-sans">
               {user?.name || 'Praveen Kumar'}
             </p>
-            <p className="text-[10px] text-[#CBCBCB] truncate font-mono-numbers">
+            <p className="text-[10px] text-neutral-400 truncate font-mono-numbers">
               {user?.role || 'Enterprise Admin'}
             </p>
           </div>

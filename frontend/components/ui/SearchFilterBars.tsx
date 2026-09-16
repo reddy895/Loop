@@ -18,18 +18,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
   return (
     <div className={cn('relative flex-1', className)}>
-      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#4A4A4A]/60 pointer-events-none" />
+      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full skeuo-input pl-9 pr-8 py-2 text-sm font-sans text-[#4A4A4A] placeholder:text-[#4A4A4A]/50"
+        className="w-full skeuo-input pl-9 pr-8 py-2 text-sm font-sans text-neutral-900 placeholder:text-neutral-400"
       />
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#4A4A4A]/60 hover:text-[#4A4A4A]"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700"
         >
           <X className="w-4 h-4" />
         </button>
@@ -53,13 +53,13 @@ export const FilterSelect: React.FC<FilterSelectProps> = ({
 }) => {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-semibold uppercase tracking-wider text-[#4A4A4A]/70">
+      <label className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
         {label}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="skeuo-input px-3 py-1.5 text-xs font-sans text-[#4A4A4A] bg-[#FFFFE3] cursor-pointer focus:outline-none"
+        className="skeuo-input px-3 py-1.5 text-xs font-sans text-neutral-900 bg-white cursor-pointer focus:outline-none"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -102,9 +102,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
   return (
     <div className="skeuo-panel p-4 flex flex-col gap-3">
-      <div className="flex items-center gap-2 pb-2 border-b border-[#4A4A4A]/10">
-        <Filter className="w-4 h-4 text-[#6D8196]" />
-        <span className="font-heading font-semibold text-sm text-[#4A4A4A]">
+      <div className="flex items-center gap-2 pb-2 border-b border-neutral-200">
+        <Filter className="w-4 h-4 text-neutral-800" />
+        <span className="font-heading font-semibold text-sm text-neutral-900">
           Filter & Search Intelligence
         </span>
         {hasActiveFilters && (
@@ -121,7 +121,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
         <div className="sm:col-span-2">
-          <label className="text-[10px] font-semibold uppercase tracking-wider text-[#4A4A4A]/70 mb-1 block">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1 block">
             Search Text
           </label>
           <SearchBar value={searchQuery} onChange={onSearchChange} />

@@ -2,11 +2,17 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Ensure Next.js treats this application as a pure backend API host if needed
   experimental: {
     serverActions: {
-      bodySizeLimit: '2mb',
+      bodySizeLimit: '50mb',
     },
+  },
+  // Allow large CSV uploads (up to 50MB) for big dataset ingestion
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+    responseLimit: false,
   },
 };
 

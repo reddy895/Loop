@@ -1,12 +1,12 @@
-// This is your Prisma schema file for PostgreSQL database integration
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma schema — SQLite for zero-setup, handles millions of rows with indexes
+// learn more: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -57,18 +57,29 @@ model Member {
   @@map("members")
 }
 
+/// Core feedback record — indexed for fast filtering on large datasets (lakhs of rows)
 model Feedback {
   id             String   @id @default(uuid())
   workspaceId    String
   content        String
+  customerLabel  String   @default("Imported Customer")
   customerEmail  String?
-  sentiment      String
-  sentimentScore Float
-  source         String
+  channel        String   @default("CSV Import")
+  sentiment      String   @default("NEUTRAL")
+  sentimentScore Float    @default(0)
+  source         String   @default("csv_batch")
   themeId        String?
+  themeName      String?
   status         String   @default("NEW")
+  isDeleted      Boolean  @default(false)
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
 
+  @@index([workspaceId, isDeleted, createdAt])
+  @@index([workspaceId, sentiment, isDeleted])
+  @@index([workspaceId, themeId, isDeleted])
+  @@index([workspaceId, status, isDeleted])
+  @@index([workspaceId, channel, isDeleted])
   @@map("feedbacks")
 }
 
@@ -81,7 +92,28 @@ model Theme {
   trend       String   @default("STABLE")
   createdAt   DateTime @default(now())
 
+  @@index([workspaceId])
   @@map("themes")
+}
+
+/// Import job tracker — aggregate stats so dashboard never re-scans all rows
+model ImportJob {
+  id            String    @id @default(uuid())
+  workspaceId   String
+  filename      String
+  totalRows     Int       @default(0)
+  importedCount Int       @default(0)
+  failedCount   Int       @default(0)
+  status        String    @default("PENDING")
+  positiveCount Int       @default(0)
+  negativeCount Int       @default(0)
+  neutralCount  Int       @default(0)
+  summaryJson   String?
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  @@index([workspaceId, createdAt])
+  @@map("import_jobs")
 }
 
 model Session {

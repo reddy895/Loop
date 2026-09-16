@@ -15,7 +15,7 @@ export default function DashboardLayout({
 
   return (
     <FeedbackProvider>
-      <div className="min-h-screen flex bg-[#FFFFE3] text-[#4A4A4A] font-sans antialiased">
+      <div className="min-h-screen flex bg-[#FAFAFA] text-neutral-900 font-sans antialiased">
         {/* Sidebar */}
         <Sidebar
           isMobileOpen={isMobileOpen}

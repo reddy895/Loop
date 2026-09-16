@@ -26,22 +26,22 @@ export const StatsCard: React.FC<StatsCardProps> = ({
     <Card variant={variant} className="relative overflow-hidden group transition-all duration-200">
       <div className="flex items-start justify-between">
         <div>
-          <span className="text-xs font-medium uppercase tracking-wider text-[#4A4A4A]/70 font-sans">
+          <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500 font-sans">
             {title}
           </span>
-          <div className="mt-2 text-2xl lg:text-3xl font-bold font-mono-numbers text-[#4A4A4A] tracking-tight">
+          <div className="mt-2 text-2xl lg:text-3xl font-bold font-mono-numbers text-neutral-900 tracking-tight">
             {value}
           </div>
         </div>
         {icon && (
-          <div className="p-2.5 rounded-lg bg-[#4A4A4A]/10 border border-[#FFFFE3]/40 text-[#4A4A4A] shadow-inner shrink-0 ml-2">
+          <div className="p-2.5 rounded-lg bg-neutral-100 border border-neutral-200 text-neutral-800 shrink-0 ml-2">
             {icon}
           </div>
         )}
       </div>
 
       {(change || description) && (
-        <div className="mt-4 pt-2.5 border-t border-[#4A4A4A]/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="mt-4 pt-2.5 border-t border-neutral-200 flex flex-wrap items-center justify-between gap-2 text-xs">
           {change && (
             <span
               className={cn(
@@ -58,7 +58,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
             </span>
           )}
           {description && (
-            <span className="text-[#4A4A4A]/70 font-sans text-xs whitespace-nowrap truncate min-w-0">
+            <span className="text-neutral-500 font-sans text-xs whitespace-nowrap truncate min-w-0">
               {description}
             </span>
           )}

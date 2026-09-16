@@ -81,6 +81,7 @@ export type DatasetType = 'enterprise' | 'appstore' | 'zendesk' | 'custom';
 
 interface FeedbackContextType {
   isRetrieved: boolean;
+  isServerMode: boolean; // true when data lives in DB (large CSV uploaded)
   activeDatasetType: DatasetType;
   datasetName: string;
   feedbackList: FeedbackItem[];
@@ -115,6 +116,7 @@ const FeedbackContext = createContext<FeedbackContextType | undefined>(undefined
 
 export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isRetrieved, setIsRetrieved] = useState<boolean>(false);
+  const [isServerMode, setIsServerMode] = useState<boolean>(false); // true = data is in SQLite DB
   const [activeDatasetType, setActiveDatasetType] = useState<DatasetType>('enterprise');
   const [currentBundle, setCurrentBundle] = useState<any>(null);
   const [isRetrieveModalOpen, setIsRetrieveModalOpen] = useState<boolean>(false);
@@ -125,10 +127,23 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
   const closeRetrieveModal = () => setIsRetrieveModalOpen(false);
 
   const retrieveCSV = (datasetType: DatasetType = 'enterprise', customCsvText?: string) => {
+    // Special sentinel value '__server__' means the data was streamed to the DB
+    if (customCsvText === '__server__') {
+      setActiveDatasetType('custom');
+      setIsServerMode(true);
+      setCurrentBundle(null);
+      setCustomItemsList(null);
+      setIsRetrieved(true);
+      setLastRetrievedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setIsRetrieveModalOpen(false);
+      return;
+    }
+
     const bundle = getDatasetBundle(datasetType, customCsvText);
     setActiveDatasetType(datasetType);
     setCurrentBundle(bundle);
     setCustomItemsList(null);
+    setIsServerMode(false);
     setIsRetrieved(true);
     setLastRetrievedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     setIsRetrieveModalOpen(false);
@@ -136,6 +151,7 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const resetToZero = () => {
     setIsRetrieved(false);
+    setIsServerMode(false);
     setActiveDatasetType('enterprise');
     setCurrentBundle(null);
     setCustomItemsList(null);
@@ -152,7 +168,12 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
   const activeFeedbackList = customItemsList || currentBundle?.feedbackList || [];
 
   const stats = {
-    totalFeedback: isRetrieved ? Math.max(currentBundle?.stats?.totalFeedback || 0, activeFeedbackList.length) : 0,
+    // In server mode, show a placeholder until the dashboard API returns real counts
+    totalFeedback: isServerMode
+      ? (currentBundle?.stats?.totalFeedback || 0)
+      : isRetrieved
+        ? Math.max(currentBundle?.stats?.totalFeedback || 0, activeFeedbackList.length)
+        : 0,
     negativePct: isRetrieved ? (currentBundle?.stats?.negativePct || '0.0%') : '0.0%',
     positivePct: isRetrieved ? (currentBundle?.stats?.positivePct || '0.0%') : '0.0%',
     newThisWeek: isRetrieved ? (currentBundle?.stats?.newThisWeek || activeFeedbackList.length) : 0,
@@ -160,7 +181,10 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
     nps: isRetrieved ? (currentBundle?.stats?.nps || '+48 NPS') : '0 NPS'
   };
 
-  const datasetName = currentBundle?.datasetName || 'Enterprise Customer Feedback Dataset (Q3)';
+  const datasetName = isServerMode
+    ? 'Custom CSV (Server-Side — Big Data Mode)'
+    : (currentBundle?.datasetName || 'Enterprise Customer Feedback Dataset (Q3)');
+
   const volumeData = isRetrieved ? (currentBundle?.volumeData || []) : zeroVolumeData;
   const sentimentPieData = isRetrieved ? (currentBundle?.sentimentPieData || []) : zeroSentimentPieData;
   const topThemesBarData = isRetrieved ? (currentBundle?.topThemesBarData || []) : zeroTopThemesBarData;
@@ -176,6 +200,7 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
     <FeedbackContext.Provider
       value={{
         isRetrieved,
+        isServerMode,
         activeDatasetType,
         datasetName,
         feedbackList: activeFeedbackList,

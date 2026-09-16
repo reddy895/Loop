@@ -8,16 +8,17 @@
 
 @layer base {
   :root {
-    --bg-cream: #FFFFE3;
-    --primary-dark: #4A4A4A;
-    --secondary-gray: #CBCBCB;
-    --accent-blue: #6D8196;
-    --accent-hover: #56687B;
+    --bg-canvas: #FFFFFF;
+    --bg-surface: #FAFAFA;
+    --text-primary: #09090B;
+    --text-secondary: #71717A;
+    --border-subtle: #E4E4E7;
+    --border-strong: #000000;
   }
 
   body {
-    background-color: #FFFFE3;
-    color: #4A4A4A;
+    background-color: #FFFFFF;
+    color: #09090B;
     font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
     letter-spacing: -0.01em;
   }
@@ -34,207 +35,147 @@
   }
 }
 
-/* Skeuomorphic Utilities */
+/* Clean, Modern Black & White Utilities (Skeuomorphism Removed) */
 .skeuo-panel {
-  background-color: #CBCBCB;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-bottom-color: rgba(74, 74, 74, 0.25);
-  border-right-color: rgba(74, 74, 74, 0.2);
-  box-shadow: 
-    3px 3px 8px rgba(74, 74, 74, 0.15),
-    -2px -2px 6px rgba(255, 255, 255, 0.8),
-    inset 1px 1px 1px rgba(255, 255, 255, 0.9);
-  border-radius: 0.5rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E4E4E7;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  border-radius: 0.75rem;
 }
 
 .skeuo-card-cream {
-  background-color: #FFFFE3;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-bottom-color: rgba(74, 74, 74, 0.18);
-  border-right-color: rgba(74, 74, 74, 0.15);
-  box-shadow: 
-    4px 4px 10px rgba(74, 74, 74, 0.12),
-    -3px -3px 8px rgba(255, 255, 255, 0.9),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.95);
-  border-radius: 0.625rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E4E4E7;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  border-radius: 0.75rem;
 }
 
 .skeuo-inset {
-  background-color: #F4F4D6;
-  border: 1px solid rgba(74, 74, 74, 0.2);
-  border-top-color: rgba(74, 74, 74, 0.35);
-  border-left-color: rgba(74, 74, 74, 0.3);
-  box-shadow: 
-    inset 2px 2px 4px rgba(74, 74, 74, 0.18),
-    inset -1px -1px 3px rgba(255, 255, 255, 0.7);
-  border-radius: 0.375rem;
+  background-color: #F4F4F5;
+  border: 1px solid #E4E4E7;
+  border-radius: 0.5rem;
 }
 
 .skeuo-inset-gray {
-  background-color: #BEBEBE;
-  border: 1px solid rgba(74, 74, 74, 0.25);
-  border-top-color: rgba(74, 74, 74, 0.4);
-  border-left-color: rgba(74, 74, 74, 0.35);
-  box-shadow: 
-    inset 2px 2px 5px rgba(0, 0, 0, 0.2),
-    inset -1px -1px 3px rgba(255, 255, 255, 0.5);
-  border-radius: 0.375rem;
+  background-color: #18181B;
+  border: 1px solid #27272A;
+  border-radius: 0.5rem;
 }
 
 .skeuo-button-primary {
-  background-color: #6D8196;
-  color: #FFFFE3;
-  border: 1px solid #7E93A9;
-  border-bottom-color: #4B5A6A;
-  border-right-color: #536475;
-  box-shadow: 
-    2px 3px 6px rgba(74, 74, 74, 0.25),
-    inset 0px 1px 1px rgba(255, 255, 255, 0.35);
-  border-radius: 0.375rem;
-  transition: all 0.12s ease-in-out;
+  background-color: #000000;
+  color: #FFFFFF;
+  border: 1px solid #000000;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease-in-out;
 }
 
 .skeuo-button-primary:hover {
-  background-color: #56687B;
-  box-shadow: 
-    3px 4px 8px rgba(74, 74, 74, 0.3),
-    inset 0px 1px 1px rgba(255, 255, 255, 0.45);
+  background-color: #27272A;
+  border-color: #27272A;
 }
 
 .skeuo-button-primary:active {
-  transform: translateY(1px);
-  box-shadow: 
-    inset 2px 2px 4px rgba(0, 0, 0, 0.35),
-    0px 1px 2px rgba(0, 0, 0, 0.1);
+  transform: scale(0.98);
 }
 
 .skeuo-button-secondary {
-  background-color: #CBCBCB;
-  color: #4A4A4A;
-  border: 1px solid #E2E2E2;
-  border-bottom-color: #A0A0A0;
-  border-right-color: #B0B0B0;
-  box-shadow: 
-    2px 2px 5px rgba(74, 74, 74, 0.15),
-    inset 0px 1px 1px rgba(255, 255, 255, 0.8);
-  border-radius: 0.375rem;
-  transition: all 0.12s ease-in-out;
+  background-color: #FFFFFF;
+  color: #09090B;
+  border: 1px solid #E4E4E7;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: all 0.15s ease-in-out;
 }
 
 .skeuo-button-secondary:hover {
-  background-color: #D6D6D6;
-  box-shadow: 
-    2px 3px 6px rgba(74, 74, 74, 0.2),
-    inset 0px 1px 1px rgba(255, 255, 255, 0.9);
+  background-color: #F4F4F5;
+  border-color: #D4D4D8;
 }
 
 .skeuo-button-secondary:active {
-  transform: translateY(1px);
-  box-shadow: 
-    inset 2px 2px 4px rgba(74, 74, 74, 0.25),
-    0px 1px 2px rgba(0, 0, 0, 0.05);
+  transform: scale(0.98);
 }
 
 .skeuo-sidebar {
-  background-color: #4A4A4A;
-  color: #FFFFE3;
-  border-right: 1px solid rgba(0, 0, 0, 0.4);
-  box-shadow: 
-    4px 0px 10px rgba(0, 0, 0, 0.15),
-    inset -1px 0px 1px rgba(255, 255, 255, 0.1);
+  background-color: #FFFFFF;
+  color: #09090B;
+  border-right: 1px solid #E4E4E7;
 }
 
 .skeuo-nav-active {
-  background-color: #3A3A3A;
-  color: #FFFFE3;
-  border: 1px solid #2B2B2B;
-  border-top-color: #202020;
-  box-shadow: 
-    inset 2px 2px 4px rgba(0, 0, 0, 0.4),
-    inset -1px -1px 2px rgba(255, 255, 255, 0.08);
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
 }
 
 .skeuo-nav-inactive {
-  color: #CBCBCB;
+  color: #71717A;
   transition: all 0.15s ease;
 }
 
 .skeuo-nav-inactive:hover {
-  background-color: rgba(255, 255, 227, 0.08);
-  color: #FFFFE3;
+  background-color: #F4F4F5;
+  color: #09090B;
 }
 
 .skeuo-input {
-  background-color: #FFFFE3;
-  color: #4A4A4A;
-  border: 1px solid #A8A88F;
-  border-top-color: #7A7A66;
-  border-left-color: #8C8C75;
-  box-shadow: 
-    inset 2px 2px 3px rgba(74, 74, 74, 0.15),
-    inset -1px -1px 2px rgba(255, 255, 255, 0.8);
-  border-radius: 0.375rem;
+  background-color: #FFFFFF;
+  color: #09090B;
+  border: 1px solid #E4E4E7;
+  border-radius: 0.5rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .skeuo-input:focus {
   outline: none;
-  border-color: #6D8196;
-  box-shadow: 
-    inset 2px 2px 3px rgba(74, 74, 74, 0.2),
-    0 0 0 2px rgba(109, 129, 150, 0.3);
+  border-color: #000000;
+  box-shadow: 0 0 0 1px #000000;
 }
 
-/* Badges */
+/* Review Sentiment Badges (Colored for instant review comprehension) */
 .skeuo-badge-positive {
-  background-color: #E2ECD8;
-  color: #2D4E2A;
-  border: 1px solid #B4CE9F;
-  border-bottom-color: #8AA873;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
 }
 
 .skeuo-badge-negative {
-  background-color: #F8E2E2;
-  color: #612727;
-  border: 1px solid #E6B0B0;
-  border-bottom-color: #C47A7A;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background-color: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
 }
 
 .skeuo-badge-neutral {
-  background-color: #ECECEC;
-  color: #4A4A4A;
-  border: 1px solid #CBCBCB;
-  border-bottom-color: #A0A0A0;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background-color: #FFFBEB;
+  color: #B45309;
+  border: 1px solid #FDE68A;
 }
 
 .skeuo-badge-accent {
-  background-color: #DDE5EC;
-  color: #374756;
-  border: 1px solid #B0C4D6;
-  border-bottom-color: #889EB2;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background-color: #F4F4F5;
+  color: #18181B;
+  border: 1px solid #E4E4E7;
 }
 
-/* Custom Scrollbar */
+/* Clean Minimalist Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #FFFFE3;
-  box-shadow: inset 1px 1px 3px rgba(74, 74, 74, 0.1);
+  background: #FAFAFA;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CBCBCB;
-  border-radius: 4px;
-  border: 1px solid #A0A0A0;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.7);
+  background: #D4D4D8;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4A4A4A;
+  background: #A1A1AA;
 }

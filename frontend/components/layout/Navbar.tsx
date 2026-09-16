@@ -33,18 +33,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-[#FFFFE3]/95 backdrop-blur-xs border-b border-[#4A4A4A]/20 shadow-xs px-4 py-3 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-neutral-200 px-4 py-3 flex items-center justify-between gap-4">
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onMobileMenuToggle}
-          className="lg:hidden p-1.5 rounded skeuo-button-secondary text-[#4A4A4A]"
+          className="lg:hidden p-1.5 rounded-lg border border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-100"
         >
           <Menu className="w-5 h-5" />
         </button>
 
         <WorkspaceSelector />
 
-        <div className="hidden md:block h-5 w-px bg-[#4A4A4A]/20 mx-1" />
+        <div className="hidden md:block h-5 w-px bg-neutral-200 mx-1" />
 
         <div className="hidden sm:block">
           <Breadcrumb items={getBreadcrumbs()} />
@@ -64,7 +64,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMobileMenuToggle }) => {
         {/* User Profile Avatar Link */}
         <Link href="/settings" className="flex items-center gap-2 group">
           <Avatar name={user?.name || "Praveen Kumar"} size="sm" />
-          <span className="hidden xl:inline text-xs font-bold text-[#4A4A4A] group-hover:text-[#6D8196] transition-colors font-sans">
+          <span className="hidden xl:inline text-xs font-bold text-neutral-800 group-hover:text-black transition-colors font-sans">
             {user?.name?.split(' ')[0] || "Praveen"}
           </span>
         </Link>

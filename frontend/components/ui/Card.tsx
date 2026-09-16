@@ -26,23 +26,23 @@ export const Card: React.FC<CardProps> = ({
 };
 
 export const CardHeader: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => (
-  <div className={cn('flex flex-col gap-1 mb-4 pb-3 border-b border-[#4A4A4A]/10', className)}>
+  <div className={cn('flex flex-col gap-1 mb-4 pb-3 border-b border-neutral-200', className)}>
     {children}
   </div>
 );
 
 export const CardTitle: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => (
-  <h3 className={cn('font-heading text-lg font-bold text-[#4A4A4A] tracking-tight', className)}>
+  <h3 className={cn('font-heading text-lg font-bold text-neutral-900 tracking-tight', className)}>
     {children}
   </h3>
 );
 
 export const CardDescription: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => (
-  <p className={cn('text-xs text-[#4A4A4A]/75 font-sans', className)}>
+  <p className={cn('text-xs text-neutral-500 font-sans', className)}>
     {children}
   </p>
 );
 
 export const CardContent: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => (
-  <div className={cn('font-sans', className)}>{children}</div>
+  <div className={cn('font-sans text-neutral-800', className)}>{children}</div>
 );

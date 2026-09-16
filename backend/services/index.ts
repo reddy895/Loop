@@ -285,94 +285,119 @@ export class FeedbackService implements IFeedbackService {
 
   public async listFeedback(workspaceId: string, options: IFeedbackFilterOptions): Promise<IPaginatedData<IFeedback>> {
     logger.info(`${this.serviceName}: Listing feedback with filtering/sorting`, { workspaceId, options });
+
+    const page = options.page || 1;
+    const limit = Math.min(options.limit || 20, 100); // Cap at 100 per page
+    const skip = (page - 1) * limit;
+
+    // ----------------------------------------------------------------
+    // Prisma path — used when DB has data (large uploaded CSVs)
+    // ----------------------------------------------------------------
+    if (prisma) {
+      try {
+        const where: Record<string, unknown> = { workspaceId, isDeleted: false };
+
+        if (options.search) {
+          const q = options.search.trim();
+          where["OR"] = [
+            { content: { contains: q } },
+            { customerLabel: { contains: q } },
+            { source: { contains: q } },
+          ];
+        }
+        if (options.channel) where["channel"] = options.channel;
+        if (options.status) where["status"] = options.status;
+        if (options.sentiment) where["sentiment"] = options.sentiment;
+        if (options.themeId) where["themeId"] = options.themeId;
+        if (options.customer) where["customerLabel"] = { contains: options.customer };
+        if (options.startDate) where["createdAt"] = { gte: new Date(options.startDate) };
+        if (options.endDate) {
+          const existing = (where["createdAt"] as Record<string, unknown>) || {};
+          where["createdAt"] = { ...existing, lte: new Date(options.endDate) };
+        }
+
+        const sortBy = options.sortBy || "newest";
+        let orderBy: Record<string, string> = { createdAt: "desc" };
+        if (sortBy === "oldest") orderBy = { createdAt: "asc" };
+        else if (sortBy === "sentiment") orderBy = { sentiment: "desc" };
+        else if (sortBy === "channel") orderBy = { channel: "asc" };
+        else if (sortBy === "status") orderBy = { status: "asc" };
+        else if (sortBy === "customer") orderBy = { customerLabel: "asc" };
+
+        const [total, dbItems] = await Promise.all([
+          (prisma as any).feedback.count({ where }),
+          (prisma as any).feedback.findMany({ where, orderBy, skip, take: limit }),
+        ]);
+
+        const items: IFeedback[] = dbItems.map((f: any) => ({
+          id: f.id,
+          workspaceId: f.workspaceId,
+          content: f.content,
+          channel: f.channel,
+          status: f.status,
+          customerLabel: f.customerLabel,
+          source: f.source,
+          sentiment: f.sentiment as SentimentType,
+          sentimentScore: f.sentimentScore,
+          themeId: f.themeId,
+          themeName: f.themeName,
+          isDeleted: f.isDeleted,
+          createdAt: f.createdAt.toISOString(),
+          updatedAt: f.updatedAt.toISOString(),
+        }));
+
+        const totalPages = Math.ceil(total / limit);
+        return {
+          items,
+          pagination: {
+            page,
+            limit,
+            totalItems: total,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+          },
+        };
+      } catch (dbError) {
+        logger.warn(`${this.serviceName}: Prisma query failed, falling back to in-memory`, { dbError });
+        // Fall through to in-memory path
+      }
+    }
+
+    // ----------------------------------------------------------------
+    // In-memory fallback — demo preset datasets (enterprise/appstore/zendesk)
+    // ----------------------------------------------------------------
     let items = getWorkspaceFeedback(workspaceId).filter((f) => !f.isDeleted);
 
-    // Apply Keyword Search (content, customerLabel, source)
     if (options.search) {
       const q = options.search.toLowerCase().trim();
       items = items.filter(
-        (f) =>
-          f.content.toLowerCase().includes(q) ||
-          f.customerLabel.toLowerCase().includes(q) ||
-          (f.source && f.source.toLowerCase().includes(q))
+        (f) => f.content.toLowerCase().includes(q) || f.customerLabel.toLowerCase().includes(q) || (f.source && f.source.toLowerCase().includes(q))
       );
     }
+    if (options.channel) items = items.filter((f) => f.channel.toLowerCase() === options.channel!.toLowerCase());
+    if (options.status) items = items.filter((f) => f.status === options.status);
+    if (options.sentiment) items = items.filter((f) => f.sentiment === options.sentiment);
+    if (options.themeId) items = items.filter((f) => f.themeId === options.themeId);
+    if (options.customer) items = items.filter((f) => f.customerLabel.toLowerCase().includes(options.customer!.toLowerCase()));
+    if (options.startDate) { const ms = new Date(options.startDate).getTime(); if (!isNaN(ms)) items = items.filter((f) => new Date(f.createdAt).getTime() >= ms); }
+    if (options.endDate) { const ms = new Date(options.endDate).getTime(); if (!isNaN(ms)) items = items.filter((f) => new Date(f.createdAt).getTime() <= ms); }
 
-    // Apply Channel Filter
-    if (options.channel) {
-      const ch = options.channel.toLowerCase().trim();
-      items = items.filter((f) => f.channel.toLowerCase() === ch);
-    }
-
-    // Apply Status Filter
-    if (options.status) {
-      items = items.filter((f) => f.status === options.status);
-    }
-
-    // Apply Sentiment Filter
-    if (options.sentiment) {
-      items = items.filter((f) => f.sentiment === options.sentiment);
-    }
-
-    // Apply Theme Filter
-    if (options.themeId) {
-      items = items.filter((f) => f.themeId === options.themeId);
-    }
-
-    // Apply Customer Filter
-    if (options.customer) {
-      const cust = options.customer.toLowerCase().trim();
-      items = items.filter((f) => f.customerLabel.toLowerCase().includes(cust));
-    }
-
-    // Apply Date Range Filter
-    if (options.startDate) {
-      const startMs = new Date(options.startDate).getTime();
-      if (!isNaN(startMs)) {
-        items = items.filter((f) => new Date(f.createdAt).getTime() >= startMs);
-      }
-    }
-    if (options.endDate) {
-      const endMs = new Date(options.endDate).getTime();
-      if (!isNaN(endMs)) {
-        items = items.filter((f) => new Date(f.createdAt).getTime() <= endMs);
-      }
-    }
-
-    // Apply Sorting
     const sortBy = options.sortBy || "newest";
     const sortOrder = options.sortOrder || "desc";
-
     items.sort((a, b) => {
-      let comparison = 0;
-      if (sortBy === "newest" || sortBy === "createdAt") {
-        comparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      } else if (sortBy === "oldest") {
-        comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      } else if (sortBy === "sentiment") {
-        const rank = { POSITIVE: 3, NEUTRAL: 2, NEGATIVE: 1 };
-        comparison = rank[b.sentiment] - rank[a.sentiment];
-      } else if (sortBy === "channel") {
-        comparison = a.channel.localeCompare(b.channel);
-      } else if (sortBy === "status") {
-        comparison = a.status.localeCompare(b.status);
-      } else if (sortBy === "customer") {
-        comparison = a.customerLabel.localeCompare(b.customerLabel);
-      } else {
-        comparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-      return sortOrder === "asc" ? -comparison : comparison;
+      let cmp = 0;
+      if (sortBy === "oldest") cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      else if (sortBy === "sentiment") { const r = { POSITIVE: 3, NEUTRAL: 2, NEGATIVE: 1 }; cmp = r[b.sentiment] - r[a.sentiment]; }
+      else if (sortBy === "channel") cmp = a.channel.localeCompare(b.channel);
+      else if (sortBy === "status") cmp = a.status.localeCompare(b.status);
+      else if (sortBy === "customer") cmp = a.customerLabel.localeCompare(b.customerLabel);
+      else cmp = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return sortOrder === "asc" ? -cmp : cmp;
     });
 
-    const page = options.page || 1;
-    const limit = options.limit || 10;
-    const { skip, take, meta } = calculatePagination({ page, limit, totalItems: items.length });
-    const paginatedItems = items.slice(skip, skip + take);
-
-    return {
-      items: paginatedItems,
-      pagination: meta,
-    };
+    const { skip: s, take, meta } = calculatePagination({ page, limit, totalItems: items.length });
+    return { items: items.slice(s, s + take), pagination: meta };
   }
 
   public async getFeedbackById(id: string, workspaceId: string): Promise<IFeedback> {
@@ -538,6 +563,7 @@ export class FeedbackService implements IFeedbackService {
   }
 }
 
+
 export class CsvImportService implements ICsvImportService {
   public readonly serviceName = "CsvImportService";
 
@@ -554,12 +580,39 @@ export class CsvImportService implements ICsvImportService {
     }
 
     const errors: Array<{ row: number; message: string; field?: string }> = [];
-    const importedFeedback: IFeedback[] = [];
+    let importedCount = 0;
+    let positiveCount = 0;
+    let negativeCount = 0;
+    let neutralCount = 0;
 
-    const feedbackService = new FeedbackService();
+    const themes = getWorkspaceThemes(workspaceId);
+
+    // ----------------------------------------------------------------
+    // Use Prisma batched inserts when DB is available (big data path)
+    // Falls back to in-memory for small/demo datasets
+    // ----------------------------------------------------------------
+    const usePrisma = !!prisma;
+    const BATCH_SIZE = 500;
+    const batchRecords: Array<{
+      id: string;
+      workspaceId: string;
+      content: string;
+      customerLabel: string;
+      customerEmail: string | undefined;
+      channel: string;
+      sentiment: string;
+      sentimentScore: number;
+      source: string;
+      themeId: string | undefined;
+      themeName: string | undefined;
+      status: string;
+      isDeleted: boolean;
+    }> = [];
+
+    const themeCounts: Record<string, number> = {};
 
     for (let index = 0; index < rows.length; index++) {
-      const rowIndex = index + 2; // header is line 1
+      const rowIndex = index + 2;
       const validation = validateCsvRow(rows[index], rowIndex);
 
       if (!validation.valid && validation.error) {
@@ -568,33 +621,112 @@ export class CsvImportService implements ICsvImportService {
       }
 
       if (validation.data) {
-        try {
-          const created = await feedbackService.createFeedback(workspaceId, {
-            content: validation.data.content,
-            channel: validation.data.channel,
-            customerLabel: validation.data.customerLabel,
-            source: validation.data.source || "CSV Import",
-            sentiment: validation.data.sentiment as SentimentType | undefined,
-          });
-          importedFeedback.push(created);
-        } catch (err) {
-          errors.push({
-            row: rowIndex,
-            message: err instanceof Error ? err.message : "Failed to import row record.",
-          });
+        const rawSentiment = (validation.data.sentiment || "").toUpperCase();
+        let sentiment: SentimentType = "NEUTRAL";
+        let sentimentScore = 0.0;
+
+        if (rawSentiment === "POSITIVE") { sentiment = "POSITIVE"; sentimentScore = 0.85; positiveCount++; }
+        else if (rawSentiment === "NEGATIVE") { sentiment = "NEGATIVE"; sentimentScore = -0.75; negativeCount++; }
+        else {
+          // Keyword heuristic for unlabelled rows
+          const lower = validation.data.content.toLowerCase();
+          if (lower.match(/great|love|awesome|fantastic|excellent|fast|perfect|good|stunning/)) {
+            sentiment = "POSITIVE"; sentimentScore = 0.85; positiveCount++;
+          } else if (lower.match(/crash|bug|slow|terrible|broken|fail|timeout|unusable|error|issue/)) {
+            sentiment = "NEGATIVE"; sentimentScore = -0.75; negativeCount++;
+          } else {
+            neutralCount++;
+          }
+        }
+
+        // Theme matching
+        const rawTheme = (rows[index]["theme"] || rows[index]["topic"] || "").toLowerCase();
+        let matchedTheme = themes.find((t) => {
+          const tl = t.name.toLowerCase();
+          return rawTheme.includes(tl) || tl.includes(rawTheme.split(" ")[0]);
+        });
+        if (!matchedTheme && themes.length > 0) {
+          // Auto-assign by content keywords
+          const lower = validation.data.content.toLowerCase();
+          if (lower.match(/mobile|ios|android|tablet/)) matchedTheme = themes.find((t) => t.name.toLowerCase().includes("mobile"));
+          else if (lower.match(/bill|price|cost|invoice/)) matchedTheme = themes.find((t) => t.name.toLowerCase().includes("bill") || t.name.toLowerCase().includes("price"));
+          else if (lower.match(/sso|auth|login|password/)) matchedTheme = themes.find((t) => t.name.toLowerCase().includes("auth"));
+          else if (lower.match(/api|webhook|integr/)) matchedTheme = themes.find((t) => t.name.toLowerCase().includes("integr"));
+          if (!matchedTheme) matchedTheme = themes[index % themes.length];
+        }
+
+        if (matchedTheme?.id) themeCounts[matchedTheme.id] = (themeCounts[matchedTheme.id] || 0) + 1;
+
+        const record = {
+          id: `fb_${Date.now()}_${Math.floor(Math.random() * 1_000_000)}`,
+          workspaceId,
+          content: validation.data.content,
+          customerLabel: validation.data.customerLabel,
+          customerEmail: rows[index]["email"] || rows[index]["customeremail"] || undefined,
+          channel: validation.data.channel,
+          sentiment,
+          sentimentScore,
+          source: validation.data.source || "CSV Import",
+          themeId: matchedTheme?.id,
+          themeName: matchedTheme?.name,
+          status: "NEW",
+          isDeleted: false,
+        };
+
+        if (usePrisma) {
+          batchRecords.push(record);
+          // Flush batch every BATCH_SIZE rows
+          if (batchRecords.length >= BATCH_SIZE) {
+            try {
+              await (prisma as any).feedback.createMany({ data: batchRecords, skipDuplicates: true });
+              importedCount += batchRecords.length;
+              batchRecords.length = 0;
+            } catch (err) {
+              logger.error("Prisma batch insert failed", { err });
+              errors.push({ row: rowIndex, message: "Batch insert failed" });
+              batchRecords.length = 0;
+            }
+          }
+        } else {
+          // In-memory fallback (small datasets / demo)
+          const fbItem: IFeedback = {
+            ...record,
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+          };
+          getWorkspaceFeedback(workspaceId).unshift(fbItem);
+          importedCount++;
         }
       }
     }
 
+    // Flush remaining batch
+    if (usePrisma && batchRecords.length > 0) {
+      try {
+        await (prisma as any).feedback.createMany({ data: batchRecords, skipDuplicates: true });
+        importedCount += batchRecords.length;
+      } catch (err) {
+        logger.error("Prisma final batch insert failed", { err });
+        errors.push({ row: rows.length + 1, message: "Final batch insert failed" });
+      }
+    }
+
+    // Update in-memory theme counts
+    Object.entries(themeCounts).forEach(([themeId, count]) => {
+      const theme = themes.find((t) => t.id === themeId);
+      if (theme) theme.feedbackCount += count;
+    });
+
     return {
-      importedCount: importedFeedback.length,
+      importedCount,
       failedCount: errors.length,
       totalProcessed: rows.length,
-      errors,
-      importedFeedback,
+      errors: errors.slice(0, 50), // Cap error list to avoid huge response
+      importedFeedback: [], // Don't return rows on big import — client uses pagination
     };
   }
 }
+
 
 export class ThemeService implements IThemeService {
   public readonly serviceName = "ThemeService";
@@ -824,65 +956,124 @@ export class AnalyticsService implements IAnalyticsService {
 
   public async getDashboardMetrics(workspaceId: string): Promise<IDashboardMetrics> {
     logger.info(`${this.serviceName}: Computing aggregate dashboard analytics`, { workspaceId });
-    const feedbackList = getWorkspaceFeedback(workspaceId).filter((f) => !f.isDeleted);
 
+    // ----------------------------------------------------------------
+    // Prisma path — O(1) aggregation queries, no full-table scan in JS
+    // ----------------------------------------------------------------
+    if (prisma) {
+      try {
+        const baseWhere = { workspaceId, isDeleted: false };
+
+        const [totalFeedback, sentimentGroups, recentDbRows] = await Promise.all([
+          (prisma as any).feedback.count({ where: baseWhere }),
+          (prisma as any).feedback.groupBy({
+            by: ["sentiment"],
+            where: baseWhere,
+            _count: { sentiment: true },
+          }),
+          (prisma as any).feedback.findMany({
+            where: baseWhere,
+            orderBy: { createdAt: "desc" },
+            take: 5,
+          }),
+        ]);
+
+        const sentMap: Record<string, number> = {};
+        for (const g of sentimentGroups) sentMap[g.sentiment] = g._count.sentiment;
+        const positiveCount = sentMap["POSITIVE"] || 0;
+        const negativeCount = sentMap["NEGATIVE"] || 0;
+        const neutralCount = sentMap["NEUTRAL"] || 0;
+
+        const oneWeekAgo = new Date(Date.now() - 7 * 86400000);
+        const newThisWeek = await (prisma as any).feedback.count({
+          where: { ...baseWhere, createdAt: { gte: oneWeekAgo } },
+        });
+
+        const themes = getWorkspaceThemes(workspaceId);
+        const themeCountsDb = await (prisma as any).feedback.groupBy({
+          by: ["themeId", "themeName"],
+          where: { ...baseWhere, themeId: { not: null } },
+          _count: { themeId: true },
+          _avg: { sentimentScore: true },
+        });
+
+        const topThemes = themeCountsDb
+          .map((g: any) => {
+            const theme = themes.find((t) => t.id === g.themeId);
+            return {
+              id: g.themeId,
+              name: g.themeName || theme?.name || "Unknown",
+              count: g._count.themeId,
+              sentimentScore: Number((g._avg?.sentimentScore || 0).toFixed(2)),
+              color: theme?.color || "#6366F1",
+            };
+          })
+          .sort((a: any, b: any) => b.count - a.count)
+          .slice(0, 8);
+
+        const recentFeedback: IFeedback[] = recentDbRows.map((f: any) => ({
+          id: f.id, workspaceId: f.workspaceId, content: f.content,
+          channel: f.channel, status: f.status, customerLabel: f.customerLabel,
+          source: f.source, sentiment: f.sentiment as SentimentType,
+          sentimentScore: f.sentimentScore, themeId: f.themeId, themeName: f.themeName,
+          isDeleted: f.isDeleted,
+          createdAt: f.createdAt.toISOString(), updatedAt: f.updatedAt.toISOString(),
+        }));
+
+        // Volume by day — last 7 days using groupBy date
+        const volumeByDay: Array<{ date: string; count: number }> = [];
+        const sentimentTrend: Array<{ date: string; positive: number; neutral: number; negative: number }> = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(); d.setDate(d.getDate() - i);
+          const dateStr = d.toISOString().split("T")[0];
+          const dayStart = new Date(dateStr + "T00:00:00.000Z");
+          const dayEnd = new Date(dateStr + "T23:59:59.999Z");
+          const dayGroups = await (prisma as any).feedback.groupBy({
+            by: ["sentiment"],
+            where: { ...baseWhere, createdAt: { gte: dayStart, lte: dayEnd } },
+            _count: { sentiment: true },
+          });
+          const dm: Record<string, number> = {};
+          for (const g of dayGroups) dm[g.sentiment] = g._count.sentiment;
+          const dayTotal = (dm["POSITIVE"] || 0) + (dm["NEGATIVE"] || 0) + (dm["NEUTRAL"] || 0);
+          volumeByDay.push({ date: dateStr, count: dayTotal });
+          sentimentTrend.push({ date: dateStr, positive: dm["POSITIVE"] || 0, neutral: dm["NEUTRAL"] || 0, negative: dm["NEGATIVE"] || 0 });
+        }
+
+        return { totalFeedback, positiveCount, neutralCount, negativeCount, newThisWeek, topThemes, recentFeedback, chartData: { volumeByDay, sentimentTrend } };
+      } catch (dbError) {
+        logger.warn(`${this.serviceName}: Prisma aggregation failed, falling back to in-memory`, { dbError });
+        // Fall through to in-memory path
+      }
+    }
+
+    // ----------------------------------------------------------------
+    // In-memory fallback for demo datasets
+    // ----------------------------------------------------------------
+    const feedbackList = getWorkspaceFeedback(workspaceId).filter((f) => !f.isDeleted);
     const totalFeedback = feedbackList.length;
     const positiveCount = feedbackList.filter((f) => f.sentiment === "POSITIVE").length;
     const negativeCount = feedbackList.filter((f) => f.sentiment === "NEGATIVE").length;
     const neutralCount = feedbackList.filter((f) => f.sentiment === "NEUTRAL").length;
-
     const oneWeekAgoMs = Date.now() - 7 * 86400000;
     const newThisWeek = feedbackList.filter((f) => new Date(f.createdAt).getTime() >= oneWeekAgoMs).length;
-
     const themes = getWorkspaceThemes(workspaceId);
     const topThemes = themes.map((t) => {
-      const themeFeedback = feedbackList.filter((f) => f.themeId === t.id);
-      const scoreSum = themeFeedback.reduce((acc, f) => acc + (f.sentimentScore || 0), 0);
-      const avgScore = themeFeedback.length > 0 ? scoreSum / themeFeedback.length : 0;
-      return {
-        id: t.id,
-        name: t.name,
-        count: themeFeedback.length,
-        sentimentScore: Number(avgScore.toFixed(2)),
-        color: t.color,
-      };
+      const tf = feedbackList.filter((f) => f.themeId === t.id);
+      const avg = tf.length > 0 ? tf.reduce((a, f) => a + (f.sentimentScore || 0), 0) / tf.length : 0;
+      return { id: t.id, name: t.name, count: tf.length, sentimentScore: Number(avg.toFixed(2)), color: t.color };
     }).sort((a, b) => b.count - a.count);
-
     const recentFeedback = feedbackList.slice(0, 5);
-
-    // Dynamic Chart Data Generation
-    const days = 7;
     const volumeByDay: Array<{ date: string; count: number }> = [];
     const sentimentTrend: Array<{ date: string; positive: number; neutral: number; negative: number }> = [];
-
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split("T")[0];
-
-      const dayFeedback = feedbackList.filter((f) => f.createdAt.startsWith(dateStr));
-      volumeByDay.push({ date: dateStr, count: dayFeedback.length });
-      sentimentTrend.push({
-        date: dateStr,
-        positive: dayFeedback.filter((f) => f.sentiment === "POSITIVE").length,
-        neutral: dayFeedback.filter((f) => f.sentiment === "NEUTRAL").length,
-        negative: dayFeedback.filter((f) => f.sentiment === "NEGATIVE").length,
-      });
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const ds = d.toISOString().split("T")[0];
+      const df = feedbackList.filter((f) => f.createdAt.startsWith(ds));
+      volumeByDay.push({ date: ds, count: df.length });
+      sentimentTrend.push({ date: ds, positive: df.filter((f) => f.sentiment === "POSITIVE").length, neutral: df.filter((f) => f.sentiment === "NEUTRAL").length, negative: df.filter((f) => f.sentiment === "NEGATIVE").length });
     }
-
-    return {
-      totalFeedback,
-      positiveCount,
-      neutralCount,
-      negativeCount,
-      newThisWeek,
-      topThemes,
-      recentFeedback,
-      chartData: {
-        volumeByDay,
-        sentimentTrend,
-      },
-    };
+    return { totalFeedback, positiveCount, neutralCount, negativeCount, newThisWeek, topThemes, recentFeedback, chartData: { volumeByDay, sentimentTrend } };
   }
 
   public async getAnalyticsBreakdown(workspaceId: string): Promise<IAnalyticsMetrics> {

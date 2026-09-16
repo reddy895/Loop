@@ -392,9 +392,9 @@ export const mockVolumeData = [
 ];
 
 export const mockSentimentPieData = [
-  { name: 'Positive', value: 62, color: '#6D8196' },
-  { name: 'Negative', value: 24, color: '#4A4A4A' },
-  { name: 'Neutral', value: 14, color: '#CBCBCB' }
+  { name: 'Positive', value: 62, color: '#10B981' },
+  { name: 'Negative', value: 24, color: '#EF4444' },
+  { name: 'Neutral', value: 14, color: '#F59E0B' }
 ];
 
 export const mockTopThemesBarData = [

@@ -21,11 +21,11 @@ export const Pagination: React.FC<PaginationProps> = ({
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-3 border-t border-[#4A4A4A]/15 font-sans text-xs text-[#4A4A4A]">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-3 border-t border-neutral-200 font-sans text-xs text-neutral-600">
       <div>
-        Showing <span className="font-semibold font-mono-numbers">{startItem}</span> to{' '}
-        <span className="font-semibold font-mono-numbers">{endItem}</span> of{' '}
-        <span className="font-semibold font-mono-numbers">{totalItems}</span> items
+        Showing <span className="font-semibold font-mono-numbers text-neutral-900">{startItem}</span> to{' '}
+        <span className="font-semibold font-mono-numbers text-neutral-900">{endItem}</span> of{' '}
+        <span className="font-semibold font-mono-numbers text-neutral-900">{totalItems}</span> items
       </div>
 
       <div className="flex items-center gap-2">
@@ -39,7 +39,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           Previous
         </Button>
 
-        <span className="px-3 py-1 bg-[#CBCBCB] rounded font-semibold font-mono-numbers text-[#4A4A4A] border border-[#A0A0A0]">
+        <span className="px-3 py-1 bg-neutral-100 rounded-md font-semibold font-mono-numbers text-neutral-800 border border-neutral-200">
           Page {currentPage} of {totalPages || 1}
         </span>
 

@@ -10,7 +10,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@prisma/client": "^5.10.0",
     "next": "14.1.0",
     "next-auth": "^4.24.6",
     "react": "^18.2.0",
@@ -18,9 +17,11 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@prisma/client": "^5.22.0",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
+    "prisma": "^5.22.0",
     "typescript": "^5.3.3"
   }
 }

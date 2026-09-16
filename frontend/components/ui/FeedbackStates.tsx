@@ -7,7 +7,7 @@ export const LoadingSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => {
   return (
     <div className="w-full space-y-3 p-4 animate-pulse">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-12 bg-[#CBCBCB]/60 rounded-md border border-[#A0A0A0]/20" />
+        <div key={i} className="h-12 bg-neutral-100 rounded-lg border border-neutral-200" />
       ))}
     </div>
   );
@@ -25,14 +25,14 @@ export const EmptyState: React.FC<{
   actionText = 'Clear Filters'
 }) => {
   return (
-    <div className="skeuo-inset p-8 flex flex-col items-center justify-center text-center my-4">
-      <div className="p-3 bg-[#CBCBCB] rounded-full text-[#4A4A4A] border border-[#A0A0A0] shadow-inner mb-3">
+    <div className="p-8 flex flex-col items-center justify-center text-center my-4 bg-neutral-50 rounded-xl border border-neutral-200">
+      <div className="p-3 bg-white rounded-full text-neutral-800 border border-neutral-200 shadow-xs mb-3">
         <Inbox className="w-8 h-8" />
       </div>
-      <h3 className="font-heading text-lg font-bold text-[#4A4A4A]">
+      <h3 className="font-heading text-lg font-bold text-neutral-900">
         {title}
       </h3>
-      <p className="text-xs text-[#4A4A4A]/70 font-sans max-w-sm mt-1 mb-4">
+      <p className="text-xs text-neutral-500 font-sans max-w-sm mt-1 mb-4">
         {description}
       </p>
       {onAction && (
@@ -52,13 +52,13 @@ export const ErrorState: React.FC<{
   onRetry
 }) => {
   return (
-    <div className="skeuo-panel p-6 border-l-4 border-l-red-600 flex items-start gap-4">
-      <AlertTriangle className="w-6 h-6 text-red-600 shrink-0 mt-0.5" />
+    <div className="skeuo-panel p-6 border-l-4 border-l-rose-600 flex items-start gap-4">
+      <AlertTriangle className="w-6 h-6 text-rose-600 shrink-0 mt-0.5" />
       <div className="flex-1">
-        <h4 className="font-heading font-bold text-sm text-[#4A4A4A]">
+        <h4 className="font-heading font-bold text-sm text-neutral-900">
           System Connection Exception
         </h4>
-        <p className="text-xs text-[#4A4A4A]/80 font-sans mt-1">
+        <p className="text-xs text-neutral-600 font-sans mt-1">
           {message}
         </p>
         {onRetry && (
@@ -83,15 +83,15 @@ export const CSVRetrieveCard: React.FC<{ onRetrieveClick: () => void; title?: st
   description = 'Fetch batch customer feedback records from CSV to generate real-time AI sentiment analytics and dashboards.'
 }) => {
   return (
-    <Card variant="panel" className="border-dashed border-2 border-[#6D8196]/40 hover:border-[#6D8196] transition-all">
+    <Card variant="panel" className="border-dashed border-2 border-neutral-300 hover:border-black transition-all bg-white">
       <div className="flex flex-col items-center text-center py-6">
-        <div className="p-3 bg-[#6D8196]/15 rounded-full text-[#6D8196] border border-[#6D8196]/30 mb-3 shadow-inner">
+        <div className="p-3 bg-neutral-100 rounded-full text-neutral-900 border border-neutral-200 mb-3 shadow-xs">
           <FileSpreadsheet className="w-8 h-8" />
         </div>
-        <h3 className="font-heading text-base font-bold text-[#4A4A4A]">
+        <h3 className="font-heading text-base font-bold text-neutral-900">
           {title}
         </h3>
-        <p className="text-xs text-[#4A4A4A]/70 font-sans max-w-md mt-1 mb-4">
+        <p className="text-xs text-neutral-500 font-sans max-w-md mt-1 mb-4">
           {description}
         </p>
         <Button variant="primary" size="sm" icon={<FileSpreadsheet className="w-4 h-4" />} onClick={onRetrieveClick}>

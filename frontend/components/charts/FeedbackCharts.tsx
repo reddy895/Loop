@@ -45,7 +45,7 @@ export const ChartContainer: React.FC<ChartContainerProps> = ({
         {action && <div>{action}</div>}
       </CardHeader>
 
-      <div className="w-full skeuo-inset p-3 bg-[#F4F4D6]/70 rounded-lg overflow-hidden">
+      <div className="w-full p-3 bg-neutral-50/70 border border-neutral-100 rounded-lg overflow-hidden">
         <div style={{ height, width: '100%' }}>
           <ResponsiveContainer width="100%" height="100%">
             {children as React.ReactElement}
@@ -62,28 +62,28 @@ export const FeedbackVolumeChart: React.FC<{ data: any[] }> = ({ data }) => {
     <AreaChart data={data} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
       <defs>
         <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor="#6D8196" stopOpacity={0.8} />
-          <stop offset="95%" stopColor="#6D8196" stopOpacity={0.1} />
+          <stop offset="5%" stopColor="#2563EB" stopOpacity={0.8} />
+          <stop offset="95%" stopColor="#2563EB" stopOpacity={0.05} />
         </linearGradient>
       </defs>
-      <CartesianGrid strokeDasharray="3 3" stroke="#CBCBCB" />
-      <XAxis dataKey="date" stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 12 }} />
-      <YAxis stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 12 }} />
+      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+      <XAxis dataKey="date" stroke="#71717A" tick={{ fill: '#71717A', fontSize: 12 }} />
+      <YAxis stroke="#71717A" tick={{ fill: '#71717A', fontSize: 12 }} />
       <Tooltip
         contentStyle={{
-          backgroundColor: '#FFFFE3',
-          borderColor: '#4A4A4A',
+          backgroundColor: '#FFFFFF',
+          borderColor: '#E5E7EB',
           borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          color: '#4A4A4A',
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+          color: '#09090B',
           fontFamily: 'Inter, sans-serif'
         }}
       />
       <Area
         type="monotone"
         dataKey="volume"
-        stroke="#6D8196"
-        strokeWidth={3}
+        stroke="#2563EB"
+        strokeWidth={2.5}
         fillOpacity={1}
         fill="url(#colorVolume)"
         name="Feedback Volume"
@@ -105,7 +105,7 @@ export const SentimentPieChart: React.FC<{ data: any[] }> = ({ data }) => {
         paddingAngle={4}
         dataKey="value"
         nameKey="name"
-        stroke="#FFFFE3"
+        stroke="#FFFFFF"
         strokeWidth={2}
       >
         {data.map((entry, index) => (
@@ -114,10 +114,11 @@ export const SentimentPieChart: React.FC<{ data: any[] }> = ({ data }) => {
       </Pie>
       <Tooltip
         contentStyle={{
-          backgroundColor: '#FFFFE3',
-          borderColor: '#4A4A4A',
+          backgroundColor: '#FFFFFF',
+          borderColor: '#E5E7EB',
           borderRadius: '8px',
-          color: '#4A4A4A'
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+          color: '#09090B'
         }}
       />
       <Legend verticalAlign="bottom" height={36} iconType="circle" />
@@ -128,19 +129,27 @@ export const SentimentPieChart: React.FC<{ data: any[] }> = ({ data }) => {
 /* 3. Top Themes Bar Chart */
 export const TopThemesBarChart: React.FC<{ data: any[] }> = ({ data }) => {
   return (
-    <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#CBCBCB" />
-      <XAxis type="number" stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 12 }} />
-      <YAxis dataKey="theme" type="category" stroke="#4A4A4A" width={110} tick={{ fill: '#4A4A4A', fontSize: 11 }} />
+    <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 60 }}>
+      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+      <XAxis
+        dataKey="theme"
+        stroke="#71717A"
+        tick={{ fill: '#71717A', fontSize: 11 }}
+        angle={-35}
+        textAnchor="end"
+        interval={0}
+      />
+      <YAxis stroke="#71717A" tick={{ fill: '#71717A', fontSize: 12 }} />
       <Tooltip
         contentStyle={{
-          backgroundColor: '#FFFFE3',
-          borderColor: '#4A4A4A',
+          backgroundColor: '#FFFFFF',
+          borderColor: '#E5E7EB',
           borderRadius: '8px',
-          color: '#4A4A4A'
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+          color: '#09090B'
         }}
       />
-      <Bar dataKey="count" fill="#4A4A4A" radius={[0, 4, 4, 0]} name="Ticket Count" />
+      <Bar dataKey="count" fill="#2563EB" radius={[4, 4, 0, 0]} name="Ticket Count" />
     </BarChart>
   );
 };
@@ -149,22 +158,23 @@ export const TopThemesBarChart: React.FC<{ data: any[] }> = ({ data }) => {
 export const ThemeTrendLineChart: React.FC<{ data: any[] }> = ({ data }) => {
   return (
     <LineChart data={data} margin={{ top: 10, right: 30, left: -10, bottom: 0 }}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#CBCBCB" />
-      <XAxis dataKey="week" stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 12 }} />
-      <YAxis stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 12 }} />
+      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+      <XAxis dataKey="week" stroke="#71717A" tick={{ fill: '#71717A', fontSize: 12 }} />
+      <YAxis stroke="#71717A" tick={{ fill: '#71717A', fontSize: 12 }} />
       <Tooltip
         contentStyle={{
-          backgroundColor: '#FFFFE3',
-          borderColor: '#4A4A4A',
+          backgroundColor: '#FFFFFF',
+          borderColor: '#E5E7EB',
           borderRadius: '8px',
-          color: '#4A4A4A'
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+          color: '#09090B'
         }}
       />
       <Legend verticalAlign="bottom" height={36} />
-      <Line type="monotone" dataKey="UX" stroke="#6D8196" strokeWidth={2.5} dot={{ r: 4 }} />
-      <Line type="monotone" dataKey="Integrations" stroke="#4A4A4A" strokeWidth={2.5} dot={{ r: 4 }} />
-      <Line type="monotone" dataKey="Billing" stroke="#9E6B6B" strokeWidth={2.5} dot={{ r: 4 }} />
-      <Line type="monotone" dataKey="Mobile" stroke="#7A8B7B" strokeWidth={2.5} dot={{ r: 4 }} />
+      <Line type="monotone" dataKey="UX" stroke="#2563EB" strokeWidth={2.5} dot={{ r: 4 }} />
+      <Line type="monotone" dataKey="Integrations" stroke="#7C3AED" strokeWidth={2.5} dot={{ r: 4 }} />
+      <Line type="monotone" dataKey="Billing" stroke="#EF4444" strokeWidth={2.5} dot={{ r: 4 }} />
+      <Line type="monotone" dataKey="Mobile" stroke="#10B981" strokeWidth={2.5} dot={{ r: 4 }} />
     </LineChart>
   );
 };

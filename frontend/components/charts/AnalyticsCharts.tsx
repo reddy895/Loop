@@ -21,22 +21,23 @@ export const ChannelSentimentBarChart: React.FC<{ data: any[] }> = ({ data }) =>
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 15, right: 25, left: -10, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#CBCBCB" />
-        <XAxis dataKey="channel" stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 11 }} />
-        <YAxis stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 11 }} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+        <XAxis dataKey="channel" stroke="#71717A" tick={{ fill: '#71717A', fontSize: 11 }} />
+        <YAxis stroke="#71717A" tick={{ fill: '#71717A', fontSize: 11 }} />
         <Tooltip
           contentStyle={{
-            backgroundColor: '#FFFFE3',
-            borderColor: '#4A4A4A',
+            backgroundColor: '#FFFFFF',
+            borderColor: '#E5E7EB',
             borderRadius: '8px',
-            color: '#4A4A4A',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+            color: '#09090B',
             fontFamily: 'Inter, sans-serif'
           }}
         />
         <Legend verticalAlign="top" height={36} />
-        <Bar dataKey="positive" name="Positive" stackId="a" fill="#6D8196" radius={[0, 0, 0, 0]} />
-        <Bar dataKey="neutral" name="Neutral" stackId="a" fill="#CBCBCB" radius={[0, 0, 0, 0]} />
-        <Bar dataKey="negative" name="Negative" stackId="a" fill="#4A4A4A" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="positive" name="Positive" stackId="a" fill="#10B981" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="neutral" name="Neutral" stackId="a" fill="#F59E0B" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="negative" name="Negative" stackId="a" fill="#EF4444" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -47,20 +48,21 @@ export const SentimentTrendLineChart: React.FC<{ data: any[] }> = ({ data }) => 
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data} margin={{ top: 15, right: 25, left: -10, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#CBCBCB" />
-        <XAxis dataKey="week" stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 11 }} />
-        <YAxis stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 11 }} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+        <XAxis dataKey="week" stroke="#71717A" tick={{ fill: '#71717A', fontSize: 11 }} />
+        <YAxis stroke="#71717A" tick={{ fill: '#71717A', fontSize: 11 }} />
         <Tooltip
           contentStyle={{
-            backgroundColor: '#FFFFE3',
-            borderColor: '#4A4A4A',
+            backgroundColor: '#FFFFFF',
+            borderColor: '#E5E7EB',
             borderRadius: '8px',
-            color: '#4A4A4A'
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+            color: '#09090B'
           }}
         />
         <Legend verticalAlign="top" height={36} />
-        <Line type="monotone" dataKey="positivePct" name="% Positive Share" stroke="#6D8196" strokeWidth={3} dot={{ r: 5 }} />
-        <Line type="monotone" dataKey="negativePct" name="% Negative Share" stroke="#4A4A4A" strokeWidth={3} dot={{ r: 5 }} />
+        <Line type="monotone" dataKey="positivePct" name="% Positive Share" stroke="#10B981" strokeWidth={3} dot={{ r: 5 }} />
+        <Line type="monotone" dataKey="negativePct" name="% Negative Share" stroke="#EF4444" strokeWidth={3} dot={{ r: 5 }} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -71,20 +73,21 @@ export const ThemeComparisonBarChart: React.FC<{ data: any[] }> = ({ data }) => 
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 15, right: 25, left: -10, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#CBCBCB" />
-        <XAxis dataKey="theme" stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 10 }} />
-        <YAxis stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 11 }} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+        <XAxis dataKey="theme" stroke="#71717A" tick={{ fill: '#71717A', fontSize: 10 }} />
+        <YAxis stroke="#71717A" tick={{ fill: '#71717A', fontSize: 11 }} />
         <Tooltip
           contentStyle={{
-            backgroundColor: '#FFFFE3',
-            borderColor: '#4A4A4A',
+            backgroundColor: '#FFFFFF',
+            borderColor: '#E5E7EB',
             borderRadius: '8px',
-            color: '#4A4A4A'
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+            color: '#09090B'
           }}
         />
         <Legend verticalAlign="top" height={36} />
-        <Bar dataKey="currentMonth" name="August (Current)" fill="#6D8196" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="prevMonth" name="July (Previous)" fill="#CBCBCB" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="currentMonth" name="August (Current)" fill="#2563EB" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="prevMonth" name="July (Previous)" fill="#94A3B8" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -95,19 +98,20 @@ export const SentimentDistributionChart: React.FC<{ data: any[] }> = ({ data }) 
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart data={data} margin={{ top: 15, right: 25, left: -10, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#CBCBCB" />
-        <XAxis dataKey="range" stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 11 }} />
-        <YAxis stroke="#4A4A4A" tick={{ fill: '#4A4A4A', fontSize: 11 }} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+        <XAxis dataKey="range" stroke="#71717A" tick={{ fill: '#71717A', fontSize: 11 }} />
+        <YAxis stroke="#71717A" tick={{ fill: '#71717A', fontSize: 11 }} />
         <Tooltip
           contentStyle={{
-            backgroundColor: '#FFFFE3',
-            borderColor: '#4A4A4A',
+            backgroundColor: '#FFFFFF',
+            borderColor: '#E5E7EB',
             borderRadius: '8px',
-            color: '#4A4A4A'
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+            color: '#09090B'
           }}
         />
-        <Area type="monotone" dataKey="count" name="Feedback Volume" fill="#6D8196" fillOpacity={0.25} stroke="#6D8196" strokeWidth={2} />
-        <Bar dataKey="count" name="Ticket Count" fill="#4A4A4A" radius={[4, 4, 0, 0]} barSize={24} />
+        <Area type="monotone" dataKey="count" name="Feedback Volume" fill="#3B82F6" fillOpacity={0.2} stroke="#3B82F6" strokeWidth={2} />
+        <Bar dataKey="count" name="Ticket Count" fill="#18181B" radius={[4, 4, 0, 0]} barSize={24} />
       </ComposedChart>
     </ResponsiveContainer>
   );

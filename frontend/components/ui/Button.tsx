@@ -20,15 +20,15 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'inline-flex items-center justify-center font-medium font-sans cursor-pointer focus:outline-none transition-all duration-150 select-none';
 
   const variantStyles = {
-    primary: 'skeuo-button-primary',
-    secondary: 'skeuo-button-secondary',
-    outline: 'bg-[#FFFFE3] text-[#4A4A4A] border border-[#CBCBCB] hover:bg-[#F4F4D6] shadow-sm active:translate-y-[1px]',
-    danger: 'bg-[#8C3A3A] text-[#FFFFE3] border border-[#AA4F4F] shadow-sm hover:bg-[#732F2F] active:translate-y-[1px]'
+    primary: 'bg-black text-white hover:bg-neutral-800 border border-black shadow-xs active:scale-[0.98]',
+    secondary: 'bg-white text-neutral-900 border border-neutral-200 hover:bg-neutral-100 shadow-xs active:scale-[0.98]',
+    outline: 'bg-transparent text-neutral-900 border border-neutral-300 hover:bg-neutral-100 active:scale-[0.98]',
+    danger: 'bg-neutral-900 text-white border border-neutral-800 hover:bg-red-700 active:scale-[0.98]'
   };
 
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-xs rounded-md gap-1.5',
-    md: 'px-4 py-2 text-sm rounded-md gap-2',
+    sm: 'px-3 py-1.5 text-xs rounded-lg gap-1.5',
+    md: 'px-4 py-2 text-sm rounded-lg gap-2',
     lg: 'px-5 py-2.5 text-base rounded-lg gap-2.5'
   };
 

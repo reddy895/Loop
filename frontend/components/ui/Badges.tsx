@@ -13,12 +13,12 @@ export const SentimentBadge: React.FC<{ sentiment: SentimentType; className?: st
   };
 
   return (
-    <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold select-none', styles[sentiment], className)}>
+    <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold select-none', styles[sentiment], className)}>
       <span className={cn(
         'w-1.5 h-1.5 rounded-full mr-1.5',
-        sentiment === 'Positive' && 'bg-green-600',
-        sentiment === 'Negative' && 'bg-red-600',
-        sentiment === 'Neutral' && 'bg-gray-600'
+        sentiment === 'Positive' && 'bg-emerald-600',
+        sentiment === 'Negative' && 'bg-rose-600',
+        sentiment === 'Neutral' && 'bg-amber-500'
       )} />
       {sentiment}
     </span>
@@ -30,14 +30,14 @@ export const StatusBadge: React.FC<{ status: FeedbackStatus; className?: string 
   className
 }) => {
   const styles = {
-    New: 'bg-[#6D8196] text-[#FFFFE3] border border-[#7E93A9] shadow-xs',
-    'Under Review': 'bg-[#D9A357] text-[#3D2908] border border-[#E8B872] shadow-xs',
-    Processed: 'bg-[#537D56] text-[#FFFFE3] border border-[#6B996E] shadow-xs',
-    Archived: 'bg-[#7A7A7A] text-[#FFFFE3] border border-[#8C8C8C] shadow-xs'
+    New: 'bg-black text-white border border-black',
+    'Under Review': 'bg-neutral-100 text-neutral-800 border border-neutral-300',
+    Processed: 'bg-neutral-200 text-neutral-900 border border-neutral-300',
+    Archived: 'bg-neutral-50 text-neutral-500 border border-neutral-200'
   };
 
   return (
-    <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider', styles[status], className)}>
+    <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider', styles[status], className)}>
       {status}
     </span>
   );
@@ -48,7 +48,7 @@ export const ThemeBadge: React.FC<{ theme: FeedbackTheme; className?: string }> 
   className
 }) => {
   return (
-    <span className={cn('inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium skeuo-badge-accent border border-[#B0C4D6]', className)}>
+    <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-neutral-100 text-neutral-800 border border-neutral-200', className)}>
       {theme}
     </span>
   );
