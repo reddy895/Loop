@@ -62,7 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       title: 'Workspace',
       items: [
-        { label: 'Overview', href: '/', icon: LayoutDashboard, exact: true },
+        { label: 'Overview', href: '/dashboard', icon: LayoutDashboard, exact: true },
         {
           label: 'Feedback',
           href: '/inbox',
@@ -104,8 +104,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const isLinkActive = (item: NavItem) => {
-    if (item.href === '/') {
-      return pathname === '/';
+    if (item.href === '/dashboard') {
+      return pathname === '/dashboard';
     }
     if (item.href === '/workspace?tab=members') {
       return pathname === '/workspace' && typeof window !== 'undefined' && window.location.search.includes('tab=members');
@@ -213,7 +213,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         >
           <Link
-            href="/"
+            href="/dashboard"
             onClick={onMobileClose}
             className="flex items-center gap-3 group select-none overflow-hidden"
           >

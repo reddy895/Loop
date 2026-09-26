@@ -14,7 +14,7 @@ export default function WorkspaceCreationPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/');
+    router.push('/dashboard');
   };
 
   return (

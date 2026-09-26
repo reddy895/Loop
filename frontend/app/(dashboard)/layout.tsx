@@ -1,20 +1,35 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Navbar } from '@/components/layout/Navbar';
 import { FeedbackProvider } from '@/context/FeedbackContext';
 import { RetrieveCSVModal } from '@/components/ui/RetrieveCSVModal';
 import { CommandPalette } from '@/components/ui/CommandPalette';
+import { useAuth } from '@/context/AuthContext';
+import { LoopLogoIcon } from '@/components/ui/LoopLogo';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  // Authentication & Protected Route Enforcement
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      const redirectUrl = pathname ? `/login?redirect=${encodeURIComponent(pathname)}` : '/login';
+      router.replace(redirectUrl);
+    }
+  }, [isLoading, isAuthenticated, router, pathname]);
 
   // Restore sidebar collapsed preference
   useEffect(() => {
@@ -52,6 +67,33 @@ export default function DashboardLayout({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Premium loading state while validating session
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center font-sans space-y-4">
+        <div className="p-3.5 rounded-2xl bg-neutral-900 text-white shadow-xl animate-pulse">
+          <LoopLogoIcon size={32} variant="light" />
+        </div>
+        <div className="space-y-1 text-center">
+          <span className="text-[10px] uppercase font-mono-numbers tracking-widest font-bold text-neutral-400">
+            SESSION VALIDATION
+          </span>
+          <h2 className="font-heading text-sm font-bold text-neutral-900">
+            Preparing your workspace...
+          </h2>
+        </div>
+        <div className="w-48 h-1 bg-neutral-100 rounded-full overflow-hidden">
+          <div className="w-1/2 h-full bg-neutral-900 rounded-full animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  // Prevent flash of private content if unauthenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <FeedbackProvider>

@@ -43,9 +43,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const API_BASE = 'http://localhost:3001/api';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile | null>(DEFAULT_USER);
-  const [token, setToken] = useState<string | null>('loop_session_default_token');
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -61,16 +61,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(JSON.parse(storedUser));
         setIsAuthenticated(true);
       } else {
-        // Initialize default user session for seamless development preview
-        localStorage.setItem('loop_auth_token', 'loop_session_default_token');
-        localStorage.setItem('loop_auth_user', JSON.stringify(DEFAULT_USER));
-        setUser(DEFAULT_USER);
-        setToken('loop_session_default_token');
-        setIsAuthenticated(true);
+        setToken(null);
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } catch {
-      setUser(DEFAULT_USER);
-      setIsAuthenticated(true);
+      setUser(null);
+      setToken(null);
+      setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }

@@ -26,6 +26,7 @@ import {
   UserRole,
   MemberStatus,
   SentimentType,
+  FeedbackStatus,
   ISearchQuery,
   IPaginationQuery,
 } from "@/types";
@@ -669,7 +670,7 @@ export class CsvImportService implements ICsvImportService {
           source: validation.data.source || "CSV Import",
           themeId: matchedTheme?.id,
           themeName: matchedTheme?.name,
-          status: "NEW",
+          status: "NEW" as FeedbackStatus,
           isDeleted: false,
         };
 

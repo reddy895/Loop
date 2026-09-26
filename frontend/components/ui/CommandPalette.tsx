@@ -62,7 +62,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       subtitle: 'Executive KPIs, sentiment snapshot, and volume trajectory',
       icon: LayoutDashboard,
       action: () => {
-        router.push('/');
+        router.push('/dashboard');
         onClose();
       }
     },

@@ -44,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Compute context-aware page title & category
   const getPageInfo = () => {
-    if (pathname === '/') return { title: 'Overview', category: 'Workspace' };
+    if (pathname === '/dashboard' || pathname === '/') return { title: 'Overview', category: 'Workspace' };
     if (pathname.startsWith('/inbox')) return { title: 'Feedback Inbox', category: 'Intelligence' };
     if (pathname.startsWith('/themes')) return { title: 'Themes & Clustering', category: 'AI Intelligence' };
     if (pathname.startsWith('/analytics')) return { title: 'Analytics', category: 'Reporting' };
