@@ -1,15 +1,32 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
-import { SentimentBadge, StatusBadge, ThemeBadge } from '@/components/ui/Badges';
+import { SentimentBadge, ThemeBadge } from '@/components/ui/Badges';
 import { Button } from '@/components/ui/Button';
 import { ChartContainer, ThemeTrendLineChart } from '@/components/charts/FeedbackCharts';
 import { useFeedbackContext } from '@/context/FeedbackContext';
 import { mockThemeTrendLineData, mockThemeSummaries as defaultSummaries } from '@/lib/mockData';
 import { FeedbackTheme, ThemeSummary } from '@/types';
-import { Quote, ArrowRight, FileSpreadsheet, DownloadCloud, Inbox } from 'lucide-react';
+import {
+  Quote,
+  ArrowRight,
+  FileSpreadsheet,
+  DownloadCloud,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  MessageSquare,
+  AlertTriangle,
+  Lightbulb,
+  ExternalLink,
+  Search,
+  Filter
+} from 'lucide-react';
 
 const zeroThemeTrendLineData = [
   { week: 'Wk 1', UX: 0, Integrations: 0, Billing: 0, Mobile: 0 },
@@ -18,41 +35,113 @@ const zeroThemeTrendLineData = [
   { week: 'Wk 4', UX: 0, Integrations: 0, Billing: 0, Mobile: 0 }
 ];
 
-export default function ThemeDetailsPage() {
+export default function ThemeClusteringPage() {
   const { isRetrieved, feedbackList, themeSummaries, openRetrieveModal } = useFeedbackContext();
-  const [selectedTheme, setSelectedTheme] = useState<FeedbackTheme>('UX Performance');
+  const [expandedThemeIds, setExpandedThemeIds] = useState<Record<string, boolean>>({
+    'theme-1': true // First theme expanded by default
+  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [trendFilter, setTrendFilter] = useState<'all' | 'up' | 'down' | 'stable'>('all');
 
-  const summariesToUse = isRetrieved && themeSummaries.length > 0 ? themeSummaries : defaultSummaries.map(s => ({
-    ...s,
-    count: 0,
-    sentimentBreakdown: { positive: 0, negative: 0, neutral: 0 },
-    topQuotes: []
-  }));
+  const summariesToUse: ThemeSummary[] = isRetrieved && themeSummaries.length > 0
+    ? themeSummaries
+    : defaultSummaries.map((s) => ({
+        ...s,
+        count: 0,
+        sentimentBreakdown: { positive: 0, negative: 0, neutral: 0 },
+        topQuotes: []
+      }));
 
-  const activeThemeSummary = summariesToUse.find((t) => t.name === selectedTheme) || summariesToUse[0];
-  const associatedFeedback = isRetrieved ? feedbackList.filter((item) => item.theme === selectedTheme) : [];
+  const toggleExpand = (id: string) => {
+    setExpandedThemeIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const expandAll = () => {
+    const allExpanded: Record<string, boolean> = {};
+    summariesToUse.forEach((s) => (allExpanded[s.id] = true));
+    setExpandedThemeIds(allExpanded);
+  };
+
+  const collapseAll = () => {
+    setExpandedThemeIds({});
+  };
+
+  const filteredThemes = summariesToUse.filter((thm) => {
+    const matchesSearch =
+      searchQuery === '' ||
+      thm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      thm.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    let matchesTrend = true;
+    if (trendFilter === 'up') matchesTrend = thm.trendChange.includes('+');
+    else if (trendFilter === 'down') matchesTrend = thm.trendChange.includes('-');
+    else if (trendFilter === 'stable') matchesTrend = thm.trendChange.toLowerCase().includes('stable') || thm.trendChange.includes('0%');
+
+    return matchesSearch && matchesTrend;
+  });
+
   const trendData = isRetrieved ? mockThemeTrendLineData : zeroThemeTrendLineData;
 
+  // AI Root Cause Explanation generator for themes
+  const getAiRootCause = (themeName: string) => {
+    switch (themeName) {
+      case 'UX Performance':
+        return 'Vector clustering detected heavy concentration around bulk CSV downloads exceeding 5,000 items and client-side table rendering bottlenecks. Primary root cause is memory allocation in pagination components.';
+      case 'Billing & Pricing':
+        return 'Enterprise renewals highlight a perceived opacity during invoice audits and request for custom executive spend breakdown widgets.';
+      case 'Integration Request':
+        return 'Strong demand for bi-directional Jira Cloud sync and Salesforce CRM customer telemetry connectors to eliminate manual data entry.';
+      case 'Mobile Responsiveness':
+        return 'Mobile viewport users report navigation menu lag and filtering sheet overflow on older iPad and iOS 18 viewports.';
+      case 'Security & Auth':
+        return 'Enterprise InfoSec teams request SAML 2.0 SCIM automated role de-provisioning and IP allowlisting.';
+      default:
+        return 'AI semantic clustering detected consistent terminology patterns across incoming customer tickets.';
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="loop-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 font-sans">
+      {/* Header Banner */}
+      <div className="loop-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest bg-neutral-900 text-white font-mono-numbers">
+              AI Semantic Clustering
+            </span>
+            <span className="text-xs font-mono-numbers text-neutral-500">
+              {summariesToUse.length} Theme Clusters Identified
+            </span>
+          </div>
           <h1 className="font-heading text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
             Themes & Topic Clustering
           </h1>
           <p className="text-xs sm:text-sm text-neutral-600 font-sans mt-1">
-            Explore AI-extracted theme clusters, feedback volume distribution, and associated quotes.
+            Explore AI-extracted theme clusters, sentiment distributions, customer quotes, and strategic recommendations.
           </p>
         </div>
 
-        {!isRetrieved && (
-          <Button variant="primary" size="sm" icon={<FileSpreadsheet className="w-4 h-4" />} onClick={openRetrieveModal}>
-            Retrieve CSV
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {!isRetrieved && (
+            <Button variant="primary" size="sm" icon={<FileSpreadsheet className="w-4 h-4" />} onClick={openRetrieveModal}>
+              Retrieve CSV
+            </Button>
+          )}
+
+          {isRetrieved && (
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="sm" onClick={expandAll}>
+                Expand All
+              </Button>
+              <Button variant="secondary" size="sm" onClick={collapseAll}>
+                Collapse All
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* 0 State Alert */}
       {!isRetrieved && (
         <div className="loop-card bg-neutral-50 p-4 border-l-4 border-l-black flex items-center justify-between gap-3 font-sans animate-in fade-in">
           <div className="flex items-center gap-3">
@@ -68,157 +157,210 @@ export default function ThemeDetailsPage() {
         </div>
       )}
 
-      {/* Theme Cards Grid Selection */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-        {summariesToUse.map((thm) => {
-          const isSelected = thm.name === selectedTheme;
+      {/* Filter and Search Bar */}
+      <div className="loop-card p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search theme clusters or descriptions..."
+            className="w-full pl-9 pr-3 py-2 rounded-xl border border-neutral-300 text-xs text-neutral-900 focus:outline-hidden focus:border-neutral-900"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-neutral-500">Trend:</span>
+          {(['all', 'up', 'down', 'stable'] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTrendFilter(t)}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg capitalize transition-colors cursor-pointer ${
+                trendFilter === t
+                  ? 'bg-neutral-900 text-white'
+                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Expandable Theme Intelligence Cards List */}
+      <div className="space-y-4">
+        {filteredThemes.map((thm) => {
+          const isExpanded = !!expandedThemeIds[thm.id];
+          const totalBreakdown =
+            (thm.sentimentBreakdown.positive || 0) +
+            (thm.sentimentBreakdown.negative || 0) +
+            (thm.sentimentBreakdown.neutral || 0) || 1;
+
+          const posPct = Math.round(((thm.sentimentBreakdown.positive || 0) / totalBreakdown) * 100);
+          const negPct = Math.round(((thm.sentimentBreakdown.negative || 0) / totalBreakdown) * 100);
+          const neuPct = Math.round(((thm.sentimentBreakdown.neutral || 0) / totalBreakdown) * 100);
+
+          const associatedQuotes = isRetrieved
+            ? feedbackList.filter((fb) => fb.theme === thm.name).slice(0, 3)
+            : [];
+
           return (
             <div
               key={thm.id}
-              onClick={() => setSelectedTheme(thm.name)}
-              className={`cursor-pointer transition-all duration-150 rounded-xl p-4 select-none ${
-                isSelected
-                  ? 'bg-neutral-900 text-white border border-neutral-900 shadow-md scale-[1.02]'
-                  : 'bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-2xs text-neutral-900'
-              }`}
+              className="loop-card transition-all duration-200 overflow-hidden border border-neutral-200 hover:border-neutral-300"
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-neutral-900'}`}>
-                  {thm.name}
-                </span>
-                <span className={`text-[10px] font-mono-numbers px-1.5 py-0.5 rounded font-bold ${
-                  isSelected ? 'bg-neutral-800 text-neutral-100 border border-neutral-700' : 'bg-neutral-100 text-neutral-900 border border-neutral-200'
-                }`}>
-                  {thm.count}
-                </span>
+              {/* Theme Card Header Bar (Clickable) */}
+              <div
+                onClick={() => toggleExpand(thm.id)}
+                className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 cursor-pointer bg-white hover:bg-neutral-50/50 transition-colors select-none"
+              >
+                <div className="flex items-start sm:items-center gap-3 min-w-0">
+                  <div className="p-2 rounded-xl bg-neutral-100 border border-neutral-200 text-neutral-900 shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-heading text-base font-bold text-neutral-900">
+                        {thm.name}
+                      </h3>
+                      <span className="px-2 py-0.5 rounded font-mono-numbers text-[10px] font-bold bg-neutral-900 text-white">
+                        {thm.count} items
+                      </span>
+                      <span className="px-2 py-0.5 rounded font-mono-numbers text-[10px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200 flex items-center gap-1">
+                        {thm.trendChange.includes('+') ? (
+                          <TrendingUp className="w-3 h-3 text-neutral-900" />
+                        ) : thm.trendChange.includes('-') ? (
+                          <TrendingDown className="w-3 h-3 text-neutral-900" />
+                        ) : (
+                          <Minus className="w-3 h-3 text-neutral-500" />
+                        )}
+                        {isRetrieved ? thm.trendChange : '0% baseline'}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-neutral-600 font-sans mt-0.5 line-clamp-1">
+                      {thm.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Sentiment Distribution Visual Bar & Expand Toggle */}
+                <div className="flex items-center gap-4 shrink-0">
+                  {/* Controlled Analytics Color Bar */}
+                  <div className="w-40 sm:w-52 space-y-1">
+                    <div className="flex items-center justify-between text-[10px] font-mono-numbers text-neutral-500 font-bold">
+                      <span>{posPct}% Pos</span>
+                      <span>{negPct}% Neg</span>
+                      <span>{neuPct}% Neu</span>
+                    </div>
+
+                    <div className="w-full bg-neutral-200 h-2 rounded-full overflow-hidden flex">
+                      <div style={{ width: `${posPct}%` }} className="bg-[#10B981] h-full" title={`Positive: ${posPct}%`} />
+                      <div style={{ width: `${neuPct}%` }} className="bg-[#F59E0B] h-full" title={`Neutral: ${neuPct}%`} />
+                      <div style={{ width: `${negPct}%` }} className="bg-[#EF4444] h-full" title={`Negative: ${negPct}%`} />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpand(thm.id);
+                    }}
+                    className="p-1.5 rounded-lg border border-neutral-200 hover:bg-neutral-100 text-neutral-600 transition-colors"
+                    aria-label="Toggle theme details"
+                  >
+                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-              <p className={`text-[11px] line-clamp-2 mb-3 ${isSelected ? 'text-neutral-300' : 'text-neutral-500'}`}>
-                {thm.description}
-              </p>
-              <div className={`flex items-center justify-between text-[10px] font-mono-numbers ${isSelected ? 'text-neutral-300' : 'text-neutral-600'}`}>
-                <span>{isRetrieved ? thm.trendChange : '0% trend'}</span>
-                <ArrowRight className={`w-3 h-3 transition-transform ${isSelected ? 'translate-x-1' : ''}`} />
-              </div>
+
+              {/* Expandable Intelligence Drawer Section */}
+              {isExpanded && (
+                <div className="p-5 border-t border-neutral-200 bg-neutral-50/40 space-y-5 animate-in fade-in duration-150">
+                  {/* AI Generated Root Cause Explanation */}
+                  <div className="loop-card p-4 bg-white space-y-2 border-l-4 border-l-black">
+                    <div className="flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4 text-neutral-900" />
+                      <h4 className="text-xs font-bold font-heading text-neutral-900 uppercase tracking-wider">
+                        AI Cluster Synthesis & Root Cause
+                      </h4>
+                    </div>
+                    <p className="text-xs text-neutral-700 font-sans leading-relaxed">
+                      {getAiRootCause(thm.name)}
+                    </p>
+                  </div>
+
+                  {/* Customer Voice & Quotes */}
+                  <div className="space-y-2.5">
+                    <h4 className="text-xs font-bold font-heading text-neutral-900 flex items-center gap-2">
+                      <Quote className="w-3.5 h-3.5 text-neutral-700" />
+                      Representative Customer Feedback
+                    </h4>
+
+                    {associatedQuotes.length === 0 ? (
+                      <div className="p-4 bg-white rounded-xl border border-neutral-200 text-center text-xs text-neutral-400">
+                        {isRetrieved ? 'No specific quotes logged under this theme.' : 'Retrieve a CSV dataset to extract customer quotes.'}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {associatedQuotes.map((q) => (
+                          <div
+                            key={q.id}
+                            className="bg-white p-3.5 rounded-xl border border-neutral-200 flex flex-col justify-between space-y-3"
+                          >
+                            <p className="text-xs text-neutral-800 italic leading-relaxed">
+                              &ldquo;{q.feedback}&rdquo;
+                            </p>
+                            <div className="flex items-center justify-between text-[10px] font-mono-numbers pt-2 border-t border-neutral-100">
+                              <span className="font-bold text-neutral-900">{q.customerName}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-neutral-500">{q.channel}</span>
+                                <SentimentBadge sentiment={q.sentiment} />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <span className="text-[11px] font-mono-numbers text-neutral-500">
+                      Cluster vector distance: 0.18 • High semantic coherence
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <Link href={`/inbox?theme=${encodeURIComponent(thm.name)}`}>
+                        <Button variant="secondary" size="sm" icon={<ExternalLink className="w-3.5 h-3.5" />}>
+                          View in Inbox
+                        </Button>
+                      </Link>
+
+                      <Link href={`/ask-loop?query=${encodeURIComponent(`What is customer feedback regarding ${thm.name}?`)}`}>
+                        <Button variant="primary" size="sm" icon={<Sparkles className="w-3.5 h-3.5" />}>
+                          Ask LOOP About This Theme
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Selected Theme Details Header & Trend Graph */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <ChartContainer
-            title={`Trend Velocity: ${activeThemeSummary.name}`}
-            description={isRetrieved ? "Historical theme comment volume breakdown across weekly cohorts" : "Theme comment volume (0 baseline)"}
-            height={280}
-          >
-            <ThemeTrendLineChart data={trendData} />
-          </ChartContainer>
-        </div>
-
-        {/* Selected Theme Summary Card */}
-        <div>
-          <Card variant="panel" className="h-full flex flex-col justify-between">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>{activeThemeSummary.name}</CardTitle>
-                <ThemeBadge theme={activeThemeSummary.name} />
-              </div>
-              <CardDescription>{activeThemeSummary.description}</CardDescription>
-            </CardHeader>
-
-            <div className="space-y-3 font-sans text-xs my-2">
-              <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 space-y-2">
-                <div className="flex justify-between">
-                  <span className="font-semibold text-neutral-700">Total Tickets Tagged:</span>
-                  <span className="font-mono-numbers font-bold text-neutral-900">{activeThemeSummary.count}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-neutral-700">Positive Ratio:</span>
-                  <span className="font-mono-numbers font-bold text-neutral-900">{activeThemeSummary.sentimentBreakdown.positive}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-neutral-700">Negative Ratio:</span>
-                  <span className="font-mono-numbers font-bold text-neutral-900">{activeThemeSummary.sentimentBreakdown.negative}%</span>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-heading font-bold text-xs text-neutral-900 mb-1.5 flex items-center gap-1.5">
-                  <Quote className="w-3.5 h-3.5 text-neutral-800" />
-                  Extracted Customer Quotes:
-                </h4>
-                {activeThemeSummary.topQuotes.length === 0 ? (
-                  <p className="text-[11px] text-neutral-500 italic">No quotes extracted. Click "Retrieve CSV" to populate.</p>
-                ) : (
-                  <ul className="space-y-1.5">
-                    {activeThemeSummary.topQuotes.map((q, i) => (
-                      <li key={i} className="text-[11px] text-neutral-700 italic border-l-2 border-l-black pl-2 py-0.5">
-                        "{q}"
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      {/* Associated Customer Feedback Table */}
-      <div className="loop-card p-4 sm:p-5 space-y-3">
-        <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
-          <h3 className="font-heading font-bold text-base text-neutral-900">
-            Customer Feedback Tagged as "{selectedTheme}"
-          </h3>
-          <span className="text-xs font-mono-numbers text-neutral-900 font-bold">
-            {associatedFeedback.length} Records
-          </span>
-        </div>
-
-        {!isRetrieved || associatedFeedback.length === 0 ? (
-          <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-8 flex flex-col items-center justify-center text-center my-2 font-sans">
-            <Inbox className="w-8 h-8 text-neutral-400 mb-2" />
-            <h4 className="font-heading text-sm font-bold text-neutral-900">
-              No Theme Records Found
-            </h4>
-            <p className="text-xs text-neutral-500 max-w-sm mt-1 mb-3">
-              Workspace is initialized at 0. Click "Retrieve CSV" to fetch dataset and populate theme records.
-            </p>
-            <Button variant="primary" size="sm" icon={<FileSpreadsheet className="w-4 h-4" />} onClick={openRetrieveModal}>
-              Retrieve CSV Dataset
-            </Button>
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Channel</TableHead>
-                <TableHead>Feedback Snippet</TableHead>
-                <TableHead>Sentiment</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {associatedFeedback.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-semibold text-xs whitespace-nowrap text-neutral-900">{item.customerName}</TableCell>
-                  <TableCell className="font-mono-numbers text-xs whitespace-nowrap text-neutral-700">{item.channel}</TableCell>
-                  <TableCell className="max-w-[320px] text-xs font-sans truncate text-neutral-800">{item.feedback}</TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    <SentimentBadge sentiment={item.sentiment} />
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    <StatusBadge status={item.status} />
-                  </TableCell>
-                  <TableCell className="font-mono-numbers text-xs whitespace-nowrap text-neutral-600">{item.date}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+      {/* Historical Theme Trend Chart */}
+      <div className="pt-2">
+        <ChartContainer
+          title="Theme Volume Trajectory (Weekly)"
+          description={isRetrieved ? "Trajectory of feedback cluster volume over 4 consecutive weekly sprints" : "Weekly theme volume trajectory (0 baseline)"}
+        >
+          <ThemeTrendLineChart data={trendData} />
+        </ChartContainer>
       </div>
     </div>
   );

@@ -6,6 +6,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
   icon?: React.ReactNode;
+  loading?: boolean;
+  isLoading?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -13,10 +15,13 @@ export const Button: React.FC<ButtonProps> = ({
   size = 'md',
   children,
   icon,
+  loading = false,
+  isLoading = false,
   className,
   disabled,
   ...props
 }) => {
+  const isBusy = loading || isLoading;
   const baseStyles = 'inline-flex items-center justify-center font-medium font-sans cursor-pointer focus:outline-none transition-all duration-150 select-none';
 
   const variantStyles = {
@@ -39,13 +44,17 @@ export const Button: React.FC<ButtonProps> = ({
         baseStyles,
         variantStyles[variant],
         sizeStyles[size],
-        disabled && 'opacity-40 cursor-not-allowed pointer-events-none',
+        (disabled || isBusy) && 'opacity-60 cursor-not-allowed pointer-events-none',
         className
       )}
-      disabled={disabled}
+      disabled={disabled || isBusy}
       {...props}
     >
-      {icon && <span className="shrink-0 flex items-center">{icon}</span>}
+      {isBusy ? (
+        <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin shrink-0 mr-1.5" />
+      ) : icon ? (
+        <span className="shrink-0 flex items-center">{icon}</span>
+      ) : null}
       <span>{children}</span>
     </button>
   );

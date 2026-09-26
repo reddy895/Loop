@@ -4,11 +4,11 @@ import React, { useState, useMemo, Suspense, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
 import { SentimentBadge, StatusBadge, ThemeBadge } from '@/components/ui/Badges';
-import { FilterBar } from '@/components/ui/SearchFilterBars';
 import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState, CSVRetrieveCard, LoadingSkeleton } from '@/components/ui/FeedbackStates';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { FeedbackDetailDrawer } from '@/components/ui/FeedbackDetailDrawer';
 import { useFeedbackContext } from '@/context/FeedbackContext';
 import { FeedbackItem, FeedbackStatus, SentimentType, FeedbackTheme, FeedbackChannel } from '@/types';
 import {
@@ -19,12 +19,18 @@ import {
   Sparkles,
   Inbox,
   Database,
-  Loader2
+  Loader2,
+  Search,
+  Filter,
+  ArrowUpDown,
+  SlidersHorizontal,
+  Eye,
+  X
 } from 'lucide-react';
 
 function FeedbackInboxContent() {
   const searchParams = useSearchParams();
-  const { isRetrieved, feedbackList, openRetrieveModal, addFeedbackItem, retrieveCSV, isServerMode } = useFeedbackContext();
+  const { isRetrieved, feedbackList, openRetrieveModal, addFeedbackItem, isServerMode } = useFeedbackContext();
 
   // State filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,11 +38,17 @@ function FeedbackInboxContent() {
   const [sentimentFilter, setSentimentFilter] = useState('');
   const [themeFilter, setThemeFilter] = useState('');
   const [channelFilter, setChannelFilter] = useState('');
+  const [scoreFilter, setScoreFilter] = useState<'all' | 'critical' | 'neutral' | 'positive'>('all');
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'score-desc' | 'score-asc'>('date-desc');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 20;
+  const pageSize = 15;
+
+  // Selected feedback item for detail drawer
+  const [selectedItem, setSelectedItem] = useState<FeedbackItem | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Server-side mode state (for large uploaded CSVs)
-  const [serverData, setServerData] = useState<any[]>([]);
+  const [serverData, setServerData] = useState<FeedbackItem[]>([]);
   const [serverTotal, setServerTotal] = useState(0);
   const [serverTotalPages, setServerTotalPages] = useState(1);
   const [serverLoading, setServerLoading] = useState(false);
@@ -107,31 +119,49 @@ function FeedbackInboxContent() {
     }, 300);
   }, [isServerMode, currentPage, pageSize, searchQuery, statusFilter, sentimentFilter, channelFilter, themeFilter, BACKEND_URL]);
 
-  // Client-side filtering logic
-  const filteredData = useMemo(() => {
+  // Client-side filtering & sorting logic
+  const filteredAndSortedData = useMemo(() => {
     if (isServerMode) return serverData;
-    return feedbackList.filter((item) => {
+
+    let result = feedbackList.filter((item) => {
       const matchesSearch =
         searchQuery === '' ||
         item.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.customerEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.feedback.toLowerCase().includes(searchQuery.toLowerCase());
+        item.feedback.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.id.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesStatus = statusFilter === '' || item.status === statusFilter;
       const matchesSentiment = sentimentFilter === '' || item.sentiment === sentimentFilter;
       const matchesTheme = themeFilter === '' || item.theme === themeFilter;
       const matchesChannel = channelFilter === '' || item.channel === channelFilter;
 
-      return matchesSearch && matchesStatus && matchesSentiment && matchesTheme && matchesChannel;
-    });
-  }, [isServerMode, serverData, feedbackList, searchQuery, statusFilter, sentimentFilter, themeFilter, channelFilter]);
+      let matchesScore = true;
+      if (scoreFilter === 'critical') matchesScore = item.sentimentScore < 35;
+      else if (scoreFilter === 'neutral') matchesScore = item.sentimentScore >= 35 && item.sentimentScore <= 70;
+      else if (scoreFilter === 'positive') matchesScore = item.sentimentScore > 70;
 
-  const totalPages = isServerMode ? serverTotalPages : Math.ceil(filteredData.length / pageSize) || 1;
+      return matchesSearch && matchesStatus && matchesSentiment && matchesTheme && matchesChannel && matchesScore;
+    });
+
+    // Sorting
+    result.sort((a, b) => {
+      if (sortBy === 'date-desc') return new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (sortBy === 'date-asc') return new Date(a.date).getTime() - new Date(b.date).getTime();
+      if (sortBy === 'score-desc') return b.sentimentScore - a.sentimentScore;
+      if (sortBy === 'score-asc') return a.sentimentScore - b.sentimentScore;
+      return 0;
+    });
+
+    return result;
+  }, [isServerMode, serverData, feedbackList, searchQuery, statusFilter, sentimentFilter, themeFilter, channelFilter, scoreFilter, sortBy]);
+
+  const totalPages = isServerMode ? serverTotalPages : Math.ceil(filteredAndSortedData.length / pageSize) || 1;
   const paginatedData = useMemo(() => {
     if (isServerMode) return serverData;
     const start = (currentPage - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [isServerMode, serverData, filteredData, currentPage, pageSize]);
+    return filteredAndSortedData.slice(start, start + pageSize);
+  }, [isServerMode, serverData, filteredAndSortedData, currentPage, pageSize]);
 
   const handleClearFilters = () => {
     setSearchQuery('');
@@ -139,7 +169,14 @@ function FeedbackInboxContent() {
     setSentimentFilter('');
     setThemeFilter('');
     setChannelFilter('');
+    setScoreFilter('all');
+    setSortBy('date-desc');
     setCurrentPage(1);
+  };
+
+  const handleRowClick = (item: FeedbackItem) => {
+    setSelectedItem(item);
+    setIsDrawerOpen(true);
   };
 
   const handleAddManualFeedback = (e: React.FormEvent) => {
@@ -147,13 +184,13 @@ function FeedbackInboxContent() {
     if (!newCustomer || !newFeedback) return;
 
     const newItem: FeedbackItem = {
-      id: `fb_manual_${Date.now()}`,
+      id: `FB-${Math.floor(1000 + Math.random() * 9000)}`,
       customerName: newCustomer,
       customerEmail: newEmail || `${newCustomer.toLowerCase().replace(/\s+/g, '.')}@example.com`,
       channel: newChannel,
       feedback: newFeedback,
       sentiment: newSentiment,
-      sentimentScore: newSentiment === 'Positive' ? 85 : newSentiment === 'Negative' ? 25 : 55,
+      sentimentScore: newSentiment === 'Positive' ? 88 : newSentiment === 'Negative' ? 22 : 54,
       theme: newTheme,
       status: 'New',
       date: new Date().toISOString().split('T')[0],
@@ -162,8 +199,6 @@ function FeedbackInboxContent() {
 
     addFeedbackItem(newItem);
     setIsManualModalOpen(false);
-
-    // Reset form
     setNewCustomer('');
     setNewEmail('');
     setNewFeedback('');
@@ -173,31 +208,41 @@ function FeedbackInboxContent() {
     setIsSimulatingSync(true);
     setTimeout(() => {
       setIsSimulatingSync(false);
-      setImportSuccessMsg('Successfully retrieved & synced 14 new customer tickets from Zendesk & Intercom.');
+      setImportSuccessMsg('Successfully retrieved & synced incoming feedback tickets.');
       setTimeout(() => setImportSuccessMsg(''), 4000);
       setIsImportModalOpen(false);
-    }, 1500);
+    }, 1200);
   };
+
+  const hasActiveFilters = searchQuery || statusFilter || sentimentFilter || themeFilter || channelFilter || scoreFilter !== 'all';
 
   return (
     <div className="space-y-6">
       {/* Top Banner & Header */}
       <div className="loop-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest bg-neutral-900 text-white font-mono-numbers">
+              Intelligence Corpus
+            </span>
+            <span className="text-xs font-mono-numbers text-neutral-500">
+              {filteredAndSortedData.length} records active
+            </span>
+          </div>
           <h1 className="font-heading text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
             Customer Feedback Inbox
           </h1>
           <p className="text-xs sm:text-sm text-neutral-600 font-sans mt-1">
-            Enterprise feedback stream aggregated with automated sentiment & theme classification.
+            Enterprise feedback stream with automated sentiment scoring, theme clustering, and deep-dive triage.
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Button
             variant="secondary"
             size="sm"
-            icon={<RefreshCw className="w-4 h-4" />}
+            icon={<RefreshCw className="w-3.5 h-3.5" />}
             onClick={() => setIsImportModalOpen(true)}
           >
             Sync Channels
@@ -215,7 +260,7 @@ function FeedbackInboxContent() {
           <Button
             variant="secondary"
             size="sm"
-            icon={<Plus className="w-4 h-4" />}
+            icon={<Plus className="w-3.5 h-3.5" />}
             onClick={() => setIsManualModalOpen(true)}
           >
             Manual Entry
@@ -223,7 +268,7 @@ function FeedbackInboxContent() {
         </div>
       </div>
 
-      {/* Success Banner */}
+      {/* Success Notification Banner */}
       {importSuccessMsg && (
         <div className="loop-card bg-neutral-50 p-4 border-l-4 border-l-black flex items-center gap-3 animate-in fade-in">
           <CheckCircle2 className="w-5 h-5 text-neutral-900 shrink-0" />
@@ -232,21 +277,6 @@ function FeedbackInboxContent() {
           </span>
         </div>
       )}
-
-      {/* Filter Bar */}
-      <FilterBar
-        searchQuery={searchQuery}
-        onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
-        statusFilter={statusFilter}
-        onStatusChange={(s) => { setStatusFilter(s); setCurrentPage(1); }}
-        sentimentFilter={sentimentFilter}
-        onSentimentChange={(s) => { setSentimentFilter(s); setCurrentPage(1); }}
-        themeFilter={themeFilter}
-        onThemeChange={(t) => { setThemeFilter(t); setCurrentPage(1); }}
-        channelFilter={channelFilter}
-        onChannelChange={(c) => { setChannelFilter(c); setCurrentPage(1); }}
-        onClearFilters={handleClearFilters}
-      />
 
       {/* Server Mode Banner */}
       {isServerMode && (
@@ -266,6 +296,107 @@ function FeedbackInboxContent() {
         </div>
       )}
 
+      {/* Advanced Filter & Search Toolbar */}
+      <div className="loop-card p-4 space-y-3 font-sans">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              placeholder="Search feedback text, customer, email, or ticket ID..."
+              className="w-full pl-9 pr-8 py-2 rounded-xl border border-neutral-300 bg-white text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-hidden focus:border-neutral-900 transition-colors"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 p-0.5"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Quick Filter Dropdowns */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Sentiment */}
+            <select
+              value={sentimentFilter}
+              onChange={(e) => { setSentimentFilter(e.target.value); setCurrentPage(1); }}
+              className="px-2.5 py-2 rounded-xl border border-neutral-300 bg-white text-xs font-medium text-neutral-800 focus:outline-hidden focus:border-neutral-900 cursor-pointer"
+            >
+              <option value="">Sentiment: All</option>
+              <option value="Positive">Positive</option>
+              <option value="Neutral">Neutral</option>
+              <option value="Negative">Negative</option>
+            </select>
+
+            {/* Score Range Filter */}
+            <select
+              value={scoreFilter}
+              onChange={(e) => { setScoreFilter(e.target.value as any); setCurrentPage(1); }}
+              className="px-2.5 py-2 rounded-xl border border-neutral-300 bg-white text-xs font-medium text-neutral-800 focus:outline-hidden focus:border-neutral-900 cursor-pointer"
+            >
+              <option value="all">Score: All (0-100)</option>
+              <option value="critical">Critical (&lt; 35)</option>
+              <option value="neutral">Moderate (35-70)</option>
+              <option value="positive">High Delighter (&gt; 70)</option>
+            </select>
+
+            {/* Theme Cluster */}
+            <select
+              value={themeFilter}
+              onChange={(e) => { setThemeFilter(e.target.value); setCurrentPage(1); }}
+              className="px-2.5 py-2 rounded-xl border border-neutral-300 bg-white text-xs font-medium text-neutral-800 focus:outline-hidden focus:border-neutral-900 cursor-pointer"
+            >
+              <option value="">Theme: All</option>
+              <option value="UX Performance">UX Performance</option>
+              <option value="Billing & Pricing">Billing & Pricing</option>
+              <option value="Integration Request">Integration Request</option>
+              <option value="Mobile Responsiveness">Mobile Responsiveness</option>
+              <option value="Security & Auth">Security & Auth</option>
+            </select>
+
+            {/* Ingestion Channel */}
+            <select
+              value={channelFilter}
+              onChange={(e) => { setChannelFilter(e.target.value); setCurrentPage(1); }}
+              className="px-2.5 py-2 rounded-xl border border-neutral-300 bg-white text-xs font-medium text-neutral-800 focus:outline-hidden focus:border-neutral-900 cursor-pointer"
+            >
+              <option value="">Channel: All</option>
+              <option value="Zendesk">Zendesk</option>
+              <option value="Intercom">Intercom</option>
+              <option value="App Store">App Store</option>
+              <option value="Discourse">Discourse</option>
+              <option value="Email">Email</option>
+            </select>
+
+            {/* Sort Order */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-2.5 py-2 rounded-xl border border-neutral-300 bg-white text-xs font-medium text-neutral-800 focus:outline-hidden focus:border-neutral-900 cursor-pointer"
+            >
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="score-desc">Highest Score</option>
+              <option value="score-asc">Lowest Score</option>
+            </select>
+
+            {hasActiveFilters && (
+              <button
+                onClick={handleClearFilters}
+                className="px-2.5 py-2 text-xs font-bold text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Main Enterprise Table Container */}
       <div className="loop-card p-4 sm:p-5 space-y-4">
         {!isRetrieved || paginatedData.length === 0 ? (
@@ -278,115 +409,157 @@ function FeedbackInboxContent() {
           </div>
         ) : (
           <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Channel</TableHead>
-                  <TableHead>Feedback Content</TableHead>
-                  <TableHead>Sentiment</TableHead>
-                  <TableHead>Theme Cluster</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Features</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedData.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-semibold text-xs whitespace-nowrap">
-                      <div className="text-neutral-900">{item.customerName}</div>
-                      <div className="text-[10px] text-neutral-500 font-mono-numbers">{item.customerEmail}</div>
-                    </TableCell>
-                    <TableCell className="font-mono-numbers text-xs font-medium whitespace-nowrap text-neutral-700">
-                      {item.channel}
-                    </TableCell>
-                    <TableCell className="max-w-[240px] sm:max-w-[320px] text-xs font-sans text-neutral-800">
-                      <p className="line-clamp-2">{item.feedback}</p>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <SentimentBadge sentiment={item.sentiment} />
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <ThemeBadge theme={item.theme} />
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <StatusBadge status={item.status} />
-                    </TableCell>
-                    <TableCell className="font-mono-numbers text-xs whitespace-nowrap text-neutral-600">
-                      {item.date}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <div className="flex flex-wrap gap-1">
-                        {(item.features || []).map((feat: string, i: number) => (
-                          <span key={i} className="px-1.5 py-0.5 text-[10px] font-mono-numbers rounded bg-neutral-100 text-neutral-800 border border-neutral-200">
-                            {feat}
-                          </span>
-                        ))}
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ticket & Customer</TableHead>
+                    <TableHead>Channel</TableHead>
+                    <TableHead>Customer Feedback & AI Summary</TableHead>
+                    <TableHead>Sentiment</TableHead>
+                    <TableHead>Score</TableHead>
+                    <TableHead>Theme Cluster</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedData.map((item) => (
+                    <TableRow
+                      key={item.id}
+                      onClick={() => handleRowClick(item)}
+                      className="cursor-pointer group hover:bg-neutral-50/80 transition-colors"
+                    >
+                      {/* Ticket & Customer */}
+                      <TableCell className="whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono-numbers text-[11px] font-bold text-neutral-950 bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200">
+                            {item.id}
+                          </span>
+                          <div>
+                            <div className="font-bold text-xs text-neutral-900 font-sans">{item.customerName}</div>
+                            <div className="text-[10px] text-neutral-500 font-mono-numbers truncate max-w-[130px]">{item.customerEmail}</div>
+                          </div>
+                        </div>
+                      </TableCell>
 
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={filteredData.length}
-              pageSize={pageSize}
-              onPageChange={setCurrentPage}
-            />
+                      {/* Channel */}
+                      <TableCell className="whitespace-nowrap font-mono-numbers text-xs text-neutral-600">
+                        {item.channel}
+                      </TableCell>
+
+                      {/* Feedback Snippet */}
+                      <TableCell className="max-w-[260px] sm:max-w-[340px] lg:max-w-[420px]">
+                        <p className="text-xs text-neutral-900 font-sans line-clamp-2 leading-relaxed">
+                          &ldquo;{item.feedback}&rdquo;
+                        </p>
+                      </TableCell>
+
+                      {/* Sentiment */}
+                      <TableCell className="whitespace-nowrap">
+                        <SentimentBadge sentiment={item.sentiment} />
+                      </TableCell>
+
+                      {/* Score */}
+                      <TableCell className="whitespace-nowrap font-mono-numbers text-xs font-bold text-neutral-900">
+                        {item.sentimentScore}/100
+                      </TableCell>
+
+                      {/* Theme */}
+                      <TableCell className="whitespace-nowrap">
+                        <ThemeBadge theme={item.theme} />
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell className="whitespace-nowrap">
+                        <StatusBadge status={item.status} />
+                      </TableCell>
+
+                      {/* Date */}
+                      <TableCell className="whitespace-nowrap font-mono-numbers text-[11px] text-neutral-500">
+                        {item.date}
+                      </TableCell>
+
+                      {/* Inspect Action */}
+                      <TableCell className="whitespace-nowrap text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRowClick(item);
+                          }}
+                          className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-neutral-100 hover:bg-neutral-900 hover:text-white text-neutral-800 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>Inspect</span>
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="border-t border-neutral-200 pt-3">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filteredAndSortedData.length}
+                pageSize={pageSize}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            </div>
           </>
         )}
       </div>
 
-      {/* Manual Entry Form */}
+      {/* Slide-Over Feedback Detail Drawer */}
+      <FeedbackDetailDrawer
+        item={selectedItem}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+      />
+
+      {/* Manual Entry Modal */}
       <Modal
         isOpen={isManualModalOpen}
         onClose={() => setIsManualModalOpen(false)}
-        title="Record Customer Feedback"
-        description="Manually insert a single customer feedback item into the workspace stream"
-        footer={
-          <>
-            <Button variant="secondary" size="sm" onClick={() => setIsManualModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" size="sm" onClick={handleAddManualFeedback}>
-              Save Feedback Record
-            </Button>
-          </>
-        }
+        title="Add Customer Feedback Manually"
+        description="Ingest individual customer ticket with instant AI sentiment & theme classification."
       >
-        <form onSubmit={handleAddManualFeedback} className="space-y-3 font-sans">
-          <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1">Customer Name</label>
-            <input
-              type="text"
-              required
-              value={newCustomer}
-              onChange={(e) => setNewCustomer(e.target.value)}
-              placeholder="e.g. Eleanor Vance"
-              className="w-full bg-white text-neutral-900 border border-neutral-300 rounded-lg px-3 py-1.5 text-xs font-sans focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1">Customer Email</label>
-            <input
-              type="email"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              placeholder="eleanor@company.com"
-              className="w-full bg-white text-neutral-900 border border-neutral-300 rounded-lg px-3 py-1.5 text-xs font-sans focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleAddManualFeedback} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1">Channel</label>
+              <label className="block text-xs font-bold text-neutral-700 mb-1">Customer Name</label>
+              <input
+                type="text"
+                required
+                value={newCustomer}
+                onChange={(e) => setNewCustomer(e.target.value)}
+                placeholder="e.g. Elena Rostova"
+                className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs text-neutral-900 focus:outline-hidden focus:border-neutral-900"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 mb-1">Customer Email</label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="e.g. elena@acme.com"
+                className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs text-neutral-900 focus:outline-hidden focus:border-neutral-900"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 mb-1">Channel</label>
               <select
                 value={newChannel}
                 onChange={(e) => setNewChannel(e.target.value as FeedbackChannel)}
-                className="w-full bg-white text-neutral-900 border border-neutral-300 rounded-lg px-2.5 py-1.5 text-xs font-sans focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs text-neutral-900 focus:outline-hidden focus:border-neutral-900 bg-white"
               >
                 <option value="Zendesk">Zendesk</option>
                 <option value="Intercom">Intercom</option>
@@ -396,11 +569,23 @@ function FeedbackInboxContent() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1">Theme Cluster</label>
+              <label className="block text-xs font-bold text-neutral-700 mb-1">Sentiment</label>
+              <select
+                value={newSentiment}
+                onChange={(e) => setNewSentiment(e.target.value as SentimentType)}
+                className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs text-neutral-900 focus:outline-hidden focus:border-neutral-900 bg-white"
+              >
+                <option value="Positive">Positive</option>
+                <option value="Neutral">Neutral</option>
+                <option value="Negative">Negative</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 mb-1">Theme</label>
               <select
                 value={newTheme}
                 onChange={(e) => setNewTheme(e.target.value as FeedbackTheme)}
-                className="w-full bg-white text-neutral-900 border border-neutral-300 rounded-lg px-2.5 py-1.5 text-xs font-sans focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs text-neutral-900 focus:outline-hidden focus:border-neutral-900 bg-white"
               >
                 <option value="UX Performance">UX Performance</option>
                 <option value="Billing & Pricing">Billing & Pricing</option>
@@ -410,76 +595,54 @@ function FeedbackInboxContent() {
               </select>
             </div>
           </div>
+
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1">Feedback Content</label>
+            <label className="block text-xs font-bold text-neutral-700 mb-1">Feedback Quote</label>
             <textarea
               required
               rows={3}
               value={newFeedback}
               onChange={(e) => setNewFeedback(e.target.value)}
-              placeholder="Paste exact customer statement..."
-              className="w-full bg-white text-neutral-900 border border-neutral-300 rounded-lg p-2.5 text-xs font-sans focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+              placeholder="Enter exact customer feedback content..."
+              className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs text-neutral-900 focus:outline-hidden focus:border-neutral-900"
             />
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1.5">Assigned Sentiment</label>
-            <div className="flex gap-4">
-              {(['Positive', 'Negative', 'Neutral'] as SentimentType[]).map((sent) => (
-                <label key={sent} className="flex items-center gap-1.5 text-xs cursor-pointer select-none text-neutral-800">
-                  <input
-                    type="radio"
-                    name="sentiment"
-                    checked={newSentiment === sent}
-                    onChange={() => setNewSentiment(sent)}
-                    className="accent-black"
-                  />
-                  {sent}
-                </label>
-              ))}
-            </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" size="sm" type="button" onClick={() => setIsManualModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="sm" type="submit" icon={<Plus className="w-3.5 h-3.5" />}>
+              Add & Classify
+            </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Simulated Channel Import */}
+      {/* Sync Modal */}
       <Modal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
-        title="Simulate Channel Sync"
-        description="Trigger live API webhook import simulation across external integrations"
-        footer={
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleSimulateSync}
-            disabled={isSimulatingSync}
-            icon={isSimulatingSync ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          >
-            {isSimulatingSync ? 'Syncing External APIs...' : 'Trigger Sync Now'}
-          </Button>
-        }
+        title="Sync Integrated Channels"
+        description="Fetch latest customer tickets from connected Zendesk, Intercom, and App Store webhooks."
       >
-        <div className="space-y-3 font-sans">
-          <p className="text-xs text-neutral-600">
-            Select integration channels to fetch newly submitted customer support tickets:
+        <div className="space-y-4">
+          <p className="text-xs text-neutral-600 font-sans">
+            LOOP will query active integration endpoints and run GEMINI-1.5 PRO auto-tagging on unclassified records.
           </p>
-          <div className="space-y-2">
-            {[
-              { name: 'Zendesk Support Desk', count: '8 new tickets pending' },
-              { name: 'Intercom Live Chat', count: '4 new conversations' },
-              { name: 'Apple App Store Reviews', count: '2 new reviews' },
-              { name: 'Discourse Forum', count: '0 new threads' }
-            ].map((ch, idx) => (
-              <label key={idx} className="loop-card p-3 flex items-center justify-between cursor-pointer hover:border-neutral-400 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <input type="checkbox" defaultChecked className="accent-black" />
-                  <span className="font-semibold text-xs text-neutral-900">{ch.name}</span>
-                </div>
-                <span className="text-[10px] font-mono-numbers text-neutral-500 font-semibold">
-                  {ch.count}
-                </span>
-              </label>
-            ))}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" size="sm" onClick={() => setIsImportModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              loading={isSimulatingSync}
+              onClick={handleSimulateSync}
+              icon={<RefreshCw className="w-3.5 h-3.5" />}
+            >
+              Start Sync Pipeline
+            </Button>
           </div>
         </div>
       </Modal>
@@ -489,7 +652,7 @@ function FeedbackInboxContent() {
 
 export default function FeedbackInboxPage() {
   return (
-    <Suspense fallback={<LoadingSkeleton rows={8} />}>
+    <Suspense fallback={<LoadingSkeleton rows={6} />}>
       <FeedbackInboxContent />
     </Suspense>
   );
