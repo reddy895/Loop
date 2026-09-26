@@ -1,0 +1,128 @@
+// Prisma schema — SQLite for zero-setup, handles millions of rows with indexes
+// learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  password      String
+  jobTitle      String?   @default("Product Lead")
+  role          String    @default("ADMIN")
+  avatar        String?
+  emailAlerts   Boolean   @default(true)
+  weeklyDigest  Boolean   @default(true)
+  aiAutoTagging Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Workspace {
+  id            String   @id @default(uuid())
+  name          String
+  code          String
+  ownerId       String
+  details       String?
+  settings      String?
+  membersCount  Int      @default(1)
+  feedbackCount Int      @default(0)
+  reportsCount  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("workspaces")
+}
+
+model Member {
+  id          String   @id @default(uuid())
+  workspaceId String
+  userId      String?
+  email       String
+  role        String   @default("MEMBER")
+  status      String   @default("ACTIVE")
+  name        String
+  createdAt   DateTime @default(now())
+
+  @@map("members")
+}
+
+/// Core feedback record — indexed for fast filtering on large datasets (lakhs of rows)
+model Feedback {
+  id             String   @id @default(uuid())
+  workspaceId    String
+  content        String
+  customerLabel  String   @default("Imported Customer")
+  customerEmail  String?
+  channel        String   @default("CSV Import")
+  sentiment      String   @default("NEUTRAL")
+  sentimentScore Float    @default(0)
+  source         String   @default("csv_batch")
+  themeId        String?
+  themeName      String?
+  status         String   @default("NEW")
+  isDeleted      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+
+  @@index([workspaceId, isDeleted, createdAt])
+  @@index([workspaceId, sentiment, isDeleted])
+  @@index([workspaceId, themeId, isDeleted])
+  @@index([workspaceId, status, isDeleted])
+  @@index([workspaceId, channel, isDeleted])
+  @@map("feedbacks")
+}
+
+model Theme {
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  color       String
+  description String?
+  trend       String   @default("STABLE")
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+  @@map("themes")
+}
+
+/// Import job tracker — aggregate stats so dashboard never re-scans all rows
+model ImportJob {
+  id            String    @id @default(uuid())
+  workspaceId   String
+  filename      String
+  totalRows     Int       @default(0)
+  importedCount Int       @default(0)
+  failedCount   Int       @default(0)
+  status        String    @default("PENDING")
+  positiveCount Int       @default(0)
+  negativeCount Int       @default(0)
+  neutralCount  Int       @default(0)
+  summaryJson   String?
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  @@index([workspaceId, createdAt])
+  @@map("import_jobs")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}

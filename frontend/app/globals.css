@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), sans-serif;
+  --font-heading: var(--font-heading), "Plus Jakarta Sans", sans-serif;
+  --font-mono: var(--font-jetbrains), monospace;
+}
+
+@layer base {
+  :root {
+    --bg-canvas: #FFFFFF;
+    --bg-surface: #FAFAFA;
+    --bg-subtle: #F4F4F5;
+    --text-primary: #09090B;
+    --text-secondary: #52525B;
+    --text-muted: #71717A;
+    --border-subtle: #E4E4E7;
+    --border-default: #D4D4D8;
+    --border-strong: #09090B;
+  }
+
+  body {
+    background-color: #FAFAFA;
+    color: #09090B;
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: var(--font-heading), "Plus Jakarta Sans", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #09090B;
+  }
+
+  .font-mono-numbers {
+    font-family: var(--font-jetbrains), monospace;
+    font-feature-settings: "tnum" 1, "zero" 1;
+  }
+}
+
+/* ==========================================================================
+   LOOP Monochrome Design System Utilities
+   Strict Black + White visual hierarchy (Grayscale only outside analytics)
+   ========================================================================== */
+
+/* Modern Modular Cards */
+.loop-card,
+.skeuo-panel {
+  background-color: #FFFFFF;
+  border: 1px solid #E4E4E7;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  border-radius: 0.75rem;
+  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.loop-card-hover,
+.skeuo-card-cream {
+  background-color: #FFFFFF;
+  border: 1px solid #E4E4E7;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  border-radius: 0.75rem;
+  transition: all 0.15s ease-out;
+}
+
+.loop-card-hover:hover,
+.skeuo-card-cream:hover {
+  border-color: #A1A1AA;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+}
+
+.loop-card-inset,
+.skeuo-inset {
+  background-color: #F4F4F5;
+  border: 1px solid #E4E4E7;
+  border-radius: 0.5rem;
+}
+
+.skeuo-inset-gray {
+  background-color: #18181B;
+  border: 1px solid #27272A;
+  border-radius: 0.5rem;
+  color: #FFFFFF;
+}
+
+/* Buttons */
+.loop-btn-primary,
+.skeuo-button-primary {
+  background-color: #000000;
+  color: #FFFFFF;
+  border: 1px solid #000000;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out, transform 0.1s ease-out;
+}
+
+.loop-btn-primary:hover,
+.skeuo-button-primary:hover {
+  background-color: #27272A;
+  border-color: #27272A;
+}
+
+.loop-btn-primary:active,
+.skeuo-button-primary:active {
+  transform: scale(0.98);
+}
+
+.loop-btn-secondary,
+.skeuo-button-secondary {
+  background-color: #FFFFFF;
+  color: #09090B;
+  border: 1px solid #E4E4E7;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out, transform 0.1s ease-out;
+}
+
+.loop-btn-secondary:hover,
+.skeuo-button-secondary:hover {
+  background-color: #F4F4F5;
+  border-color: #D4D4D8;
+}
+
+.loop-btn-secondary:active,
+.skeuo-button-secondary:active {
+  transform: scale(0.98);
+}
+
+/* Sidebar & Navigation — Strictly Monochrome */
+.skeuo-sidebar {
+  background-color: #FFFFFF;
+  color: #09090B;
+  border-right: 1px solid #E4E4E7;
+}
+
+.skeuo-nav-active,
+.loop-nav-active {
+  background-color: #18181B;
+  color: #FFFFFF;
+  border: 1px solid #18181B;
+  font-weight: 600;
+}
+
+.skeuo-nav-inactive,
+.loop-nav-inactive {
+  color: #52525B;
+  transition: all 0.15s ease-out;
+}
+
+.skeuo-nav-inactive:hover,
+.loop-nav-inactive:hover {
+  background-color: #F4F4F5;
+  color: #09090B;
+}
+
+/* Inputs & Form Elements */
+.loop-input,
+.skeuo-input {
+  background-color: #FFFFFF;
+  color: #09090B;
+  border: 1px solid #E4E4E7;
+  border-radius: 0.5rem;
+  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.loop-input:focus,
+.skeuo-input:focus {
+  outline: none;
+  border-color: #09090B;
+  box-shadow: 0 0 0 1px #09090B;
+}
+
+/* Monochrome Badges (No random colors outside analytics) */
+.skeuo-badge-positive {
+  background-color: #18181B;
+  color: #FFFFFF;
+  border: 1px solid #18181B;
+}
+
+.skeuo-badge-negative {
+  background-color: #FFFFFF;
+  color: #09090B;
+  border: 1.5px solid #09090B;
+  font-weight: 700;
+}
+
+.skeuo-badge-neutral {
+  background-color: #F4F4F5;
+  color: #52525B;
+  border: 1px solid #E4E4E7;
+}
+
+.skeuo-badge-accent {
+  background-color: #F4F4F5;
+  color: #18181B;
+  border: 1px solid #E4E4E7;
+}
+
+/* Minimalist Monochrome Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAFAFA;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4D4D8;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A1A1AA;
+}
