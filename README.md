@@ -30,7 +30,6 @@ Zidio 1/
 | 🧪 Test Suite | Unit + Integration tests with Zod schema validation |
 
 ---
-
 ## 🛠️ Tech Stack
 
 ### Backend (`/backend`)
