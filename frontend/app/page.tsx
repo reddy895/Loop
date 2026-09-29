@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { LoopLogoIcon } from '@/components/ui/LoopLogo';
 import { Button } from '@/components/ui/Button';
@@ -29,59 +29,119 @@ import {
 } from 'lucide-react';
 
 export default function LandingPage() {
-  const [activePipelineStep, setActivePipelineStep] = useState(0);
-  const [selectedQuoteIdx, setSelectedQuoteIdx] = useState(0);
-  const [activeTab, setActiveTab] = useState<'sentiment' | 'themes' | 'rag'>('sentiment');
+  const particleCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Customer quotes in hero pipeline
-  const heroQuotes = [
-    {
-      text: 'The bulk export feature constantly times out when downloading more than 5,000 feedback records.',
-      customer: 'Sarah Jenkins • Staff PM at Stripe',
-      channel: 'Zendesk',
-      sentiment: 'Negative',
-      score: 24,
-      theme: 'UX Performance',
-      aiSummary: 'Critical latency bottleneck on high-volume data export operations.'
-    },
-    {
-      text: 'I love the new dashboard. Triage time dropped by 40% across our product operations team.',
-      customer: 'David Kim • VP Product at Linear',
-      channel: 'Email',
-      sentiment: 'Positive',
-      score: 92,
-      theme: 'Productivity',
-      aiSummary: 'Strong user delight and measured 40% efficiency gains in triage workflows.'
-    },
-    {
-      text: 'Mobile app navigation menu stutters when filtering large dataset categories on iPad.',
-      customer: 'Elena Rostova • Mobile Lead at Datadog',
-      channel: 'App Store',
-      sentiment: 'Negative',
-      score: 31,
-      theme: 'Mobile Responsiveness',
-      aiSummary: 'Tablet viewport rendering lag requires memory optimization.'
-    },
-    {
-      text: 'Customer support response was excellent. Resolved our SAML SSO migration issue in under 15 minutes.',
-      customer: 'Marcus Vance • InfoSec at Brex',
-      channel: 'Intercom',
-      sentiment: 'Positive',
-      score: 96,
-      theme: 'Security & Auth',
-      aiSummary: 'Exceptional enterprise support satisfaction and rapid resolution.'
-    }
-  ];
-
-  // Auto-cycle through quotes in hero
   useEffect(() => {
-    const timer = setInterval(() => {
-      setSelectedQuoteIdx((prev) => (prev + 1) % heroQuotes.length);
-    }, 4500);
-    return () => clearInterval(timer);
-  }, [heroQuotes.length]);
+    const canvas = particleCanvasRef.current;
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) return;
 
-  const activeQuote = heroQuotes[selectedQuoteIdx];
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const coarsePointer = window.matchMedia('(pointer: coarse)');
+    const shouldAnimate = () =>
+      !reducedMotion.matches && !coarsePointer.matches && window.innerWidth >= 768;
+    type Particle = { x: number; y: number; vx: number; vy: number; radius: number };
+    let particles: Particle[] = [];
+    let frame = 0;
+    let running = false;
+    let width = 0;
+    let height = 0;
+    let pointer = { x: -1000, y: -1000 };
+
+    const resize = () => {
+      const bounds = canvas.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = bounds.width;
+      height = bounds.height;
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      particles = Array.from({ length: Math.min(64, Math.max(28, Math.floor(width / 20))) }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: (Math.random() - 0.5) * 0.22,
+        radius: 0.7 + Math.random() * 0.8,
+      }));
+      canvas.style.display = shouldAnimate() ? 'block' : 'none';
+      if (shouldAnimate() && !running) animate();
+    };
+
+    const animate = () => {
+      if (!shouldAnimate()) {
+        running = false;
+        context.clearRect(0, 0, width, height);
+        canvas.style.display = 'none';
+        return;
+      }
+      running = true;
+      canvas.style.display = 'block';
+      context.clearRect(0, 0, width, height);
+
+      particles.forEach((particle) => {
+        const dx = particle.x - pointer.x;
+        const dy = particle.y - pointer.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < 115 && distance > 0) {
+          const force = (115 - distance) / 115 * 0.16;
+          particle.vx += (dx / distance) * force;
+          particle.vy += (dy / distance) * force;
+        }
+
+        particle.vx = Math.max(-0.55, Math.min(0.55, particle.vx * 0.985));
+        particle.vy = Math.max(-0.55, Math.min(0.55, particle.vy * 0.985));
+        particle.x = (particle.x + particle.vx + width) % width;
+        particle.y = (particle.y + particle.vy + height) % height;
+
+        context.beginPath();
+        context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        context.fillStyle = 'rgba(24, 24, 27, 0.25)';
+        context.fill();
+      });
+
+      particles.forEach((particle, index) => {
+        const nearPointer = Math.hypot(particle.x - pointer.x, particle.y - pointer.y) < 150;
+        if (!nearPointer) return;
+        for (let nextIndex = index + 1; nextIndex < particles.length; nextIndex += 1) {
+          const next = particles[nextIndex];
+          const distance = Math.hypot(particle.x - next.x, particle.y - next.y);
+          if (distance < 90) {
+            context.beginPath();
+            context.moveTo(particle.x, particle.y);
+            context.lineTo(next.x, next.y);
+            context.strokeStyle = `rgba(39, 39, 42, ${(1 - distance / 90) * 0.12})`;
+            context.lineWidth = 0.7;
+            context.stroke();
+          }
+        }
+      });
+
+      frame = window.requestAnimationFrame(animate);
+    };
+
+    const movePointer = (event: PointerEvent) => {
+      const bounds = canvas.getBoundingClientRect();
+      pointer = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+    };
+    const resetPointer = () => { pointer = { x: -1000, y: -1000 }; };
+    const updateMotion = () => resize();
+
+    resize();
+    window.addEventListener('resize', resize);
+    canvas.addEventListener('pointermove', movePointer);
+    canvas.addEventListener('pointerleave', resetPointer);
+    reducedMotion.addEventListener('change', updateMotion);
+    coarsePointer.addEventListener('change', updateMotion);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('resize', resize);
+      canvas.removeEventListener('pointermove', movePointer);
+      canvas.removeEventListener('pointerleave', resetPointer);
+      reducedMotion.removeEventListener('change', updateMotion);
+      coarsePointer.removeEventListener('change', updateMotion);
+    };
+  }, []);
 
   const pipelineStages = [
     { title: 'Customer Feedback', desc: 'Raw customer voices stream from Zendesk, Intercom, App Store & CSV', icon: MessageSquare },
@@ -104,10 +164,10 @@ export default function LandingPage() {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-heading text-lg font-extrabold tracking-wider text-neutral-950">
+                <span className="whitespace-nowrap font-heading text-sm font-extrabold tracking-wider text-neutral-950 sm:text-lg">
                   PROJECT LOOP
                 </span>
-                <span className="px-1.5 py-0.2 rounded font-mono-numbers text-[9px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-300">
+                <span className="hidden rounded border border-neutral-300 bg-neutral-100 px-1.5 py-0.2 font-mono-numbers text-[9px] font-bold text-neutral-800 sm:inline-flex">
                   AI PLATFORM
                 </span>
               </div>
@@ -137,7 +197,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="text-xs font-bold text-neutral-700 hover:text-neutral-950 px-3 py-2 transition-colors"
+              className="whitespace-nowrap px-2 py-2 text-xs font-bold text-neutral-700 transition-colors hover:text-neutral-950 sm:px-3"
             >
               Sign In
             </Link>
@@ -147,7 +207,7 @@ export default function LandingPage() {
                 variant="primary"
                 size="sm"
                 icon={<ArrowRight className="w-3.5 h-3.5" />}
-                className="font-bold tracking-tight"
+                className="whitespace-nowrap font-bold tracking-tight"
               >
                 Analyse Your Feedback
               </Button>
@@ -159,9 +219,14 @@ export default function LandingPage() {
       {/* ============================================================== */}
       {/* 1. HERO SECTION: Cinematic Enterprise AI                      */}
       {/* ============================================================== */}
-      <section className="relative pt-16 sm:pt-24 pb-20 overflow-hidden border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto space-y-6">
+      <section className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden border-b border-neutral-200 py-16 sm:py-20 lg:py-24">
+        <canvas
+          ref={particleCanvasRef}
+          aria-hidden="true"
+          className="hero-particles pointer-events-none absolute inset-0 z-0 h-full w-full"
+        />
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-5xl space-y-6 text-center sm:space-y-10">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-neutral-300 bg-neutral-50 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-neutral-900 animate-pulse" />
               <span className="text-[11px] font-mono-numbers font-bold uppercase tracking-wider text-neutral-700">
@@ -169,15 +234,15 @@ export default function LandingPage() {
               </span>
             </div>
 
-            <h1 className="font-heading text-4xl sm:text-6xl font-extrabold tracking-tight text-neutral-950 leading-[1.1]">
+            <h1 className="font-heading text-4xl font-extrabold leading-[0.98] tracking-tight text-neutral-950 sm:text-7xl lg:text-[5rem]">
               Turn Customer Feedback Into Business Intelligence.
             </h1>
 
-            <p className="text-base sm:text-lg text-neutral-600 font-sans leading-relaxed max-w-2xl mx-auto">
+            <p className="mx-auto max-w-2xl font-sans text-base leading-relaxed text-neutral-600 sm:text-lg">
               LOOP transforms raw customer feedback into structured intelligence using AI-powered classification, theme discovery, analytics and evidence-based answers.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row sm:gap-4">
               <Link href="/login" className="w-full sm:w-auto">
                 <Button
                   variant="primary"
@@ -200,7 +265,7 @@ export default function LandingPage() {
               </a>
             </div>
 
-            <div className="pt-3 flex items-center justify-center gap-6 text-xs text-neutral-500 font-mono-numbers">
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 pt-3 font-mono-numbers text-xs text-neutral-500">
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-neutral-900" />
                 Zero Hallucinations
@@ -213,120 +278,6 @@ export default function LandingPage() {
                 <Zap className="w-4 h-4 text-neutral-900" />
                 Gemini 1.5 Pro
               </span>
-            </div>
-          </div>
-
-          {/* ============================================================== */}
-          {/* DYNAMIC HERO VISUAL: Live Feedback Pipeline Transformation     */}
-          {/* ============================================================== */}
-          <div className="mt-16 max-w-5xl mx-auto loop-card p-6 sm:p-8 bg-neutral-50/70 border-neutral-300 shadow-xl">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between pb-6 border-b border-neutral-200 gap-4">
-              <div>
-                <span className="text-[10px] uppercase font-mono-numbers font-bold text-neutral-400">
-                  Interactive Intelligence Pipeline
-                </span>
-                <h3 className="font-heading text-lg font-bold text-neutral-950">
-                  Raw Feedback Flowing Into Structured Insight
-                </h3>
-              </div>
-
-              {/* Quote Picker Pills */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {heroQuotes.map((q, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedQuoteIdx(idx)}
-                    className={`px-2.5 py-1 text-xs font-mono-numbers font-bold rounded-lg transition-all cursor-pointer ${
-                      selectedQuoteIdx === idx
-                        ? 'bg-neutral-900 text-white shadow-2xs'
-                        : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-100'
-                    }`}
-                  >
-                    Ticket #{idx + 1}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Pipeline Flow Visualization Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 items-center">
-              {/* Left (5 Cols): Incoming Customer Voice Card */}
-              <div className="lg:col-span-5 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-neutral-500 uppercase font-mono-numbers text-[10px]">
-                    1. Incoming Customer Ticket
-                  </span>
-                  <span className="font-mono-numbers text-[10px] text-neutral-400">
-                    Source: {activeQuote.channel}
-                  </span>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-white border border-neutral-300 shadow-sm space-y-3">
-                  <p className="text-sm font-medium text-neutral-900 leading-relaxed italic">
-                    &ldquo;{activeQuote.text}&rdquo;
-                  </p>
-                  <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs font-mono-numbers">
-                    <span className="font-bold text-neutral-800">{activeQuote.customer}</span>
-                    <span className="text-neutral-400 text-[10px]">Just received</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Middle (2 Cols): Pipeline Flow Direction */}
-              <div className="lg:col-span-2 flex flex-col items-center justify-center space-y-2 text-center py-2">
-                <div className="w-10 h-10 rounded-full bg-neutral-900 text-white flex items-center justify-center shadow-md animate-pulse">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] font-mono-numbers font-bold uppercase tracking-wider text-neutral-600">
-                  AI Synthesis
-                </span>
-                <span className="text-[9px] font-mono-numbers text-neutral-400">
-                  Vectors &bull; 0.18s
-                </span>
-              </div>
-
-              {/* Right (5 Cols): Structured Intelligence Output */}
-              <div className="lg:col-span-5 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-neutral-500 uppercase font-mono-numbers text-[10px]">
-                    2. Structured Business Intelligence
-                  </span>
-                  <span className="font-mono-numbers text-[10px] text-neutral-900 font-bold bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200">
-                    Confidence: 96%
-                  </span>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-white border border-neutral-300 shadow-sm space-y-3">
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2 rounded-lg bg-neutral-50 border border-neutral-200">
-                      <span className="text-[10px] font-mono-numbers text-neutral-400 uppercase block">
-                        Sentiment
-                      </span>
-                      <span className={`font-bold font-mono-numbers ${activeQuote.sentiment === 'Positive' ? 'text-black' : 'text-neutral-900'}`}>
-                        {activeQuote.sentiment} ({activeQuote.score}/100)
-                      </span>
-                    </div>
-
-                    <div className="p-2 rounded-lg bg-neutral-50 border border-neutral-200">
-                      <span className="text-[10px] font-mono-numbers text-neutral-400 uppercase block">
-                        Theme Cluster
-                      </span>
-                      <span className="font-bold text-neutral-900 truncate block">
-                        {activeQuote.theme}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-200 space-y-1">
-                    <span className="text-[10px] font-mono-numbers text-neutral-400 uppercase block">
-                      AI Executive Synthesis
-                    </span>
-                    <p className="text-xs text-neutral-700 leading-relaxed">
-                      {activeQuote.aiSummary}
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

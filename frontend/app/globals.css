@@ -218,3 +218,9 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #A1A1AA;
 }
+
+@media (max-width: 767px), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .hero-particles {
+    display: none !important;
+  }
+}
