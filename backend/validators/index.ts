@@ -142,3 +142,69 @@ export const memberQuerySchema = paginationQuerySchema.extend({
   role: z.enum(["OWNER", "ADMIN", "ANALYST", "MEMBER", "VIEWER"]).optional(),
 });
 
+// Authentication & Account Security Schemas
+export const registerSchema = z
+  .object({
+    name: z.string({ required_error: "Full name is required." }).trim().min(2, "Name must be at least 2 characters.").max(100),
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string().optional(),
+    jobTitle: z.string().trim().max(100).optional(),
+    companyName: z.string().trim().max(100).optional(),
+  })
+  .refine(
+    (data) => !data.confirmPassword || data.password === data.confirmPassword,
+    {
+      message: "Password confirmation does not match password.",
+      path: ["confirmPassword"],
+    }
+  );
+
+export const loginSchema = z.object({
+  email: emailSchema,
+  password: z.string({ required_error: "Password is required." }).min(1, "Password cannot be empty."),
+});
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string({ required_error: "Reset token is required." }).min(1, "Token cannot be empty."),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().optional(),
+  })
+  .refine(
+    (data) => !data.confirmPassword || data.newPassword === data.confirmPassword,
+    {
+      message: "Password confirmation does not match new password.",
+      path: ["confirmPassword"],
+    }
+  );
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string({ required_error: "Current password is required." }).min(1),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().optional(),
+  })
+  .refine(
+    (data) => !data.confirmPassword || data.newPassword === data.confirmPassword,
+    {
+      message: "Password confirmation does not match new password.",
+      path: ["confirmPassword"],
+    }
+  );
+
+export const createThemeSchema = z.object({
+  name: z.string({ required_error: "Theme name is required." }).trim().min(2, "Theme name must be at least 2 characters.").max(80),
+  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "Color must be a valid hex code (e.g. #3B82F6)").optional(),
+  description: z.string().max(500).optional(),
+});
+
+export const aiAskQuerySchema = z.object({
+  query: z.string({ required_error: "Search/question query is required." }).trim().min(2, "Query must be at least 2 characters.").max(1000, "Query cannot exceed 1000 characters."),
+  limit: z.coerce.number().int().positive().max(50).default(10),
+});
+
