@@ -385,6 +385,10 @@ export interface IAuthService extends IBaseService {
   validateUserCredentials(email: string, pass: string): Promise<unknown>;
   registerUser(userData: unknown): Promise<unknown>;
   generateSessionToken(userId: string): Promise<string>;
+  validateSessionToken(token: string): Promise<unknown>;
+  invalidateSessionToken(token: string): Promise<{ success: boolean }>;
+  createPasswordResetToken(email: string): Promise<{ success: boolean; resetToken?: string }>;
+  resetPasswordWithToken(token: string, newPassword: string): Promise<{ success: boolean }>;
 }
 
 export interface IFeedbackService extends IBaseService {

@@ -1,11 +1,13 @@
 /**
  * @file authConfig.ts
  * @description Central NextAuth (Auth.js) options configuration.
+ * Configures Credentials provider with secure credential verification and JWT session strategy.
  */
 
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { config } from "@/config/envConfig";
+import { authService } from "@/services";
 
 /**
  * NextAuth options configuration object.
@@ -22,35 +24,54 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      id: "credentials",
+      name: "Corporate Credentials",
       credentials: {
         email: { label: "Email", type: "email", placeholder: "user@example.com" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials: Record<"email" | "password", string> | undefined) {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
-        // Placeholder authentication logic - integrates with AuthService
-        return {
-          id: "placeholder-user-id",
-          email: credentials.email,
-          name: "Project LOOP User",
-        };
+        try {
+          const user = await authService.validateUserCredentials(
+            credentials.email,
+            credentials.password
+          );
+
+          if (!user) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: (user as any).role || "ADMIN",
+            jobTitle: (user as any).jobTitle || "Product Lead",
+          };
+        } catch {
+          return null;
+        }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: { token: Record<string, unknown>; user?: { id?: string } }) {
-      if (user?.id) {
+    async jwt({ token, user }) {
+      if (user) {
         token.id = user.id;
+        token.role = (user as any).role || "ADMIN";
+        token.jobTitle = (user as any).jobTitle || "Product Lead";
       }
-      return token as unknown as import("next-auth/jwt").JWT;
+      return token;
     },
-    async session({ session, token }: { session: import("next-auth").Session; token: Record<string, unknown> }) {
+    async session({ session, token }) {
       if (session.user && token.id) {
-        (session.user as { id?: string }).id = token.id as string;
+        (session.user as any).id = token.id as string;
+        (session.user as any).role = (token.role as string) || "ADMIN";
+        (session.user as any).jobTitle = (token.jobTitle as string) || "Product Lead";
       }
       return session;
     },

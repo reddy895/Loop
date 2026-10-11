@@ -32,7 +32,7 @@ import {
 } from "@/types";
 import { getAiProvider } from "@/providers";
 import { logger } from "@/logger/appLogger";
-import { calculatePagination, NotFoundError, ValidationError, ConflictError, ForbiddenError } from "@/utils";
+import { calculatePagination, NotFoundError, ValidationError, ConflictError, ForbiddenError, hashPassword, verifyPassword, validatePasswordStrength, generateSecureToken, hashToken } from "@/utils";
 import { parseCsvString, validateCsvRow } from "@/utils/csvUtils";
 import { classificationService } from "@/ai";
 import crypto from "crypto";
@@ -1152,7 +1152,7 @@ export class AnalyticsService implements IAnalyticsService {
   }
 }
 
-interface IUserRecord {
+export interface IUserRecord {
   id: string;
   email: string;
   name: string;
@@ -1167,10 +1167,6 @@ interface IUserRecord {
   updatedAt: string;
 }
 
-const hashPasswordHelper = (password: string): string => {
-  return crypto.pbkdf2Sync(password, "loop_salt", 1000, 64, "sha512").toString("hex");
-};
-
 const IN_MEMORY_USERS: Map<string, IUserRecord> = new Map([
   [
     "praveen@acmesaas.com",
@@ -1178,7 +1174,7 @@ const IN_MEMORY_USERS: Map<string, IUserRecord> = new Map([
       id: "usr_praveen_1",
       email: "praveen@acmesaas.com",
       name: "Praveen Kumar",
-      passwordHash: hashPasswordHelper("password123"),
+      passwordHash: hashPassword("password123"),
       jobTitle: "Senior Staff Product Lead",
       role: "ADMIN",
       emailAlerts: true,
@@ -1196,49 +1192,41 @@ export class AuthService implements IAuthService {
   public async validateUserCredentials(email: string, pass: string): Promise<Omit<IUserRecord, "passwordHash"> | null> {
     logger.info(`${this.serviceName}: Validating credentials for user`, { email });
     const normalizedEmail = email.toLowerCase().trim();
-    const inputHash = hashPasswordHelper(pass);
 
-    // Try Prisma DB first
+    // 1. Check Prisma Database
     try {
       if (prisma && typeof (prisma as any).user?.findUnique === "function") {
         const dbUser = await (prisma as any).user.findUnique({ where: { email: normalizedEmail } });
         if (dbUser) {
-          if (dbUser.password === inputHash || dbUser.password === pass) {
+          const verification = verifyPassword(pass, dbUser.password);
+          if (verification.valid) {
+            // Rehash legacy passwords transparently
+            if (verification.needsRehash) {
+              const modernHash = hashPassword(pass);
+              (prisma as any).user.update({
+                where: { id: dbUser.id },
+                data: { password: modernHash },
+              }).catch((err: unknown) => logger.warn("Failed to update rehashed password", { err }));
+            }
+
             const { password, ...safeUser } = dbUser;
             return safeUser as Omit<IUserRecord, "passwordHash">;
           }
           return null;
         }
       }
-    } catch {
-      logger.warn(`${this.serviceName}: Prisma query failed, falling back to memory store.`);
+    } catch (err) {
+      logger.warn(`${this.serviceName}: Prisma lookup failed, checking memory fallback`, { err });
     }
 
-    // In-memory fallback
+    // 2. Check in-memory store (for testing and offline demo)
     const memUser = IN_MEMORY_USERS.get(normalizedEmail);
-    if (!memUser) {
-      // Auto-create demo account if not exists for easy first-time testing
-      const newDemoUser: IUserRecord = {
-        id: "usr_" + Date.now(),
-        email: normalizedEmail,
-        name: email.split("@")[0] || "Enterprise User",
-        passwordHash: inputHash,
-        jobTitle: "Senior Product Lead",
-        role: "ADMIN",
-        emailAlerts: true,
-        weeklyDigest: true,
-        aiAutoTagging: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      IN_MEMORY_USERS.set(normalizedEmail, newDemoUser);
-      const { passwordHash, ...safeDemo } = newDemoUser;
-      return safeDemo;
-    }
-
-    if (memUser.passwordHash === inputHash || pass === "••••••••••••") {
-      const { passwordHash, ...safeUser } = memUser;
-      return safeUser;
+    if (memUser) {
+      const verification = verifyPassword(pass, memUser.passwordHash);
+      if (verification.valid) {
+        const { passwordHash, ...safeUser } = memUser;
+        return safeUser;
+      }
     }
 
     return null;
@@ -1254,15 +1242,117 @@ export class AuthService implements IAuthService {
   }): Promise<Omit<IUserRecord, "passwordHash">> {
     logger.info(`${this.serviceName}: Registering new user account`, { email: userData.email });
     const normalizedEmail = userData.email.toLowerCase().trim();
-    const rawPass = userData.password || userData.pass || "password123";
-    const passwordHash = hashPasswordHelper(rawPass);
+    const rawPass = userData.password || userData.pass;
 
-    const newUser: IUserRecord = {
+    if (!rawPass) {
+      throw new ValidationError("Password is required for registration.");
+    }
+
+    const strengthCheck = validatePasswordStrength(rawPass);
+    if (!strengthCheck.valid) {
+      throw new ValidationError(strengthCheck.message || "Password does not meet security criteria.");
+    }
+
+    const passwordHash = hashPassword(rawPass);
+
+    // Enforce email uniqueness across DB and memory
+    if (prisma && typeof (prisma as any).user?.findUnique === "function") {
+      try {
+        const existing = await (prisma as any).user.findUnique({ where: { email: normalizedEmail } });
+        if (existing) {
+          throw new ConflictError("An account with this email address already exists.");
+        }
+      } catch (err) {
+        if (err instanceof ConflictError) throw err;
+      }
+    }
+
+    if (IN_MEMORY_USERS.has(normalizedEmail)) {
+      throw new ConflictError("An account with this email address already exists.");
+    }
+
+    // Try transactional Prisma persistence
+    if (prisma && typeof (prisma as any).user?.create === "function") {
+      try {
+        const createdUser = await (prisma as any).$transaction(async (tx: any) => {
+          const u = await tx.user.create({
+            data: {
+              name: userData.name.trim(),
+              email: normalizedEmail,
+              password: passwordHash,
+              jobTitle: userData.jobTitle?.trim() || "Product Lead",
+              role: "ADMIN",
+            },
+          });
+
+          // Provision personal default workspace
+          const workspaceName = userData.companyName?.trim()
+            ? `${userData.companyName.trim()} Workspace`
+            : `${userData.name.trim()}'s Workspace`;
+
+          const code = (userData.companyName || userData.name)
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, "")
+            .slice(0, 8) || "LOOP";
+
+          const ws = await tx.workspace.create({
+            data: {
+              name: workspaceName,
+              code: `${code}-${Math.floor(100 + Math.random() * 900)}`,
+              ownerId: u.id,
+              details: "Default organizational intelligence workspace",
+              settings: JSON.stringify({ autoCategorize: true, defaultLanguage: "en" }),
+            },
+          });
+
+          // Add user as OWNER of their new workspace
+          await tx.member.create({
+            data: {
+              workspaceId: ws.id,
+              userId: u.id,
+              email: normalizedEmail,
+              name: userData.name.trim(),
+              role: "OWNER",
+              status: "ACTIVE",
+            },
+          });
+
+          // Create audit log entry
+          await tx.auditLog.create({
+            data: {
+              workspaceId: ws.id,
+              userId: u.id,
+              action: "USER_REGISTERED",
+              resource: "auth",
+              details: `Account registered: ${normalizedEmail}`,
+            },
+          });
+
+          return u;
+        });
+
+        const { password, ...safeUser } = createdUser;
+        IN_MEMORY_USERS.set(normalizedEmail, {
+          ...safeUser,
+          passwordHash,
+          createdAt: safeUser.createdAt.toISOString(),
+          updatedAt: safeUser.updatedAt.toISOString(),
+        });
+
+        return safeUser;
+      } catch (err) {
+        if (err instanceof ConflictError || err instanceof ValidationError) throw err;
+        logger.warn(`${this.serviceName}: Prisma registration transaction failed, falling back to memory`, { err });
+      }
+    }
+
+    // In-memory fallback
+    const memUser: IUserRecord = {
       id: "usr_" + Date.now(),
       email: normalizedEmail,
-      name: userData.name || "Enterprise User",
+      name: userData.name.trim(),
       passwordHash,
-      jobTitle: userData.jobTitle || "Product Manager",
+      jobTitle: userData.jobTitle?.trim() || "Product Lead",
       role: "ADMIN",
       emailAlerts: true,
       weeklyDigest: true,
@@ -1271,27 +1361,8 @@ export class AuthService implements IAuthService {
       updatedAt: new Date().toISOString(),
     };
 
-    // Try Prisma DB first
-    try {
-      if (prisma && typeof (prisma as any).user?.create === "function") {
-        const created = await (prisma as any).user.create({
-          data: {
-            name: newUser.name,
-            email: newUser.email,
-            password: passwordHash,
-            jobTitle: newUser.jobTitle,
-            role: newUser.role,
-          },
-        });
-        const { password, ...safeUser } = created;
-        return safeUser;
-      }
-    } catch {
-      logger.warn(`${this.serviceName}: Prisma user creation failed, falling back to memory store.`);
-    }
-
-    IN_MEMORY_USERS.set(normalizedEmail, newUser);
-    const { passwordHash: _, ...safeUser } = newUser;
+    IN_MEMORY_USERS.set(normalizedEmail, memUser);
+    const { passwordHash: _, ...safeUser } = memUser;
     return safeUser;
   }
 
@@ -1315,12 +1386,6 @@ export class AuthService implements IAuthService {
       }
     }
 
-    // Default return Praveen Kumar
-    const defaultUser = IN_MEMORY_USERS.get("praveen@acmesaas.com");
-    if (defaultUser) {
-      const { passwordHash, ...safeUser } = defaultUser;
-      return safeUser;
-    }
     return null;
   }
 
@@ -1343,44 +1408,43 @@ export class AuthService implements IAuthService {
       // Fallback
     }
 
-    let targetRecord: IUserRecord | undefined;
     for (const record of IN_MEMORY_USERS.values()) {
       if (record.id === userId) {
-        targetRecord = record;
-        break;
+        Object.assign(record, updates, { updatedAt: new Date().toISOString() });
+        const { passwordHash, ...safeUser } = record;
+        return safeUser;
       }
     }
 
-    if (!targetRecord) {
-      targetRecord = IN_MEMORY_USERS.get("praveen@acmesaas.com");
-    }
-
-    if (targetRecord) {
-      Object.assign(targetRecord, updates, { updatedAt: new Date().toISOString() });
-      IN_MEMORY_USERS.set(targetRecord.email, targetRecord);
-      const { passwordHash, ...safeUser } = targetRecord;
-      return safeUser;
-    }
-
-    throw new NotFoundError("User record not found");
+    throw new NotFoundError("User record not found.");
   }
 
   public async changeUserPassword(userId: string, currentPass: string, newPass: string): Promise<boolean> {
     logger.info(`${this.serviceName}: Changing password for user`, { userId });
-    const currentHash = hashPasswordHelper(currentPass);
-    const newHash = hashPasswordHelper(newPass);
+
+    const strengthCheck = validatePasswordStrength(newPass);
+    if (!strengthCheck.valid) {
+      throw new ValidationError(strengthCheck.message || "New password does not meet security criteria.");
+    }
+
+    const newHash = hashPassword(newPass);
 
     try {
       if (prisma && typeof (prisma as any).user?.findUnique === "function") {
         const dbUser = await (prisma as any).user.findUnique({ where: { id: userId } });
         if (dbUser) {
-          if (dbUser.password !== currentHash && dbUser.password !== currentPass) {
+          const currentValid = verifyPassword(currentPass, dbUser.password);
+          if (!currentValid.valid) {
             throw new ValidationError("Current password supplied is incorrect.");
           }
+
           await (prisma as any).user.update({
             where: { id: userId },
             data: { password: newHash },
           });
+
+          // Invalidate active sessions to enforce re-login
+          await (prisma as any).session.deleteMany({ where: { userId } }).catch(() => {});
           return true;
         }
       }
@@ -1388,36 +1452,157 @@ export class AuthService implements IAuthService {
       if (err instanceof ValidationError) throw err;
     }
 
-    let targetRecord: IUserRecord | undefined;
     for (const record of IN_MEMORY_USERS.values()) {
       if (record.id === userId) {
-        targetRecord = record;
-        break;
+        const currentValid = verifyPassword(currentPass, record.passwordHash);
+        if (!currentValid.valid) {
+          throw new ValidationError("Current password supplied is incorrect.");
+        }
+        record.passwordHash = newHash;
+        record.updatedAt = new Date().toISOString();
+        return true;
       }
     }
 
-    if (!targetRecord) {
-      targetRecord = IN_MEMORY_USERS.get("praveen@acmesaas.com");
-    }
-
-    if (targetRecord) {
-      if (targetRecord.passwordHash !== currentHash && currentPass !== "••••••••••••" && currentPass !== "password123") {
-        throw new ValidationError("Current password supplied is incorrect.");
-      }
-      targetRecord.passwordHash = newHash;
-      targetRecord.updatedAt = new Date().toISOString();
-      IN_MEMORY_USERS.set(targetRecord.email, targetRecord);
-      return true;
-    }
-
-    throw new NotFoundError("User account not found");
+    throw new NotFoundError("User account not found.");
   }
 
   public async generateSessionToken(userId: string): Promise<string> {
-    logger.info(`${this.serviceName}: Generating session token`, { userId });
-    return "loop_session_" + crypto.randomBytes(24).toString("hex");
+    const rawToken = "loop_sess_" + generateSecureToken(32);
+
+    try {
+      if (prisma && typeof (prisma as any).session?.create === "function") {
+        await (prisma as any).session.create({
+          data: {
+            userId,
+            token: rawToken,
+            expiresAt: new Date(Date.now() + 30 * 86400000), // 30 days
+          },
+        });
+      }
+    } catch (err) {
+      logger.warn("Failed to persist session in DB, relying on signed token", { err });
+    }
+
+    return rawToken;
+  }
+
+  public async validateSessionToken(token: string): Promise<Omit<IUserRecord, "passwordHash"> | null> {
+    if (!token) return null;
+
+    try {
+      if (prisma && typeof (prisma as any).session?.findUnique === "function") {
+        const session = await (prisma as any).session.findUnique({
+          where: { token },
+          include: { user: true },
+        });
+
+        if (session && session.expiresAt > new Date() && session.user) {
+          const { password, ...safeUser } = session.user;
+          return safeUser;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    return null;
+  }
+
+  public async invalidateSessionToken(token: string): Promise<{ success: boolean }> {
+    try {
+      if (prisma && typeof (prisma as any).session?.deleteMany === "function") {
+        await (prisma as any).session.deleteMany({ where: { token } });
+      }
+    } catch {
+      // Fallback
+    }
+    return { success: true };
+  }
+
+  public async createPasswordResetToken(email: string): Promise<{ success: boolean; resetToken?: string }> {
+    const normalizedEmail = email.toLowerCase().trim();
+    logger.info(`${this.serviceName}: Password reset requested`, { email: normalizedEmail });
+
+    // Single-use cryptographically random token
+    const rawToken = generateSecureToken(32);
+    const tokenHash = hashToken(rawToken);
+    const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour validity
+
+    try {
+      if (prisma && typeof (prisma as any).passwordResetToken?.create === "function") {
+        // Invalidate older unused tokens for this email
+        await (prisma as any).passwordResetToken.deleteMany({
+          where: { email: normalizedEmail, usedAt: null },
+        }).catch(() => {});
+
+        await (prisma as any).passwordResetToken.create({
+          data: {
+            email: normalizedEmail,
+            tokenHash,
+            expiresAt,
+          },
+        });
+      }
+    } catch (err) {
+      logger.warn("Failed to persist password reset token in DB", { err });
+    }
+
+    // Avoid account enumeration: always return success. Include rawToken in dev mode for testing.
+    return {
+      success: true,
+      resetToken: process.env.NODE_ENV !== "production" ? rawToken : undefined,
+    };
+  }
+
+  public async resetPasswordWithToken(token: string, newPassword: string): Promise<{ success: boolean }> {
+    logger.info(`${this.serviceName}: Executing password reset with token`);
+
+    const strengthCheck = validatePasswordStrength(newPassword);
+    if (!strengthCheck.valid) {
+      throw new ValidationError(strengthCheck.message || "Password does not meet security requirements.");
+    }
+
+    const tokenHash = hashToken(token);
+
+    if (!prisma || typeof (prisma as any).passwordResetToken?.findUnique !== "function") {
+      throw new ValidationError("Database service unavailable to verify reset token.");
+    }
+
+    const record = await (prisma as any).passwordResetToken.findUnique({
+      where: { tokenHash },
+    });
+
+    if (!record || record.usedAt !== null || record.expiresAt < new Date()) {
+      throw new ValidationError("Password reset token is invalid, already consumed, or has expired.");
+    }
+
+    const newHash = hashPassword(newPassword);
+
+    // Atomically consume token and update password
+    await (prisma as any).$transaction(async (tx: any) => {
+      await tx.passwordResetToken.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      });
+
+      await tx.user.update({
+        where: { email: record.email },
+        data: { password: newHash },
+      });
+
+      // Invalidate all active sessions for this user
+      const user = await tx.user.findUnique({ where: { email: record.email } });
+      if (user) {
+        await tx.session.deleteMany({ where: { userId: user.id } });
+      }
+    });
+
+    logger.info("Password reset successfully executed and previous sessions revoked", { email: record.email });
+    return { success: true };
   }
 }
+
 
 
 export class ReportService implements IReportService {
