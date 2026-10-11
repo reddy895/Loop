@@ -93,12 +93,23 @@ function FeedbackInboxContent() {
         const res = await fetch(`${BACKEND_URL}/api/feedback?${params.toString()}`);
         if (res.ok) {
           const json = await res.json();
-          const items = (json.data?.items || json.items || []).map((f: any) => ({
+          const items = (json.data?.items || json.items || []).map((f: {
+            id: string;
+            customerLabel?: string;
+            customerEmail?: string;
+            channel?: string;
+            content?: string;
+            sentiment?: string;
+            sentimentScore?: number;
+            themeName?: string;
+            status?: string;
+            createdAt?: string;
+          }) => ({
             id: f.id,
             customerName: f.customerLabel || 'Customer',
             customerEmail: f.customerEmail || '',
-            channel: f.channel,
-            feedback: f.content,
+            channel: f.channel || 'CSV Import',
+            feedback: f.content || '',
             sentiment: f.sentiment ? (f.sentiment.charAt(0).toUpperCase() + f.sentiment.slice(1).toLowerCase()) : 'Neutral',
             sentimentScore: f.sentimentScore || 50,
             theme: f.themeName || 'UX Performance',
@@ -123,7 +134,7 @@ function FeedbackInboxContent() {
   const filteredAndSortedData = useMemo(() => {
     if (isServerMode) return serverData;
 
-    let result = feedbackList.filter((item) => {
+    const result = feedbackList.filter((item) => {
       const matchesSearch =
         searchQuery === '' ||
         item.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -336,7 +347,7 @@ function FeedbackInboxContent() {
             {/* Score Range Filter */}
             <select
               value={scoreFilter}
-              onChange={(e) => { setScoreFilter(e.target.value as any); setCurrentPage(1); }}
+              onChange={(e) => { setScoreFilter(e.target.value as 'all' | 'critical' | 'neutral' | 'positive'); setCurrentPage(1); }}
               className="px-2.5 py-2 rounded-xl border border-neutral-300 bg-white text-xs font-medium text-neutral-800 focus:outline-hidden focus:border-neutral-900 cursor-pointer"
             >
               <option value="all">Score: All (0-100)</option>
@@ -376,7 +387,7 @@ function FeedbackInboxContent() {
             {/* Sort Order */}
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as 'date-desc' | 'date-asc' | 'score-desc' | 'score-asc')}
               className="px-2.5 py-2 rounded-xl border border-neutral-300 bg-white text-xs font-medium text-neutral-800 focus:outline-hidden focus:border-neutral-900 cursor-pointer"
             >
               <option value="date-desc">Newest First</option>
