@@ -806,7 +806,7 @@ export class CsvImportService implements ICsvImportService {
           // Flush batch every BATCH_SIZE rows
           if (batchRecords.length >= BATCH_SIZE) {
             try {
-              await (prisma as any).feedback.createMany({ data: batchRecords, skipDuplicates: true });
+              await (prisma as any).feedback.createMany({ data: batchRecords });
               importedCount += batchRecords.length;
               batchRecords.length = 0;
             } catch (err) {
@@ -831,7 +831,7 @@ export class CsvImportService implements ICsvImportService {
     // Flush remaining batch
     if (usePrisma && batchRecords.length > 0) {
       try {
-        await (prisma as any).feedback.createMany({ data: batchRecords, skipDuplicates: true });
+        await (prisma as any).feedback.createMany({ data: batchRecords });
         importedCount += batchRecords.length;
       } catch (err) {
         logger.error("Prisma final batch insert failed", { err });

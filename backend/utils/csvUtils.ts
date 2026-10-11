@@ -132,10 +132,10 @@ export const validateCsvRow = (
   return {
     valid: true,
     data: {
-      content: content.trim(),
-      channel: channel.trim(),
-      customerLabel: customerLabel.trim(),
-      source: source.trim(),
+      content: sanitizeFormulaInjection(content.trim()),
+      channel: sanitizeFormulaInjection(channel.trim()),
+      customerLabel: sanitizeFormulaInjection(customerLabel.trim()),
+      source: sanitizeFormulaInjection(source.trim()),
       sentiment,
     },
   };
