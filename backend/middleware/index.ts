@@ -149,10 +149,47 @@ export const resolveAuthContext = async (
   }
 
   // 4. Resolve and verify workspace tenant
-  const requestedWorkspaceId =
+  let requestedWorkspaceId =
     req.headers.get(SYSTEM_CONSTANTS.WORKSPACE_ID_HEADER) ||
-    req.nextUrl.searchParams.get("workspaceId") ||
-    "ws_default";
+    req.nextUrl.searchParams.get("workspaceId");
+
+  if (!requestedWorkspaceId) {
+    // Look up user's primary active workspace
+    if (prisma && typeof (prisma as any).member?.findFirst === "function") {
+      try {
+        const primaryMember = await (prisma as any).member.findFirst({
+          where: {
+            OR: [
+              { userId: authenticatedUser.id },
+              { email: authenticatedUser.email.toLowerCase() },
+            ],
+          },
+          orderBy: { createdAt: "asc" },
+        });
+        if (primaryMember) {
+          requestedWorkspaceId = primaryMember.workspaceId;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    // Also check if owner of any workspace
+    if (!requestedWorkspaceId && prisma && typeof (prisma as any).workspace?.findFirst === "function") {
+      try {
+        const ownedWs = await (prisma as any).workspace.findFirst({
+          where: { ownerId: authenticatedUser.id },
+        });
+        if (ownedWs) {
+          requestedWorkspaceId = ownedWs.id;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    if (!requestedWorkspaceId) {
+      requestedWorkspaceId = "ws_default";
+    }
+  }
 
   let serverRole: UserRole = "VIEWER";
   let isMember = false;
