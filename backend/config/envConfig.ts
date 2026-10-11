@@ -13,7 +13,7 @@ import { IAppConfig, NodeEnvironment } from "@/types";
 const envSchema = z.object({
   DATABASE_URL: z
     .string()
-    .default("file:./prisma/dev.db"),
+    .default("file:./dev.db"),
   NEXTAUTH_URL: z
     .string()
     .default("http://localhost:3000"),

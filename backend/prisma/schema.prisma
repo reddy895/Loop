@@ -11,69 +11,81 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
+  id            String         @id @default(uuid())
   name          String
-  email         String    @unique
+  email         String         @unique
   password      String
-  jobTitle      String?   @default("Product Lead")
-  role          String    @default("ADMIN")
+  jobTitle      String?        @default("Product Lead")
+  role          String         @default("ADMIN")
   avatar        String?
-  emailAlerts   Boolean   @default(true)
-  weeklyDigest  Boolean   @default(true)
-  aiAutoTagging Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  isVerified    Boolean        @default(true)
+  emailAlerts   Boolean        @default(true)
+  weeklyDigest  Boolean        @default(true)
+  aiAutoTagging Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   sessions      Session[]
+  accounts      Account[]
+  memberships   Member[]
 
   @@map("users")
 }
 
 model Workspace {
-  id            String   @id @default(uuid())
+  id            String     @id @default(uuid())
   name          String
   code          String
   ownerId       String
   details       String?
   settings      String?
-  membersCount  Int      @default(1)
-  feedbackCount Int      @default(0)
-  reportsCount  Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  membersCount  Int        @default(1)
+  feedbackCount Int        @default(0)
+  reportsCount  Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  members       Member[]
+  feedbacks     Feedback[]
+  themes        Theme[]
 
+  @@index([ownerId])
   @@map("workspaces")
 }
 
 model Member {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   workspaceId String
   userId      String?
   email       String
-  role        String   @default("MEMBER")
-  status      String   @default("ACTIVE")
+  role        String     @default("MEMBER")
+  status      String     @default("ACTIVE")
   name        String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime   @default(now())
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@index([workspaceId, email])
+  @@index([userId])
   @@map("members")
 }
 
 /// Core feedback record — indexed for fast filtering on large datasets (lakhs of rows)
 model Feedback {
-  id             String   @id @default(uuid())
+  id             String     @id @default(uuid())
   workspaceId    String
   content        String
-  customerLabel  String   @default("Imported Customer")
+  customerLabel  String     @default("Imported Customer")
   customerEmail  String?
-  channel        String   @default("CSV Import")
-  sentiment      String   @default("NEUTRAL")
-  sentimentScore Float    @default(0)
-  source         String   @default("csv_batch")
+  channel        String     @default("CSV Import")
+  sentiment      String     @default("NEUTRAL")
+  sentimentScore Float      @default(0)
+  source         String     @default("csv_batch")
   themeId        String?
   themeName      String?
-  status         String   @default("NEW")
-  isDeleted      Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now())
+  status         String     @default("NEW")
+  isDeleted      Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @default(now())
+  workspace      Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, isDeleted, createdAt])
   @@index([workspaceId, sentiment, isDeleted])
@@ -84,13 +96,14 @@ model Feedback {
 }
 
 model Theme {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   workspaceId String
   name        String
   color       String
   description String?
-  trend       String   @default("STABLE")
-  createdAt   DateTime @default(now())
+  trend       String     @default("STABLE")
+  createdAt   DateTime   @default(now())
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
   @@map("themes")
@@ -124,5 +137,65 @@ model Session {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("sessions")
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  email     String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email, expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid())
+  email     String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+  @@map("email_verification_tokens")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  workspaceId String?
+  userId      String?
+  action      String
+  resource    String
+  details     String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId, createdAt])
+  @@index([userId, createdAt])
+  @@map("audit_logs")
 }
