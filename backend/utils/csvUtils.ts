@@ -1,24 +1,41 @@
 /**
  * @file csvUtils.ts
- * @description Utilities for converting JSON arrays into CSV string representations.
+ * @description Utilities for converting JSON arrays into CSV representations with spreadsheet formula injection protection
+ * and robust parsing of incoming CSV datasets.
  */
 
 /**
- * Converts an array of objects into a formatted CSV string representation.
- * @param data Array of records
+ * Neutralizes CSV/Spreadsheet Formula Injection (CSV Injection).
+ * Any cell value starting with '=', '+', '-', '@', '\t', or '\r' is prefixed with an apostrophe
+ * to force spreadsheet viewers (Excel, Sheets, Numbers) to parse the value strictly as text.
+ */
+export const sanitizeFormulaInjection = (val: unknown): string => {
+  if (val === null || val === undefined) return "";
+  const str = String(val).trim();
+
+  if (/^[=+\-@\t\r]/.test(str)) {
+    return `'${str}`;
+  }
+  return str;
+};
+
+/**
+ * Converts an array of objects into a sanitized, formatted CSV string representation.
+ * Automatically escapes quotation marks and neutralizes spreadsheet formula execution.
  */
 export const convertObjectsToCsv = <T extends Record<string, unknown>>(data: T[]): string => {
   if (!data || data.length === 0) return "";
 
   const headers = Object.keys(data[0]);
-  const headerLine = headers.join(",");
+  const headerLine = headers.map((h) => `"${sanitizeFormulaInjection(h).replace(/"/g, '""')}"`).join(",");
 
   const rowLines = data.map((row) => {
     return headers
       .map((header) => {
         const val = row[header];
         if (val === null || val === undefined) return '""';
-        const strVal = String(val).replace(/"/g, '""');
+        const sanitized = sanitizeFormulaInjection(val);
+        const strVal = String(sanitized).replace(/"/g, '""');
         return `"${strVal}"`;
       })
       .join(",");
@@ -29,12 +46,15 @@ export const convertObjectsToCsv = <T extends Record<string, unknown>>(data: T[]
 
 /**
  * Parses a CSV raw string into an array of header-mapped objects.
- * Handles quoted fields, commas, and line breaks.
+ * Handles quoted fields, commas, escaped quotes, and CRLF / LF line breaks safely.
  */
 export const parseCsvString = (csvContent: string): Record<string, string>[] => {
   if (!csvContent || !csvContent.trim()) return [];
 
-  const lines = csvContent
+  // Strip byte-order-mark (BOM) if present
+  const cleanContent = csvContent.charCodeAt(0) === 0xfeff ? csvContent.slice(1) : csvContent;
+
+  const lines = cleanContent
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
@@ -85,12 +105,16 @@ export const parseCsvString = (csvContent: string): Record<string, string>[] => 
 };
 
 /**
- * Validates a CSV row for required feedback fields.
+ * Validates a CSV row for required feedback fields and formats payload.
  */
 export const validateCsvRow = (
   row: Record<string, string>,
   rowIndex: number
-): { valid: boolean; error?: { row: number; message: string; field?: string }; data?: { content: string; channel: string; customerLabel: string; source?: string; sentiment?: string } } => {
+): {
+  valid: boolean;
+  error?: { row: number; message: string; field?: string };
+  data?: { content: string; channel: string; customerLabel: string; source?: string; sentiment?: string };
+} => {
   const content = row["content"] || row["feedback"] || row["text"] || row["message"];
   const channel = row["channel"] || row["source_channel"] || row["platform"] || "CSV Import";
   const customerLabel = row["customerlabel"] || row["customer"] || row["user"] || row["segment"] || "Imported Customer";
@@ -116,4 +140,3 @@ export const validateCsvRow = (
     },
   };
 };
-
