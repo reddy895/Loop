@@ -403,6 +403,34 @@ export class FeedbackService implements IFeedbackService {
 
   public async getFeedbackById(id: string, workspaceId: string): Promise<IFeedback> {
     logger.info(`${this.serviceName}: Fetching feedback by ID`, { id, workspaceId });
+    if (prisma) {
+      try {
+        const dbItem = await (prisma as any).feedback.findFirst({
+          where: { id, workspaceId, isDeleted: false },
+        });
+        if (dbItem) {
+          return {
+            id: dbItem.id,
+            workspaceId: dbItem.workspaceId,
+            content: dbItem.content,
+            channel: dbItem.channel,
+            status: dbItem.status,
+            customerLabel: dbItem.customerLabel,
+            source: dbItem.source,
+            sentiment: dbItem.sentiment as SentimentType,
+            sentimentScore: dbItem.sentimentScore,
+            themeId: dbItem.themeId,
+            themeName: dbItem.themeName,
+            isDeleted: dbItem.isDeleted,
+            createdAt: dbItem.createdAt.toISOString(),
+            updatedAt: dbItem.updatedAt.toISOString(),
+          };
+        }
+      } catch (err) {
+        logger.warn(`${this.serviceName}: Prisma getFeedbackById failed, falling back to memory`, { err });
+      }
+    }
+
     const item = getWorkspaceFeedback(workspaceId).find((f) => f.id === id && !f.isDeleted);
     if (!item) {
       throw new NotFoundError(`Feedback record with ID '${id}' not found in workspace.`);
@@ -447,6 +475,46 @@ export class FeedbackService implements IFeedbackService {
       themeName = themes[0].name;
     }
 
+    if (prisma) {
+      try {
+        const created = await (prisma as any).feedback.create({
+          data: {
+            workspaceId,
+            content: data.content,
+            channel: data.channel,
+            status: "NEW",
+            customerLabel: data.customerLabel,
+            source: data.source || "API Ingestion",
+            sentiment,
+            sentimentScore,
+            themeId,
+            themeName,
+            isDeleted: false,
+          },
+        });
+        const mapped: IFeedback = {
+          id: created.id,
+          workspaceId: created.workspaceId,
+          content: created.content,
+          channel: created.channel,
+          status: created.status,
+          customerLabel: created.customerLabel,
+          source: created.source,
+          sentiment: created.sentiment as SentimentType,
+          sentimentScore: created.sentimentScore,
+          themeId: created.themeId,
+          themeName: created.themeName,
+          isDeleted: created.isDeleted,
+          createdAt: created.createdAt.toISOString(),
+          updatedAt: created.updatedAt.toISOString(),
+        };
+        getWorkspaceFeedback(workspaceId).unshift(mapped);
+        return mapped;
+      } catch (err) {
+        logger.warn(`${this.serviceName}: Prisma createFeedback failed, falling back to memory`, { err });
+      }
+    }
+
     const newFeedback: IFeedback = {
       id: `fb_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       workspaceId,
@@ -477,6 +545,54 @@ export class FeedbackService implements IFeedbackService {
 
   public async updateFeedback(id: string, workspaceId: string, data: IUpdateFeedbackInput): Promise<IFeedback> {
     logger.info(`${this.serviceName}: Updating feedback record`, { id, workspaceId });
+    if (prisma) {
+      try {
+        const updatePayload: Record<string, unknown> = { updatedAt: new Date() };
+        if (data.content !== undefined) updatePayload.content = data.content;
+        if (data.status !== undefined) updatePayload.status = data.status;
+        if (data.channel !== undefined) updatePayload.channel = data.channel;
+        if (data.customerLabel !== undefined) updatePayload.customerLabel = data.customerLabel;
+        if (data.sentiment !== undefined) {
+          updatePayload.sentiment = data.sentiment;
+          updatePayload.sentimentScore = data.sentiment === "POSITIVE" ? 0.85 : data.sentiment === "NEGATIVE" ? -0.8 : 0.0;
+        }
+        if (data.themeId !== undefined) {
+          updatePayload.themeId = data.themeId;
+          const themes = getWorkspaceThemes(workspaceId);
+          const t = themes.find((th) => th.id === data.themeId);
+          if (t) updatePayload.themeName = t.name;
+        }
+
+        const updated = await (prisma as any).feedback.updateMany({
+          where: { id, workspaceId, isDeleted: false },
+          data: updatePayload,
+        });
+        if (updated.count > 0) {
+          const item = await (prisma as any).feedback.findUnique({ where: { id } });
+          if (item) {
+            return {
+              id: item.id,
+              workspaceId: item.workspaceId,
+              content: item.content,
+              channel: item.channel,
+              status: item.status,
+              customerLabel: item.customerLabel,
+              source: item.source,
+              sentiment: item.sentiment as SentimentType,
+              sentimentScore: item.sentimentScore,
+              themeId: item.themeId,
+              themeName: item.themeName,
+              isDeleted: item.isDeleted,
+              createdAt: item.createdAt.toISOString(),
+              updatedAt: item.updatedAt.toISOString(),
+            };
+          }
+        }
+      } catch (err) {
+        logger.warn(`${this.serviceName}: Prisma updateFeedback failed, falling back to memory`, { err });
+      }
+    }
+
     const item = getWorkspaceFeedback(workspaceId).find((f) => f.id === id && !f.isDeleted);
     if (!item) {
       throw new NotFoundError(`Feedback record with ID '${id}' not found in workspace.`);
@@ -502,6 +618,17 @@ export class FeedbackService implements IFeedbackService {
 
   public async deleteFeedback(id: string, workspaceId: string): Promise<{ success: boolean; id: string }> {
     logger.info(`${this.serviceName}: Soft deleting feedback record`, { id, workspaceId });
+    if (prisma) {
+      try {
+        await (prisma as any).feedback.updateMany({
+          where: { id, workspaceId },
+          data: { isDeleted: true, updatedAt: new Date() },
+        });
+      } catch (err) {
+        logger.warn(`${this.serviceName}: Prisma deleteFeedback failed, falling back to memory`, { err });
+      }
+    }
+
     const item = getWorkspaceFeedback(workspaceId).find((f) => f.id === id && !f.isDeleted);
     if (!item) {
       throw new NotFoundError(`Feedback record with ID '${id}' not found in workspace.`);
