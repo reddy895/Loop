@@ -1,12 +1,12 @@
 /**
  * @file app/api/members/[id]/route.ts
- * @description REST API Route handler for updating member role/status and removing members.
+ * @description REST API Route handler for updating member role/status and removing members with server-side RBAC.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { memberService } from "@/services";
 import { createSuccessResponse, ValidationError } from "@/utils";
-import { handleApiError, requestLoggerMiddleware, extractAuthContext } from "@/middleware";
+import { handleApiError, requestLoggerMiddleware, resolveAuthContext } from "@/middleware";
 import { updateMemberSchema, validateData } from "@/validators";
 
 interface RouteParams {
@@ -23,7 +23,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams): Promise<
   requestLoggerMiddleware(req);
 
   try {
-    const authContext = extractAuthContext(req, ["ADMIN", "OWNER"]);
+    const authContext = await resolveAuthContext(req, ["ADMIN", "OWNER"]);
     const body = await req.json().catch(() => ({}));
     const validatedBody = validateData(updateMemberSchema, body);
 
@@ -52,7 +52,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams): Promise
   requestLoggerMiddleware(req);
 
   try {
-    const authContext = extractAuthContext(req, ["ADMIN", "OWNER"]);
+    const authContext = await resolveAuthContext(req, ["ADMIN", "OWNER"]);
 
     const result = await memberService.removeMemberFromWorkspace(authContext.workspaceId, params.id);
 

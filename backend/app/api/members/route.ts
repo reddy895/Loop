@@ -1,12 +1,12 @@
 /**
  * @file app/api/members/route.ts
- * @description REST API Route handler for workspace member listing and member invitations.
+ * @description REST API Route handler for workspace member listing and member invitations with server-side authorization.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { memberService } from "@/services";
 import { createSuccessResponse, createPaginatedResponse } from "@/utils";
-import { handleApiError, requestLoggerMiddleware, extractAuthContext } from "@/middleware";
+import { handleApiError, requestLoggerMiddleware, resolveAuthContext } from "@/middleware";
 import { memberQuerySchema, inviteMemberSchema, validateData } from "@/validators";
 import { HTTP_STATUS_CODES } from "@/constants";
 
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   requestLoggerMiddleware(req);
 
   try {
-    const authContext = extractAuthContext(req);
+    const authContext = await resolveAuthContext(req);
     const searchParams = Object.fromEntries(req.nextUrl.searchParams.entries());
     const validatedQuery = validateData(memberQuerySchema, searchParams);
 
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   requestLoggerMiddleware(req);
 
   try {
-    const authContext = extractAuthContext(req, ["ADMIN", "OWNER"]);
+    const authContext = await resolveAuthContext(req, ["ADMIN", "OWNER"]);
     const body = await req.json().catch(() => ({}));
     const validatedBody = validateData(inviteMemberSchema, body);
 
