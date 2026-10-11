@@ -19,11 +19,13 @@ import {
   Zap
 } from 'lucide-react';
 
+type DatasetId = 'enterprise' | 'appstore' | 'zendesk' | 'custom';
+
 export const RetrieveCSVModal: React.FC = () => {
   const { isRetrieveModalOpen, closeRetrieveModal, retrieveCSV } = useFeedbackContext();
-  const { token } = useAuth() as any;
+  const { token } = useAuth();
 
-  const [selectedDataset, setSelectedDataset] = useState<'enterprise' | 'appstore' | 'zendesk' | 'custom'>('enterprise');
+  const [selectedDataset, setSelectedDataset] = useState<DatasetId>('enterprise');
   const [customCsvContent, setCustomCsvContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isRetrieving, setIsRetrieving] = useState(false);
@@ -34,7 +36,13 @@ export const RetrieveCSVModal: React.FC = () => {
   const [isStreamingUpload, setIsStreamingUpload] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const datasetOptions = [
+  const datasetOptions: Array<{
+    id: DatasetId;
+    title: string;
+    subtitle: string;
+    badge: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }> = [
     {
       id: 'enterprise',
       title: 'Enterprise Customer Feedback Dataset (Q3)',
@@ -251,7 +259,7 @@ export const RetrieveCSVModal: React.FC = () => {
                 return (
                   <div
                     key={opt.id}
-                    onClick={() => setSelectedDataset(opt.id as any)}
+                    onClick={() => setSelectedDataset(opt.id)}
                     className={`p-3.5 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${
                       isSelected
                         ? 'bg-neutral-50 border-black shadow-xs ring-1 ring-black'

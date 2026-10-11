@@ -57,7 +57,7 @@ export const ChartContainer: React.FC<ChartContainerProps> = ({
 };
 
 /* 1. Feedback Volume Area Chart */
-export const FeedbackVolumeChart: React.FC<{ data: any[] }> = ({ data }) => {
+export const FeedbackVolumeChart: React.FC<{ data: Record<string, unknown>[] }> = ({ data }) => {
   return (
     <AreaChart data={data} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
       <defs>
@@ -93,7 +93,7 @@ export const FeedbackVolumeChart: React.FC<{ data: any[] }> = ({ data }) => {
 };
 
 /* 2. Sentiment Breakdown Pie Chart */
-export const SentimentPieChart: React.FC<{ data: any[] }> = ({ data }) => {
+export const SentimentPieChart: React.FC<{ data: Array<{ name: string; value: number; color?: string }> }> = ({ data }) => {
   return (
     <PieChart>
       <Pie
@@ -127,7 +127,7 @@ export const SentimentPieChart: React.FC<{ data: any[] }> = ({ data }) => {
 };
 
 /* 3. Top Themes Bar Chart */
-export const TopThemesBarChart: React.FC<{ data: any[] }> = ({ data }) => {
+export const TopThemesBarChart: React.FC<{ data: Record<string, unknown>[] }> = ({ data }) => {
   return (
     <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 60 }}>
       <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
@@ -155,7 +155,7 @@ export const TopThemesBarChart: React.FC<{ data: any[] }> = ({ data }) => {
 };
 
 /* 4. Theme Trend Line Chart */
-export const ThemeTrendLineChart: React.FC<{ data: any[] }> = ({ data }) => {
+export const ThemeTrendLineChart: React.FC<{ data: Record<string, unknown>[] }> = ({ data }) => {
   return (
     <LineChart data={data} margin={{ top: 10, right: 30, left: -10, bottom: 0 }}>
       <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />

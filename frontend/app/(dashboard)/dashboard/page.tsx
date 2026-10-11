@@ -18,9 +18,7 @@ import { useFeedbackContext } from '@/context/FeedbackContext';
 import { FeedbackItem } from '@/types';
 import {
   MessageSquare,
-  TrendingDown,
   TrendingUp,
-  Clock,
   FileSpreadsheet,
   ArrowRight,
   Sparkles,
@@ -32,10 +30,7 @@ import {
   FileText,
   Activity,
   CheckCircle2,
-  Calendar,
   AlertTriangle,
-  Lightbulb,
-  ExternalLink,
   Eye
 } from 'lucide-react';
 
@@ -49,7 +44,6 @@ export default function DashboardPage() {
     sentimentPieData,
     topThemesBarData,
     reportsList,
-    themeSummaries,
     openRetrieveModal,
     resetToZero,
     lastRetrievedTime
@@ -301,7 +295,7 @@ export default function DashboardPage() {
                     No Customer Feedback Records
                   </h4>
                   <p className="text-xs text-neutral-500 font-sans max-w-sm mt-1 mb-4 leading-relaxed">
-                    Workspace is initialized at 0. Click "Retrieve CSV" below to fetch customer feedback data and populate recent tickets.
+                    Workspace is initialized at 0. Click &quot;Retrieve CSV&quot; below to fetch customer feedback data and populate recent tickets.
                   </p>
                   <Button
                     variant="primary"

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFeedbackContext } from '@/context/FeedbackContext';
 import {
@@ -16,7 +16,6 @@ import {
   Settings,
   User,
   FileSpreadsheet,
-  ArrowRight,
   CornerDownLeft,
   X,
   Sparkles
@@ -32,7 +31,7 @@ interface CommandItem {
   category: 'Navigation' | 'Actions' | 'Feedback';
   title: string;
   subtitle?: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   action: () => void;
   badge?: string;
 }
@@ -48,9 +47,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   // Focus input when opened
   useEffect(() => {
     if (isOpen) {
-      setQuery('');
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      const timer = setTimeout(() => {
+        setQuery('');
+        setSelectedIndex(0);
+        inputRef.current?.focus();
+      }, 10);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -219,7 +221,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         }))
     : [];
 
-  const allFilteredItems = [
+  const allFilteredItems = useMemo(() => [
     ...defaultNavigationItems.filter((i) =>
       i.title.toLowerCase().includes(query.toLowerCase()) ||
       (i.subtitle && i.subtitle.toLowerCase().includes(query.toLowerCase()))
@@ -229,7 +231,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       (i.subtitle && i.subtitle.toLowerCase().includes(query.toLowerCase()))
     ),
     ...feedbackItems
-  ];
+  ], [query, feedbackItems, defaultNavigationItems, defaultActionItems]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -255,7 +257,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, selectedIndex, allFilteredItems]);
+  }, [isOpen, selectedIndex, allFilteredItems, onClose]);
 
   // Ensure selected item is scrolled into view
   useEffect(() => {

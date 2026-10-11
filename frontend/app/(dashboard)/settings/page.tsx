@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -31,16 +31,14 @@ function SettingsContent() {
   const { user, updateProfile, changePassword, logout } = useAuth();
 
   // Active Tab state
+  type SettingsTab = 'profile' | 'security' | 'preferences' | 'appearance' | 'workspace';
   const tabQuery = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'appearance' | 'workspace'>(
-    (tabQuery as any) || 'profile'
-  );
+  const initialTab: SettingsTab =
+    tabQuery && ['profile', 'security', 'preferences', 'appearance', 'workspace'].includes(tabQuery)
+      ? (tabQuery as SettingsTab)
+      : 'profile';
 
-  useEffect(() => {
-    if (tabQuery && ['profile', 'security', 'preferences', 'appearance', 'workspace'].includes(tabQuery)) {
-      setActiveTab(tabQuery as any);
-    }
-  }, [tabQuery]);
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
 
   // Profile Form state
   const [name, setName] = useState(user?.name || 'Praveen Kumar');
@@ -71,17 +69,17 @@ function SettingsContent() {
   const [language, setLanguage] = useState('English (US)');
   const [timezone, setTimezone] = useState('UTC-05:00 Eastern Time');
 
-  // Keep state synced with loaded user
-  useEffect(() => {
-    if (user) {
-      setName(user.name);
-      setEmail(user.email);
-      setJobTitle(user.jobTitle);
-      setEmailAlerts(user.emailAlerts);
-      setWeeklyDigest(user.weeklyDigest);
-      setAiAutoTagging(user.aiAutoTagging);
-    }
-  }, [user]);
+  // Keep state synced when user changes
+  const [prevUserId, setPrevUserId] = useState(user?.id);
+  if (user && user.id !== prevUserId) {
+    setPrevUserId(user.id);
+    setName(user.name);
+    setEmail(user.email);
+    setJobTitle(user.jobTitle);
+    setEmailAlerts(user.emailAlerts);
+    setWeeklyDigest(user.weeklyDigest);
+    setAiAutoTagging(user.aiAutoTagging);
+  }
 
   // Password strength calculation
   const getPasswordStrength = (pass: string) => {

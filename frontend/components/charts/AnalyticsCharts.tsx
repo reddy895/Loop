@@ -17,7 +17,7 @@ import {
 } from 'recharts';
 
 /* 1. Stacked Bar Chart: Sentiment Breakdown per Integration Channel */
-export const ChannelSentimentBarChart: React.FC<{ data: any[] }> = ({ data }) => {
+export const ChannelSentimentBarChart: React.FC<{ data: Record<string, unknown>[] }> = ({ data }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 15, right: 25, left: -10, bottom: 5 }}>
@@ -44,7 +44,7 @@ export const ChannelSentimentBarChart: React.FC<{ data: any[] }> = ({ data }) =>
 };
 
 /* 2. Sentiment Trend Velocity Line Chart over 6 Weeks */
-export const SentimentTrendLineChart: React.FC<{ data: any[] }> = ({ data }) => {
+export const SentimentTrendLineChart: React.FC<{ data: Record<string, unknown>[] }> = ({ data }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data} margin={{ top: 15, right: 25, left: -10, bottom: 5 }}>
@@ -69,7 +69,7 @@ export const SentimentTrendLineChart: React.FC<{ data: any[] }> = ({ data }) => 
 };
 
 /* 3. Theme Month-over-Month Comparison (Current Month vs Previous Month) */
-export const ThemeComparisonBarChart: React.FC<{ data: any[] }> = ({ data }) => {
+export const ThemeComparisonBarChart: React.FC<{ data: Record<string, unknown>[] }> = ({ data }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 15, right: 25, left: -10, bottom: 5 }}>
@@ -94,7 +94,7 @@ export const ThemeComparisonBarChart: React.FC<{ data: any[] }> = ({ data }) => 
 };
 
 /* 4. Sentiment Score Distribution (0-100 Score Spread) */
-export const SentimentDistributionChart: React.FC<{ data: any[] }> = ({ data }) => {
+export const SentimentDistributionChart: React.FC<{ data: Record<string, unknown>[] }> = ({ data }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart data={data} margin={{ top: 15, right: 25, left: -10, bottom: 5 }}>

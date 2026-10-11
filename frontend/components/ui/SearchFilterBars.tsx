@@ -128,6 +128,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
 
         <FilterSelect
+          label="Status"
+          value={statusFilter}
+          onChange={onStatusChange}
+          options={[
+            { label: 'All Statuses', value: '' },
+            { label: 'New', value: 'NEW' },
+            { label: 'Processed', value: 'PROCESSED' },
+            { label: 'Archived', value: 'ARCHIVED' }
+          ]}
+        />
+
+        <FilterSelect
           label="Sentiment"
           value={sentimentFilter}
           onChange={onSentimentChange}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -21,9 +21,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  X,
-  Sparkles,
-  ExternalLink
+  X
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -36,7 +34,7 @@ interface SidebarProps {
 interface NavItem {
   label: string;
   href: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   badge?: string;
   exact?: boolean;
 }

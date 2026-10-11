@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
@@ -22,7 +22,9 @@ import {
 
 function WorkspaceContent() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'details' | 'members'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'members'>(() => {
+    return searchParams.get('tab') === 'members' ? 'members' : 'details';
+  });
   const [membersList, setMembersList] = useState<WorkspaceMember[]>(mockMembers);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
@@ -30,12 +32,6 @@ function WorkspaceContent() {
   const [inviteName, setInviteName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<MemberRole>('Analyst');
-
-  useEffect(() => {
-    if (searchParams.get('tab') === 'members') {
-      setActiveTab('members');
-    }
-  }, [searchParams]);
 
   const handleInviteSubmit = (e: React.FormEvent) => {
     e.preventDefault();

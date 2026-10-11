@@ -15,12 +15,22 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('loop_sidebar_collapsed');
+        if (saved !== null) return saved === 'true';
+      } catch {
+        // Ignore
+      }
+    }
+    return false;
+  });
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   // Authentication & Protected Route Enforcement
@@ -31,24 +41,12 @@ export default function DashboardLayout({
     }
   }, [isLoading, isAuthenticated, router, pathname]);
 
-  // Restore sidebar collapsed preference
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('loop_sidebar_collapsed');
-      if (saved !== null) {
-        setIsSidebarCollapsed(saved === 'true');
-      }
-    } catch (e) {
-      // Ignore localStorage errors
-    }
-  }, []);
-
   const handleToggleCollapse = () => {
     setIsSidebarCollapsed((prev) => {
       const next = !prev;
       try {
         localStorage.setItem('loop_sidebar_collapsed', String(next));
-      } catch (e) {
+      } catch {
         // Ignore localStorage errors
       }
       return next;

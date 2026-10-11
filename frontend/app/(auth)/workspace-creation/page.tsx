@@ -22,7 +22,7 @@ export default function WorkspaceCreationPage() {
       <CardHeader className="text-center pb-4">
         <CardTitle className="text-2xl">Initialize Workspace</CardTitle>
         <CardDescription>
-          Configure your organization's feedback portal settings
+          Configure your organization&apos;s feedback portal settings
         </CardDescription>
       </CardHeader>
 

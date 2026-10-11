@@ -127,7 +127,7 @@ export async function uploadCsvInChunks(
     processedRows += chunkRows.length;
     const percentage = Math.round((processedRows / totalRows) * 100);
     const estimatedRemaining = totalChunks - chunkIdx - 1;
-    const message = `Uploaded ${processedRows.toLocaleString()} / ${totalRows.toLocaleString()} rows (batch ${chunkIdx + 1} of ${totalChunks})`;
+    const message = `Uploaded ${processedRows.toLocaleString()} / ${totalRows.toLocaleString()} rows (batch ${chunkIdx + 1} of ${totalChunks}${estimatedRemaining > 0 ? `, ${estimatedRemaining} remaining` : ''})`;
 
     onProgress({ phase: 'uploading', processedRows, totalRows, importedCount: totalImported, failedCount: totalFailed, percentage, message });
   }

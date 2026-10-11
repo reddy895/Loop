@@ -13,23 +13,30 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>('light');
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedTheme = localStorage.getItem('loop-theme');
+        if (savedTheme === 'dark' || savedTheme === 'light') {
+          return savedTheme;
+        }
+      } catch {
+        return 'light';
+      }
+    }
+    return 'light';
+  });
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('loop-theme') as Theme;
-    if (savedTheme === 'dark' || savedTheme === 'light') {
-      setThemeState(savedTheme);
-      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-    }
-  }, []);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
 
   const setTheme = (t: Theme) => {
     setThemeState(t);
-    localStorage.setItem('loop-theme', t);
-    if (t === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    try {
+      localStorage.setItem('loop-theme', t);
+    } catch {
+      // Ignore
     }
   };
 

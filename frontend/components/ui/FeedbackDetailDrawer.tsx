@@ -9,16 +9,11 @@ import {
   X,
   Sparkles,
   User,
-  Mail,
   Calendar,
   Layers,
-  MessageSquare,
-  Bot,
   ExternalLink,
   Copy,
   Check,
-  CheckCircle2,
-  Clock,
   ShieldCheck
 } from 'lucide-react';
 
@@ -26,7 +21,7 @@ interface FeedbackDetailDrawerProps {
   item: FeedbackItem | null;
   isOpen: boolean;
   onClose: () => void;
-  onStatusChange?: (id: string, newStatus: any) => void;
+  onStatusChange?: (id: string, newStatus: FeedbackItem['status']) => void;
 }
 
 export const FeedbackDetailDrawer: React.FC<FeedbackDetailDrawerProps> = ({

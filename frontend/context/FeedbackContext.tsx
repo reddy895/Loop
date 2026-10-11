@@ -7,8 +7,7 @@ import {
   CustomerReport
 } from '@/types';
 import {
-  getDatasetBundle,
-  parseCustomCsvContent
+  getDatasetBundle
 } from '@/lib/datasetGenerator';
 
 // Zero-state data constants for new user initialization
@@ -93,14 +92,14 @@ interface FeedbackContextType {
     csat?: string;
     nps?: string;
   };
-  volumeData: any[];
-  sentimentPieData: any[];
-  topThemesBarData: any[];
-  channelSentimentData: any[];
-  weeklySentimentTrend: any[];
-  themeComparisonData: any[];
-  sentimentDistributionData: any[];
-  channelPerformanceList: any[];
+  volumeData: Record<string, unknown>[];
+  sentimentPieData: Array<{ name: string; value: number; color?: string }>;
+  topThemesBarData: Record<string, unknown>[];
+  channelSentimentData: Record<string, unknown>[];
+  weeklySentimentTrend: Record<string, unknown>[];
+  themeComparisonData: Record<string, unknown>[];
+  sentimentDistributionData: Record<string, unknown>[];
+  channelPerformanceList: Record<string, unknown>[];
   themeSummaries: ThemeSummary[];
   reportsList: CustomerReport[];
   isRetrieveModalOpen: boolean;
@@ -118,7 +117,7 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [isRetrieved, setIsRetrieved] = useState<boolean>(false);
   const [isServerMode, setIsServerMode] = useState<boolean>(false); // true = data is in SQLite DB
   const [activeDatasetType, setActiveDatasetType] = useState<DatasetType>('enterprise');
-  const [currentBundle, setCurrentBundle] = useState<any>(null);
+  const [currentBundle, setCurrentBundle] = useState<ReturnType<typeof getDatasetBundle> | null>(null);
   const [isRetrieveModalOpen, setIsRetrieveModalOpen] = useState<boolean>(false);
   const [lastRetrievedTime, setLastRetrievedTime] = useState<string | null>(null);
   const [customItemsList, setCustomItemsList] = useState<FeedbackItem[] | null>(null);
