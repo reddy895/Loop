@@ -10,8 +10,18 @@ export interface IEnvironmentVariables {
   DATABASE_URL: string;
   NEXTAUTH_URL: string;
   NEXTAUTH_SECRET: string;
+  CORS_ALLOWED_ORIGINS?: string;
   GEMINI_API_KEY?: string;
   OLLAMA_BASE_URL?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  GITHUB_CLIENT_ID?: string;
+  GITHUB_CLIENT_SECRET?: string;
+  SMTP_HOST?: string;
+  SMTP_PORT?: string;
+  SMTP_USER?: string;
+  SMTP_PASSWORD?: string;
+  EMAIL_FROM?: string;
   NODE_ENV: NodeEnvironment;
 }
 
@@ -19,8 +29,18 @@ export interface IAppConfig {
   databaseUrl: string;
   nextAuthUrl: string;
   nextAuthSecret: string;
+  corsAllowedOrigins: string[];
   geminiApiKey?: string;
   ollamaBaseUrl?: string;
+  googleClientId?: string;
+  googleClientSecret?: string;
+  githubClientId?: string;
+  githubClientSecret?: string;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpUser?: string;
+  smtpPassword?: string;
+  emailFrom?: string;
   nodeEnv: NodeEnvironment;
   isProduction: boolean;
   isDevelopment: boolean;
