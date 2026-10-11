@@ -1,43 +1,52 @@
 /**
  * @file app/api/auth/register/route.ts
- * @description API endpoint for new user registration.
+ * @description Secure API endpoint for new user registration with rate limiting and strict Zod validation.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { authService } from "@/services";
 import { createSuccessResponse } from "@/utils";
-import { handleApiError, requestLoggerMiddleware } from "@/middleware";
+import { handleApiError, requestLoggerMiddleware, applyRateLimit } from "@/middleware";
+import { registerSchema, validateData } from "@/validators";
 import { HTTP_STATUS_CODES } from "@/constants";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   requestLoggerMiddleware(req);
 
+  // Apply rate limiting (5 attempts / 60 seconds per IP)
+  const rateLimitResponse = applyRateLimit(req, "AUTH_REGISTER");
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await req.json().catch(() => ({}));
-    const { email, name, password, jobTitle, companyName } = body;
-
-    if (!email || !name || !password) {
-      return NextResponse.json(
-        { success: false, message: "Name, email, and password are required." },
-        { status: HTTP_STATUS_CODES.BAD_REQUEST }
-      );
-    }
+    const validatedData = validateData(registerSchema, body);
 
     const user = await authService.registerUser({
-      name,
-      email,
-      password,
-      jobTitle: jobTitle || "Product Manager",
-      companyName,
+      name: validatedData.name,
+      email: validatedData.email,
+      password: validatedData.password,
+      jobTitle: validatedData.jobTitle || "Product Lead",
+      companyName: validatedData.companyName,
     });
 
-    const token = await authService.generateSessionToken(user.id);
+    const token = await authService.generateSessionToken((user as any).id);
 
-    return createSuccessResponse(
+    const response = createSuccessResponse(
       { user, token },
-      "User registered successfully.",
+      "Account registered successfully. Welcome to Project LOOP.",
       HTTP_STATUS_CODES.CREATED
     );
+
+    // Set secure session cookie
+    response.cookies.set("loop_session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60,
+    });
+
+    return response;
   } catch (error) {
     return handleApiError(error);
   }
