@@ -11,12 +11,12 @@
  */
 export const sanitizeFormulaInjection = (val: unknown): string => {
   if (val === null || val === undefined) return "";
-  const str = String(val).trim();
+  const raw = String(val);
 
-  if (/^[=+\-@\t\r]/.test(str)) {
-    return `'${str}`;
+  if (/^[=+\-@\t\r]/.test(raw) || /^[=+\-@\t\r]/.test(raw.trim())) {
+    return `'${raw}`;
   }
-  return str;
+  return raw;
 };
 
 /**
