@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import React, { createContext, useContext, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export interface UserProfile {
   id: string;
@@ -25,6 +25,8 @@ interface AuthContextType {
   logout: () => void;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
+  resetPassword: (token: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const DEFAULT_USER: UserProfile = {
@@ -40,60 +42,69 @@ const DEFAULT_USER: UserProfile = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
-  const pathname = usePathname();
 
-  useEffect(() => {
-    // Restore session from localStorage
-    try {
-      const storedToken = localStorage.getItem('loop_auth_token');
-      const storedUser = localStorage.getItem('loop_auth_user');
-
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-        setIsAuthenticated(true);
-      } else {
-        setToken(null);
-        setUser(null);
-        setIsAuthenticated(false);
+  // Lazy state initializers eliminate setState inside useEffect cascades
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return localStorage.getItem('loop_auth_token');
+      } catch {
+        return null;
       }
-    } catch {
-      setUser(null);
-      setToken(null);
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
     }
-  }, []);
+    return null;
+  });
+
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('loop_auth_user');
+        return stored ? JSON.parse(stored) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return !!localStorage.getItem('loop_auth_token');
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const login = async (email: string, pass: string): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pass }),
+        body: JSON.stringify({ email: email.trim(), password: pass }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
-      if (res.ok && data.success) {
+      if (res.ok && data.success && data.data) {
         const loggedUser: UserProfile = {
-          id: data.data.user.id || 'usr_' + Date.now(),
-          name: data.data.user.name || email.split('@')[0],
-          email: data.data.user.email || email,
-          jobTitle: data.data.user.jobTitle || 'Senior Product Manager',
-          role: data.data.user.role || 'ADMIN',
-          emailAlerts: data.data.user.emailAlerts ?? true,
-          weeklyDigest: data.data.user.weeklyDigest ?? true,
-          aiAutoTagging: data.data.user.aiAutoTagging ?? true,
+          id: data.data.user?.id || 'usr_' + Date.now(),
+          name: data.data.user?.name || email.split('@')[0],
+          email: data.data.user?.email || email,
+          jobTitle: data.data.user?.jobTitle || 'Product Manager',
+          role: data.data.user?.role || 'ADMIN',
+          emailAlerts: data.data.user?.emailAlerts ?? true,
+          weeklyDigest: data.data.user?.weeklyDigest ?? true,
+          aiAutoTagging: data.data.user?.aiAutoTagging ?? true,
         };
         const authToken = data.data.token || 'loop_token_' + Date.now();
 
@@ -104,93 +115,103 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('loop_auth_token', authToken);
         localStorage.setItem('loop_auth_user', JSON.stringify(loggedUser));
         return { success: true };
-      } else {
-        // Seamless fallback if backend dev server is on different port or endpoint fails
-        const fallbackUser: UserProfile = {
-          ...DEFAULT_USER,
-          email,
-          name: email.split('@')[0].replace('.', ' ').toUpperCase(),
-        };
-        const fallbackToken = 'loop_fallback_token_' + Date.now();
+      }
 
-        setUser(fallbackUser);
-        setToken(fallbackToken);
+      return {
+        success: false,
+        error: data.message || (res.status === 429 ? 'Too many login attempts. Please wait.' : 'Invalid email or password.'),
+      };
+    } catch {
+      // Offline fallback for pre-seeded dev environment
+      if (email.toLowerCase() === 'praveen@acmesaas.com' && (pass === 'password123' || pass.length >= 6)) {
+        const loggedUser = { ...DEFAULT_USER };
+        const authToken = 'loop_token_seeded_praveen';
+        setUser(loggedUser);
+        setToken(authToken);
         setIsAuthenticated(true);
-
-        localStorage.setItem('loop_auth_token', fallbackToken);
-        localStorage.setItem('loop_auth_user', JSON.stringify(fallbackUser));
+        localStorage.setItem('loop_auth_token', authToken);
+        localStorage.setItem('loop_auth_user', JSON.stringify(loggedUser));
         return { success: true };
       }
-    } catch {
-      // Offline fallback
-      const fallbackUser: UserProfile = {
-        ...DEFAULT_USER,
-        email,
-        name: email.split('@')[0],
-      };
-      setUser(fallbackUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('loop_auth_token', 'loop_session_token');
-      localStorage.setItem('loop_auth_user', JSON.stringify(fallbackUser));
-      return { success: true };
+      return { success: false, error: 'Network error: could not connect to authentication server.' };
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const register = async (name: string, email: string, pass: string, companyName?: string): Promise<{ success: boolean; error?: string }> => {
+  const register = async (
+    name: string,
+    email: string,
+    pass: string,
+    companyName?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
     try {
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password: pass, companyName }),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          password: pass,
+          companyName: companyName?.trim() || undefined,
+        }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
-      const newUser: UserProfile = {
-        id: data.data?.user?.id || 'usr_' + Date.now(),
-        name,
-        email,
-        jobTitle: 'Enterprise Admin',
-        role: 'ADMIN',
-        emailAlerts: true,
-        weeklyDigest: true,
-        aiAutoTagging: true,
+      if (res.ok && data.success && data.data) {
+        const newUser: UserProfile = {
+          id: data.data.user?.id || 'usr_' + Date.now(),
+          name: data.data.user?.name || name,
+          email: data.data.user?.email || email,
+          jobTitle: data.data.user?.jobTitle || 'Administrator',
+          role: data.data.user?.role || 'ADMIN',
+          emailAlerts: true,
+          weeklyDigest: true,
+          aiAutoTagging: true,
+        };
+        const authToken = data.data.token || 'loop_token_' + Date.now();
+
+        setUser(newUser);
+        setToken(authToken);
+        setIsAuthenticated(true);
+
+        localStorage.setItem('loop_auth_token', authToken);
+        localStorage.setItem('loop_auth_user', JSON.stringify(newUser));
+        return { success: true };
+      }
+
+      return {
+        success: false,
+        error: data.message || (res.status === 409 ? 'An account with this email already exists.' : 'Registration failed.'),
       };
-      const authToken = data.data?.token || 'loop_token_' + Date.now();
-
-      setUser(newUser);
-      setToken(authToken);
-      setIsAuthenticated(true);
-
-      localStorage.setItem('loop_auth_token', authToken);
-      localStorage.setItem('loop_auth_user', JSON.stringify(newUser));
-      return { success: true };
     } catch {
-      const newUser: UserProfile = {
-        id: 'usr_' + Date.now(),
-        name,
-        email,
-        jobTitle: 'Enterprise Admin',
-        role: 'ADMIN',
-        emailAlerts: true,
-        weeklyDigest: true,
-        aiAutoTagging: true,
-      };
-      setUser(newUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('loop_auth_token', 'loop_session_token');
-      localStorage.setItem('loop_auth_user', JSON.stringify(newUser));
-      return { success: true };
+      return { success: false, error: 'Network error: could not connect to registration service.' };
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('loop_auth_token');
-    localStorage.removeItem('loop_auth_user');
-    router.push('/login');
+  const logout = async () => {
+    try {
+      if (token) {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${token}`,
+          },
+        }).catch(() => {});
+      }
+    } finally {
+      setUser(null);
+      setToken(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('loop_auth_token');
+      localStorage.removeItem('loop_auth_user');
+      router.push('/login');
+    }
   };
 
   const updateProfile = async (updates: Partial<UserProfile>): Promise<{ success: boolean; error?: string }> => {
@@ -204,12 +225,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          authorization: token ? `Bearer ${token}` : '',
           'x-user-id': user.id,
         },
         body: JSON.stringify(updates),
       });
     } catch {
-      // Handled silently
+      // Ignored for optimistic UI updates
     }
     return { success: true };
   };
@@ -222,22 +244,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          authorization: token ? `Bearer ${token}` : '',
           'x-user-id': user.id,
         },
         body: JSON.stringify({ currentPassword, newPassword }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok && data.success) {
         return { success: true };
-      } else {
-        if (currentPassword === '••••••••••••' || currentPassword === 'password123' || currentPassword.length >= 6) {
-          return { success: true };
-        }
-        return { success: false, error: data.message || 'Incorrect current password.' };
       }
+      return { success: false, error: data.message || 'Incorrect current password.' };
     } catch {
-      return { success: true };
+      return { success: false, error: 'Network error: could not update password.' };
+    }
+  };
+
+  const requestPasswordReset = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        return { success: true };
+      }
+      return { success: false, error: data.message || 'Failed to submit password recovery request.' };
+    } catch {
+      return { success: false, error: 'Network error: unable to send password recovery instructions.' };
+    }
+  };
+
+  const resetPassword = async (resetToken: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetToken, password: newPassword }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        return { success: true };
+      }
+      return { success: false, error: data.message || 'Password reset token is invalid or expired.' };
+    } catch {
+      return { success: false, error: 'Network error: unable to reset password.' };
     }
   };
 
@@ -253,6 +308,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         updateProfile,
         changePassword,
+        requestPasswordReset,
+        resetPassword,
       }}
     >
       {children}
