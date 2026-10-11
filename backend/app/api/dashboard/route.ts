@@ -1,12 +1,12 @@
 /**
  * @file app/api/dashboard/route.ts
- * @description REST API Route handler for retrieving dashboard analytics overview.
+ * @description REST API Route handler for retrieving dashboard analytics overview with tenant isolation.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { analyticsService } from "@/services";
 import { createSuccessResponse } from "@/utils";
-import { handleApiError, requestLoggerMiddleware, extractAuthContext } from "@/middleware";
+import { handleApiError, requestLoggerMiddleware, resolveAuthContext } from "@/middleware";
 
 /**
  * GET /api/dashboard
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   requestLoggerMiddleware(req);
 
   try {
-    const authContext = extractAuthContext(req);
+    const authContext = await resolveAuthContext(req);
 
     const dashboardMetrics = await analyticsService.getDashboardMetrics(authContext.workspaceId);
 

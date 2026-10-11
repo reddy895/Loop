@@ -1,12 +1,12 @@
 /**
  * @file app/api/workspace/route.ts
- * @description REST API Route handler for retrieving and updating workspace details.
+ * @description REST API Route handler for retrieving and updating workspace details with server-side authorization.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { workspaceService } from "@/services";
 import { createSuccessResponse } from "@/utils";
-import { handleApiError, requestLoggerMiddleware, extractAuthContext } from "@/middleware";
+import { handleApiError, requestLoggerMiddleware, resolveAuthContext } from "@/middleware";
 import { updateWorkspaceSchema, validateData } from "@/validators";
 
 /**
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   requestLoggerMiddleware(req);
 
   try {
-    const authContext = extractAuthContext(req);
+    const authContext = await resolveAuthContext(req);
 
     const workspace = await workspaceService.getWorkspaceById(authContext.workspaceId);
 
@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
   requestLoggerMiddleware(req);
 
   try {
-    const authContext = extractAuthContext(req, ["ADMIN", "OWNER"]);
+    const authContext = await resolveAuthContext(req, ["ADMIN", "OWNER"]);
     const body = await req.json().catch(() => ({}));
     const validatedBody = validateData(updateWorkspaceSchema, body);
 
