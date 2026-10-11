@@ -1,24 +1,24 @@
 /**
  * @file app/api/feedback/simulate/route.ts
- * @description REST API Route handler for generating simulated demo feedback records.
+ * @description REST API Route handler for generating simulated demo feedback records with tenant isolation.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { feedbackService } from "@/services";
 import { createSuccessResponse } from "@/utils";
-import { handleApiError, requestLoggerMiddleware, extractAuthContext } from "@/middleware";
+import { handleApiError, requestLoggerMiddleware, resolveAuthContext } from "@/middleware";
 import { simulateFeedbackSchema, validateData } from "@/validators";
 import { HTTP_STATUS_CODES } from "@/constants";
 
 /**
  * POST /api/feedback/simulate
- * Generate realistic simulated customer feedback across channels.
+ * Generate realistic simulated customer feedback across channels within authorized workspace.
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   requestLoggerMiddleware(req);
 
   try {
-    const authContext = extractAuthContext(req, ["ADMIN", "ANALYST", "OWNER"]);
+    const authContext = await resolveAuthContext(req, ["ADMIN", "ANALYST", "OWNER"]);
     const body = await req.json().catch(() => ({}));
     const validatedBody = validateData(simulateFeedbackSchema, body);
 

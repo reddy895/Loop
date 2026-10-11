@@ -1,12 +1,12 @@
 /**
  * @file app/api/feedback/[id]/route.ts
- * @description REST API Route handler for updating and deleting single feedback records.
+ * @description REST API Route handler for updating and deleting single feedback records with tenant isolation.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { feedbackService } from "@/services";
 import { createSuccessResponse } from "@/utils";
-import { handleApiError, requestLoggerMiddleware, extractAuthContext } from "@/middleware";
+import { handleApiError, requestLoggerMiddleware, resolveAuthContext } from "@/middleware";
 import { updateFeedbackSchema, validateData } from "@/validators";
 
 interface RouteParams {
@@ -17,13 +17,13 @@ interface RouteParams {
 
 /**
  * PATCH /api/feedback/:id
- * Update an existing feedback record.
+ * Update an existing feedback record within authorized workspace.
  */
 export async function PATCH(req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   requestLoggerMiddleware(req);
 
   try {
-    const authContext = extractAuthContext(req, ["ADMIN", "ANALYST", "OWNER"]);
+    const authContext = await resolveAuthContext(req, ["ADMIN", "ANALYST", "OWNER"]);
     const body = await req.json().catch(() => ({}));
     const validatedBody = validateData(updateFeedbackSchema, body);
 
@@ -37,13 +37,13 @@ export async function PATCH(req: NextRequest, { params }: RouteParams): Promise<
 
 /**
  * DELETE /api/feedback/:id
- * Soft delete a feedback record.
+ * Soft delete a feedback record within authorized workspace.
  */
 export async function DELETE(req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   requestLoggerMiddleware(req);
 
   try {
-    const authContext = extractAuthContext(req, ["ADMIN", "ANALYST", "OWNER"]);
+    const authContext = await resolveAuthContext(req, ["ADMIN", "ANALYST", "OWNER"]);
 
     const result = await feedbackService.deleteFeedback(params.id, authContext.workspaceId);
 
