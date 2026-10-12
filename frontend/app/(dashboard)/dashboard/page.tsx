@@ -271,37 +271,41 @@ export default function DashboardPage() {
 
         {/* Recent Feedback Preview Table */}
         <div className="lg:col-span-2">
-          <Card variant="panel" className="h-full flex flex-col justify-between">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <div className="loop-card p-4 sm:p-5 h-full flex flex-col justify-between transition-all duration-150">
+            <div className="flex flex-row items-center justify-between pb-2.5 mb-2 border-b border-neutral-100">
               <div>
-                <CardTitle>Recent Customer Feedback</CardTitle>
-                <CardDescription>
-                  {isRetrieved ? "Latest incoming items with direct slide-over inspect" : "0 customer records retrieved"}
-                </CardDescription>
+                <h3 className="font-heading text-sm sm:text-base font-bold text-neutral-900 tracking-tight">
+                  Recent Customer Feedback
+                </h3>
+                <p className="text-xs text-neutral-500 font-sans mt-0.5">
+                  {isRetrieved
+                    ? `Latest incoming items (${recentFeedback.length} displayed)`
+                    : '0 customer records retrieved'}
+                </p>
               </div>
               <Link href="/inbox">
                 <Button variant="secondary" size="sm" icon={<ArrowRight className="w-3.5 h-3.5" />}>
                   View Inbox
                 </Button>
               </Link>
-            </CardHeader>
+            </div>
 
             <div className="flex-1 overflow-x-auto min-h-[220px] flex flex-col justify-center">
               {!isRetrieved || recentFeedback.length === 0 ? (
-                <div className="bg-neutral-50 rounded-lg border border-neutral-200 p-8 flex flex-col items-center justify-center text-center my-2">
-                  <div className="p-3 bg-neutral-100 rounded-full text-neutral-900 border border-neutral-200 mb-3">
-                    <Inbox className="w-6 h-6" />
+                <div className="bg-neutral-50/70 rounded-xl border border-neutral-200/70 p-8 flex flex-col items-center justify-center text-center my-2">
+                  <div className="p-3 bg-white rounded-full text-neutral-900 border border-neutral-200 shadow-xs mb-3">
+                    <Inbox className="w-5 h-5" />
                   </div>
                   <h4 className="font-heading text-sm font-bold text-neutral-900">
                     No Customer Feedback Records
                   </h4>
                   <p className="text-xs text-neutral-500 font-sans max-w-sm mt-1 mb-4 leading-relaxed">
-                    Workspace is initialized at 0. Click &quot;Retrieve CSV&quot; below to fetch customer feedback data and populate recent tickets.
+                    Workspace is initialized at 0. Retrieve CSV data or import customer tickets to populate live feedback.
                   </p>
                   <Button
                     variant="primary"
                     size="sm"
-                    icon={<FileSpreadsheet className="w-4 h-4" />}
+                    icon={<FileSpreadsheet className="w-3.5 h-3.5" />}
                     onClick={openRetrieveModal}
                   >
                     Retrieve CSV Dataset
@@ -324,11 +328,11 @@ export default function DashboardPage() {
                       <TableRow
                         key={item.id}
                         onClick={() => handleOpenDetail(item)}
-                        className="cursor-pointer group hover:bg-neutral-50/80 transition-colors"
+                        className="cursor-pointer group hover:bg-neutral-50 transition-colors"
                       >
                         <TableCell className="whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <span className="font-mono-numbers text-[10px] font-bold text-neutral-900 bg-neutral-100 px-1 py-0.5 rounded border border-neutral-200">
+                            <span className="font-mono-numbers text-[10px] font-bold text-neutral-800 bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200/80">
                               {item.id}
                             </span>
                             <span className="font-semibold text-xs text-neutral-900">{item.customerName}</span>
@@ -337,7 +341,7 @@ export default function DashboardPage() {
                         <TableCell className="font-mono-numbers text-xs whitespace-nowrap text-neutral-600">
                           {item.channel}
                         </TableCell>
-                        <TableCell className="max-w-[200px] sm:max-w-[280px] truncate text-xs text-neutral-900">
+                        <TableCell className="max-w-[200px] sm:max-w-[320px] truncate text-xs text-neutral-800">
                           &ldquo;{item.feedback}&rdquo;
                         </TableCell>
                         <TableCell className="whitespace-nowrap">
@@ -352,7 +356,7 @@ export default function DashboardPage() {
                               e.stopPropagation();
                               handleOpenDetail(item);
                             }}
-                            className="p-1 rounded text-neutral-400 group-hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+                            className="p-1 rounded text-neutral-400 group-hover:text-neutral-900 hover:bg-neutral-100 transition-colors cursor-pointer"
                             title="Inspect ticket"
                           >
                             <Eye className="w-3.5 h-3.5" />
@@ -364,7 +368,7 @@ export default function DashboardPage() {
                 </Table>
               )}
             </div>
-          </Card>
+          </div>
         </div>
       </div>
 
