@@ -164,10 +164,10 @@ export default function DashboardPage() {
 
       {/* New User Alert Banner if 0 state */}
       {!isRetrieved && (
-        <div className="loop-card bg-neutral-50 p-4 border-l-4 border-l-black flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in">
+        <div className="loop-card bg-neutral-50/80 p-4 border border-neutral-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-neutral-900 text-white shrink-0">
-              <DownloadCloud className="w-5 h-5" />
+            <div className="p-2 rounded-lg bg-neutral-900 text-white shrink-0 shadow-2xs">
+              <DownloadCloud className="w-4 h-4" />
             </div>
             <div>
               <h4 className="text-xs font-bold text-neutral-900">

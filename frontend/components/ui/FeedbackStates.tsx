@@ -83,10 +83,10 @@ export const CSVRetrieveCard: React.FC<{ onRetrieveClick: () => void; title?: st
   description = 'Fetch batch customer feedback records from CSV to generate real-time AI sentiment analytics and dashboards.'
 }) => {
   return (
-    <Card variant="panel" className="border-dashed border-2 border-neutral-300 hover:border-black transition-all bg-white">
-      <div className="flex flex-col items-center text-center py-6 sm:py-8">
-        <div className="p-3.5 bg-neutral-100 rounded-full text-neutral-900 border border-neutral-200 mb-3 shadow-2xs">
-          <FileSpreadsheet className="w-7 h-7" />
+    <div className="loop-card border-dashed border border-neutral-300 hover:border-neutral-900 transition-colors bg-white">
+      <div className="flex flex-col items-center text-center py-6 sm:py-8 px-4">
+        <div className="p-3 bg-neutral-100 rounded-full text-neutral-900 border border-neutral-200 mb-3 shadow-xs">
+          <FileSpreadsheet className="w-6 h-6" />
         </div>
         <h3 className="font-heading text-base font-bold text-neutral-900">
           {title}
@@ -94,11 +94,11 @@ export const CSVRetrieveCard: React.FC<{ onRetrieveClick: () => void; title?: st
         <p className="text-xs text-neutral-500 font-sans max-w-md mt-1 mb-5 leading-relaxed">
           {description}
         </p>
-        <Button variant="primary" size="sm" icon={<FileSpreadsheet className="w-4 h-4" />} onClick={onRetrieveClick}>
+        <Button variant="primary" size="sm" icon={<FileSpreadsheet className="w-3.5 h-3.5" />} onClick={onRetrieveClick}>
           Retrieve CSV & Generate Dashboards
         </Button>
       </div>
-    </Card>
+    </div>
   );
 };
 
