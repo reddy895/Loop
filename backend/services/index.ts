@@ -862,6 +862,44 @@ export class ThemeService implements IThemeService {
 
   public async getThemesByWorkspace(workspaceId: string, search?: string): Promise<ITheme[]> {
     logger.info(`${this.serviceName}: Fetching themes for workspace`, { workspaceId, search });
+    if (prisma) {
+      try {
+        const whereClause: any = { workspaceId };
+        if (search) {
+          whereClause.name = { contains: search };
+        }
+
+        const dbThemes = await (prisma as any).theme.findMany({
+          where: whereClause,
+          orderBy: { createdAt: "desc" },
+        });
+
+        const feedbackCounts = await (prisma as any).feedback.groupBy({
+          by: ["themeId"],
+          where: { workspaceId, isDeleted: false, themeId: { not: null } },
+          _count: { themeId: true },
+        });
+
+        const countMap: Record<string, number> = {};
+        for (const item of feedbackCounts) {
+          if (item.themeId) countMap[item.themeId] = item._count.themeId;
+        }
+
+        return dbThemes.map((t: any) => ({
+          id: t.id,
+          workspaceId: t.workspaceId,
+          name: t.name,
+          color: t.color,
+          description: t.description || "",
+          trend: (t.trend || "STABLE") as any,
+          feedbackCount: countMap[t.id] || 0,
+          createdAt: t.createdAt.toISOString(),
+        }));
+      } catch (err) {
+        logger.warn(`${this.serviceName}: Prisma theme retrieval failed, falling back to memory`, { err });
+      }
+    }
+
     let themes = getWorkspaceThemes(workspaceId);
 
     // Update feedback counts dynamically
