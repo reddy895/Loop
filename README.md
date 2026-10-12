@@ -1,189 +1,154 @@
 # 🔁 Project LOOP — AI Customer Feedback Intelligence Platform
 
-> An enterprise-grade, production-ready SaaS platform that ingests customer feedback, classifies it with AI, clusters themes, and answers business questions through a RAG-powered assistant.
+> **LOOP** is an enterprise-grade, full-screen AI customer feedback intelligence workspace. It aggregates, parses, and classifies multi-channel customer feedback, identifies emerging thematic clusters, generates executive Voice of Customer (VoC) briefs, and powers evidence-backed Q&A via an offline-resilient Retrieval-Augmented Generation (RAG) assistant.
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ Monorepo Architecture Overview
 
 ```
-Zidio 1/
-├── backend/    # Next.js 14 API server · Prisma · PostgreSQL · Gemini AI
-└── frontend/   # Next.js 16 React UI · Tailwind CSS · Recharts
+LOOP-main/
+├── backend/    # Next.js 14 API server · Prisma ORM · NextAuth · Gemini / Ollama RAG
+├── frontend/   # Next.js 16 (React 19) UI · Tailwind CSS v4 · Recharts · Lucide Icons
+├── docs/       # Architecture audit, baseline inventory & production hardening logs
+└── vercel.json # Vercel cloud deployment specification
 ```
-
-**Monorepo** — two independent Next.js apps sharing a common domain.
 
 ---
 
-## ✨ Key Features
+## ✨ Core Product Capabilities
 
-| Feature | Description |
+| Module | Capability & Specification |
 |---|---|
-| 🤖 AI Classification | Auto-classifies feedback sentiment, score, feature area & summary via Gemini / Ollama |
-| 🧵 Theme Clustering | Groups feedback into intelligent AI-generated themes |
-| 🔍 Ask LOOP (RAG) | Evidence-based Q&A over your feedback corpus — no hallucinations |
-| 📊 Analytics & Dashboard | Real-time breakdown charts, trends, and metrics |
-| 📄 VoC Reports | Auto-generates Voice of Customer executive reports |
-| 🏢 Multi-Tenant RBAC | Workspace isolation with OWNER / ADMIN / ANALYST / VIEWER roles |
-| 📤 CSV Import | Batch feedback ingestion via file upload |
-| 🧪 Test Suite | Unit + Integration tests with Zod schema validation |
+| **Full-Screen Workspace** | Fluid, responsive intelligence layout reclaiming horizontal screen real estate, removing heavy border clutter and card nesting. |
+| **Data Ingestion & CSV Engine** | High-performance streaming CSV parser with strict MIME/size validation, formula injection (`=,+,-,@,\|`) neutralization, and batch database loading. |
+| **Multi-Tenant Isolation & RBAC** | Strict tenant scoping (`workspaceId`) on all server-side queries. Role-Based Access Control enforcing `OWNER`, `ADMIN`, `ANALYST`, and `MEMBER` permissions. |
+| **Real Analytics Engine** | Server-backed calculations for volume trends, sentiment breakdown, active theme distribution, and date-range filtering (`7d`, `30d`, `all`). |
+| **Ask LOOP (RAG Assistant)** | Vector cosine similarity search over tenant customer tickets, strict prompt injection fencing, and evidence grounding with zero hallucinations. |
+| **VoC Executive Briefs** | Automated generation of Voice of Customer summaries, top friction drivers, customer quote citations, and CSV/PDF report exports. |
+| **Resilient AI Pipeline** | Dual-provider support (Google Gemini 1.5 Flash & Ollama) with a deterministic heuristic fallback engine ensuring 100% uptime during external API outages. |
 
 ---
-## 🛠️ Tech Stack
+
+## 🛠️ Technology Stack
 
 ### Backend (`/backend`)
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript 5 |
-| ORM | Prisma + PostgreSQL |
-| Auth | NextAuth v4 (Credentials) |
-| AI Providers | Google Gemini · Ollama (local) |
-| Validation | Zod |
-| Logging | Structured JSON logger (with credential redaction) |
+- **Runtime & Framework:** Next.js 14 (App Router), Node.js 18+
+- **Language:** TypeScript 5 (Strict Mode)
+- **Database & ORM:** Prisma 5 (Dual-compatible: SQLite for zero-setup local dev; PostgreSQL for production cloud)
+- **Authentication & Security:** NextAuth v4, Bcrypt password hashing, sliding-window rate limiting, IDOR prevention
+- **AI & Retrieval:** Cosine vector embeddings, PromptManager templates, prompt injection fences
+- **Testing:** Custom TSX runner, 13 automated unit & integration test suites
 
 ### Frontend (`/frontend`)
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript 5 |
-| Styling | Tailwind CSS v4 |
-| Charts | Recharts |
-| Icons | Lucide React |
+- **Runtime & Framework:** Next.js 16 (App Router), React 19
+- **Styling & Tokens:** Tailwind CSS v4, bespoke design tokens, subtle borders, high contrast
+- **Visualizations:** Recharts (responsive, client-mounted, resilient zero-state handling)
+- **Client Architecture:** Unified `@/lib/api` client with automatic tenant header injection and error handling
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Local Development Setup
 
-### Prerequisites
-- Node.js 18+
-- PostgreSQL database
-- Google Gemini API key (or local Ollama instance)
+### 1. Prerequisites
+- Node.js 18.x or 20.x
+- npm 9+
 
-### 1. Clone & Install
-
+### 2. Installation
 ```bash
-# Backend
-cd backend
-npm install
+# Clone and install dependencies
+git clone https://github.com/reddy895/Loop.git
+cd Loop
 
-# Frontend
+# Install Backend
+cd backend && npm install
+
+# Install Frontend
+cd ../frontend && npm install
+```
+
+### 3. Environment Setup
+```bash
+# Configure Backend
+cd backend
+cp .env.example .env
+npm run db:generate
+
+# Configure Frontend
 cd ../frontend
-npm install
+cp .env.example .env.local
 ```
 
-### 2. Configure Environment
+### 4. Running the Development Servers
+```bash
+# Terminal 1: Start Backend (Port 3000)
+cd backend
+npm run dev
 
-Create `backend/.env` from the template:
-
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/project_loop_db?schema=public"
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-super-secret-nextauth-key-at-least-16-chars"
-GEMINI_API_KEY="your-gemini-api-key-here"
-OLLAMA_BASE_URL="http://localhost:11434"
-NODE_ENV="development"
+# Terminal 2: Start Frontend (Port 3001)
+cd frontend
+npm run dev
 ```
 
-### 3. Database Setup
+Visit **http://localhost:3001/dashboard** in your browser.
+
+---
+
+## 🧪 Quality Gates & Automated Tests
+
+LOOP includes 13 automated test suites covering cryptographic security, schema validation, rate limiting, formula injection, tenant boundaries, CRUD lifecycle, and RAG grounding:
 
 ```bash
 cd backend
-npx prisma migrate dev
-npx prisma generate
+npm test
 ```
 
-### 4. Run Locally
-
-```bash
-# Terminal 1 — Backend (port 3000)
-cd backend && npm run dev
-
-# Terminal 2 — Frontend (port 3001)
-cd frontend && npm run dev
-```
-
-### 5. Verify Backend Health
-
-```bash
-curl http://localhost:3000/api/health
-```
+### Test Suite Inventory:
+1. `[UNIT] Cryptographic Password & Token Salting`
+2. `[UNIT] Authentication & Validation Schemas`
+3. `[UNIT] Sliding-Window Rate Limiting & Brute-Force`
+4. `[UNIT] Spreadsheet Formula Injection Neutralization`
+5. `[UNIT] Prompt Injection Neutralization & Fencing`
+6. `[INTEGRATION] Authentication Lifecycle & Sessions`
+7. `[INTEGRATION] Password Reset Lifecycle & Replay Prevention`
+8. `[INTEGRATION] Multi-Tenant Isolation & Privilege Spoofing`
+9. `[INTEGRATION] Server-Side RBAC Boundaries & Hierarchy`
+10. `[INTEGRATION] Feedback CRUD Lifecycle & IDOR Defense`
+11. `[INTEGRATION] CSV Ingestion & Multi-Tenant Batch Ingestion`
+12. `[INTEGRATION] AI Fallback & Offline RAG Architecture`
+13. `[INTEGRATION] Server-Side Date Filtering & RAG Grounding`
 
 ---
 
-## 📡 API Highlights
+## ☁️ Vercel Production Deployment
 
-| Method | Route | Description |
-|---|---|---|
-| `GET` | `/api/health` | System health check |
-| `GET/POST` | `/api/feedback` | List / create feedback |
-| `POST` | `/api/feedback/upload` | CSV batch import |
-| `POST` | `/api/ai/classify` | AI classification |
-| `POST` | `/api/ai/ask` | Ask LOOP RAG Q&A |
-| `POST` | `/api/ai/report` | Generate VoC report |
-| `GET` | `/api/analytics` | Analytics breakdown |
-| `GET` | `/api/dashboard` | Overview metrics |
-| `GET/PUT` | `/api/workspace` | Workspace settings |
-| `GET/POST` | `/api/members` | Member management |
-| `GET` | `/api/themes` | Theme intelligence |
+### Option A: Monorepo Root Deployment
+- Connect the repository to Vercel.
+- The root `vercel.json` automatically handles building the Next.js application.
 
-> Full API specs: `backend/docs/API_DOCUMENTATION.md`
+### Option B: Independent Microservices (Recommended for Scale)
+1. **Frontend App:**
+   - Root Directory: `frontend`
+   - Build Command: `npm run build`
+   - Output Directory: `.next`
+   - Environment Variables:
+     - `NEXT_PUBLIC_API_URL`: `https://your-loop-backend.vercel.app/api`
+     - `NEXT_PUBLIC_APP_URL`: `https://your-loop-frontend.vercel.app`
 
----
-
-## 🔐 Role-Based Access Control
-
-| Role | Permissions |
-|---|---|
-| `OWNER` | Full access + workspace deletion |
-| `ADMIN` | Full access |
-| `ANALYST` | CRUD feedback, CSV upload, view analytics |
-| `VIEWER` | Read-only (`GET` only) |
+2. **Backend API:**
+   - Root Directory: `backend`
+   - Build Command: `npm run postinstall && next build`
+   - Output Directory: `.next`
+   - Environment Variables:
+     - `DATABASE_URL`: `postgresql://user:password@host/db?sslmode=require` (Neon, Supabase, RDS)
+     - `NEXTAUTH_SECRET`: Strong 32+ character random string
+     - `GEMINI_API_KEY`: Google Generative AI API key
+     - `NODE_ENV`: `production`
 
 ---
 
-## 🧪 Testing
-
-```bash
-cd backend
-
-# Type check
-npx tsc --noEmit
-
-# Unit tests (Zod schema validation)
-npm test tests/unit/
-
-# Integration tests
-npm test tests/integration/
-```
-
----
-
-## 📁 Project Structure (Backend AI Layer)
-
-```
-backend/ai/
-├── AIService.ts            # Central AI facade + execution metrics
-├── AskLoopService.ts       # RAG Assistant (vector search + QA)
-├── ClassificationService.ts# Sentiment, score, feature area & summary
-├── EmbeddingService.ts     # Embedding generation + Cosine Similarity
-├── PromptManager.ts        # Prompt registry, versioning & interpolation
-├── PromptTemplates.ts      # Reusable prompt strings
-├── ReportService.ts        # VoC executive report generator
-├── ResponseParser.ts       # JSON parser + Zod schema fallbacks
-└── ThemeService.ts         # AI theme clustering engine
-```
-
----
-
-## 📚 Documentation
-
-- API Documentation: `backend/docs/API_DOCUMENTATION.md`
-- Deployment Checklist: `backend/docs/DEPLOYMENT.md`
-
----
-
-## 📝 License
-
-Private — All rights reserved © Project LOOP / Zidio
+## 🔒 Security Best Practices
+- **No Client Secrets:** AI keys and database credentials remain strictly server-side.
+- **Formula Injection Immunity:** All CSV inputs and exports sanitize leading `=,+,-,@,\|, \t, \r`.
+- **Tenant Scoping:** All database operations strictly mandate `where: { workspaceId }`.
+- **Prompt Fencing:** External customer feedback strings are neutralized and bounded before inclusion in LLM prompts.
