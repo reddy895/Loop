@@ -36,54 +36,58 @@ export const ChartContainer: React.FC<ChartContainerProps> = ({
   height = 300
 }) => {
   return (
-    <Card variant="panel" className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
+    <div className="loop-card p-4 sm:p-5 w-full flex flex-col justify-between transition-all duration-150">
+      <div className="flex flex-row items-center justify-between pb-2.5 mb-2 border-b border-neutral-100">
         <div>
-          <CardTitle>{title}</CardTitle>
-          {description && <CardDescription>{description}</CardDescription>}
+          <h3 className="font-heading text-sm sm:text-base font-bold text-neutral-900 tracking-tight">
+            {title}
+          </h3>
+          {description && (
+            <p className="text-xs text-neutral-500 font-sans mt-0.5">{description}</p>
+          )}
         </div>
         {action && <div>{action}</div>}
-      </CardHeader>
-
-      <div className="w-full p-3 bg-neutral-50/70 border border-neutral-100 rounded-lg overflow-hidden">
-        <div style={{ height, width: '100%' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            {children as React.ReactElement}
-          </ResponsiveContainer>
-        </div>
       </div>
-    </Card>
+
+      <div className="w-full flex-1 pt-1" style={{ height, minHeight: height }}>
+        <ResponsiveContainer width="100%" height="100%">
+          {children as React.ReactElement}
+        </ResponsiveContainer>
+      </div>
+    </div>
   );
 };
 
 /* 1. Feedback Volume Area Chart */
 export const FeedbackVolumeChart: React.FC<{ data: Record<string, unknown>[] }> = ({ data }) => {
   return (
-    <AreaChart data={data} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+    <AreaChart data={data} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
       <defs>
         <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor="#2563EB" stopOpacity={0.8} />
-          <stop offset="95%" stopColor="#2563EB" stopOpacity={0.05} />
+          <stop offset="5%" stopColor="#09090B" stopOpacity={0.15} />
+          <stop offset="95%" stopColor="#09090B" stopOpacity={0.01} />
         </linearGradient>
       </defs>
-      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-      <XAxis dataKey="date" stroke="#71717A" tick={{ fill: '#71717A', fontSize: 12 }} />
-      <YAxis stroke="#71717A" tick={{ fill: '#71717A', fontSize: 12 }} />
+      <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
+      <XAxis dataKey="date" stroke="#A1A1AA" tick={{ fill: '#71717A', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#E4E4E7' }} />
+      <YAxis stroke="#A1A1AA" tick={{ fill: '#71717A', fontSize: 11 }} tickLine={false} axisLine={false} />
       <Tooltip
         contentStyle={{
-          backgroundColor: '#FFFFFF',
-          borderColor: '#E5E7EB',
+          backgroundColor: '#09090B',
+          borderColor: '#27272A',
           borderRadius: '8px',
-          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-          color: '#09090B',
-          fontFamily: 'Inter, sans-serif'
+          boxShadow: '0 8px 16px -2px rgba(0,0,0,0.2)',
+          color: '#FFFFFF',
+          fontSize: '12px',
+          fontFamily: 'var(--font-jetbrains), monospace'
         }}
+        itemStyle={{ color: '#FFFFFF' }}
       />
       <Area
         type="monotone"
         dataKey="volume"
-        stroke="#2563EB"
-        strokeWidth={2.5}
+        stroke="#09090B"
+        strokeWidth={2}
         fillOpacity={1}
         fill="url(#colorVolume)"
         name="Feedback Volume"
