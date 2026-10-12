@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200 px-4 sm:px-6 h-16 flex items-center justify-between gap-4 font-sans select-none">
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 px-4 sm:px-6 h-14 flex items-center justify-between gap-4 font-sans select-none transition-all duration-200">
       {/* Left Area: Mobile Menu + Workspace + Breadcrumb/Title */}
       <div className="flex items-center gap-3 min-w-0">
         <button
