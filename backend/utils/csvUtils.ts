@@ -122,6 +122,9 @@ export const validateCsvRow = (
   const rawSentiment = (row["sentiment"] || "").toUpperCase();
   const sentiment = ["POSITIVE", "NEUTRAL", "NEGATIVE"].includes(rawSentiment) ? rawSentiment : undefined;
 
+  const customerEmail = row["customeremail"] || row["email"] || row["user_email"] || undefined;
+  const themeName = row["themename"] || row["theme"] || row["category"] || row["topic"] || undefined;
+
   if (!content || !content.trim()) {
     return {
       valid: false,
@@ -135,6 +138,8 @@ export const validateCsvRow = (
       content: sanitizeFormulaInjection(content.trim()),
       channel: sanitizeFormulaInjection(channel.trim()),
       customerLabel: sanitizeFormulaInjection(customerLabel.trim()),
+      customerEmail: customerEmail ? sanitizeFormulaInjection(customerEmail.trim()) : undefined,
+      themeName: themeName ? sanitizeFormulaInjection(themeName.trim()) : undefined,
       source: sanitizeFormulaInjection(source.trim()),
       sentiment,
     },
