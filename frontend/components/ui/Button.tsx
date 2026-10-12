@@ -22,7 +22,7 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const isBusy = loading || isLoading;
-  const baseStyles = 'inline-flex items-center justify-center font-medium font-sans cursor-pointer focus:outline-none transition-all duration-150 select-none';
+  const baseStyles = 'inline-flex items-center justify-center font-medium font-sans cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2 transition-all duration-150 select-none';
 
   const variantStyles = {
     primary: 'bg-black text-white hover:bg-neutral-800 border border-black shadow-xs active:scale-[0.98]',
