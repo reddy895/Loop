@@ -117,7 +117,11 @@ export const createSuccessResponse = <T>(
     data,
   };
 
-  return NextResponse.json(payload, { status: statusCode });
+  const res = NextResponse.json(payload, { status: statusCode });
+  res.headers.set("X-Content-Type-Options", "nosniff");
+  res.headers.set("X-Frame-Options", "DENY");
+  res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  return res;
 };
 
 export const createErrorResponse = (
@@ -131,7 +135,11 @@ export const createErrorResponse = (
     errors: errors.length > 0 ? errors : [message],
   };
 
-  return NextResponse.json(payload, { status: statusCode });
+  const res = NextResponse.json(payload, { status: statusCode });
+  res.headers.set("X-Content-Type-Options", "nosniff");
+  res.headers.set("X-Frame-Options", "DENY");
+  res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  return res;
 };
 
 export const createPaginatedResponse = <T>(
