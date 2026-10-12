@@ -94,7 +94,7 @@ export class GeminiProvider implements IAiProvider {
       return ResponseParser.parseReportResponse(rawResponse, workspaceId);
     } catch (error) {
       logger.warn("GeminiProvider: Report generation API failed, using fallback report generator", { error });
-      return ResponseParser.parseReportResponse("{}", workspaceId);
+      return new FallbackAiProvider().generateReport(data);
     }
   }
 
@@ -289,7 +289,7 @@ export class OllamaProvider implements IAiProvider {
   }
 
   public async generateReport(data: unknown): Promise<IVoiceOfCustomerReport> {
-    return ResponseParser.parseReportResponse("{}", "ws_default");
+    return new FallbackAiProvider().generateReport(data);
   }
 
   public async askQuestion(question: string, context: string[]): Promise<IAskLoopResponse> {
