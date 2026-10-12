@@ -22,7 +22,7 @@ import {
 type DatasetId = 'enterprise' | 'appstore' | 'zendesk' | 'custom';
 
 export const RetrieveCSVModal: React.FC = () => {
-  const { isRetrieveModalOpen, closeRetrieveModal, retrieveCSV } = useFeedbackContext();
+  const { isRetrieveModalOpen, closeRetrieveModal, retrieveCSV, refreshData } = useFeedbackContext();
   const { token } = useAuth();
 
   const [selectedDataset, setSelectedDataset] = useState<DatasetId>('enterprise');
@@ -88,6 +88,7 @@ export const RetrieveCSVModal: React.FC = () => {
         );
         // On success, tell context that data is now in the DB
         retrieveCSV('custom', '__server__');
+        await refreshData();
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
           setUploadProgress({

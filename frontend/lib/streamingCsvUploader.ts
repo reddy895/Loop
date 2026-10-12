@@ -24,7 +24,8 @@ export interface UploadResult {
   totalProcessed: number;
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { buildApiUrl, createApiHeaders } from '@/lib/api';
+
 const CHUNK_SIZE = 500; // rows per batch — keeps each request well under 1MB
 
 /**
@@ -101,12 +102,14 @@ export async function uploadCsvInChunks(
     const csvChunk = [header, ...chunkRows].join('\n');
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/feedback/upload`, {
+      const uploadUrl = buildApiUrl('/feedback/upload');
+      const headers = createApiHeaders(
+        authToken ? { Authorization: `Bearer ${authToken}` } : undefined
+      );
+
+      const response = await fetch(uploadUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        },
+        headers,
         body: JSON.stringify({ csvContent: csvChunk }),
         signal,
       });
