@@ -7,6 +7,7 @@ import { SentimentBadge, ThemeBadge } from '@/components/ui/Badges';
 import { LoadingSkeleton } from '@/components/ui/FeedbackStates';
 import { useFeedbackContext } from '@/context/FeedbackContext';
 import { ChatMessage, RetrievedSource, FeedbackItem } from '@/types';
+import { api } from '@/lib/api';
 import {
   Send,
   Sparkles,
@@ -143,8 +144,6 @@ function AskLoopContent() {
     }
   }, [searchParams]);
 
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
   // Execute RAG query against API with robust local fallback
   const handleSendMessage = async (queryText?: string) => {
     const textToSend = (queryText || inputQuery).trim();
@@ -162,20 +161,11 @@ function AskLoopContent() {
     setIsTyping(true);
 
     try {
-      // 1. Attempt call to existing /api/ai/ask backend endpoint
-      const response = await fetch(`${BACKEND_URL}/api/ai/ask`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-workspace-id': 'ws-001'
-        },
-        body: JSON.stringify({ question: textToSend })
-      });
+      // 1. Attempt call to existing /api/ai/ask backend endpoint via unified client
+      const json: any = await api.post('/ai/ask', { question: textToSend });
+      const data = json?.data || json;
 
-      if (response.ok) {
-        const json = await response.json();
-        const data = json.data || json;
-
+      if (data && data.answer) {
         const retrievedSources: RetrievedSource[] = (data.evidence || []).map((e: any) => ({
           id: e.feedbackId || 'FB-SRC',
           customer: e.customer || 'Customer',
@@ -191,7 +181,7 @@ function AskLoopContent() {
           sender: 'assistant',
           text: data.answer || 'Query completed based on retrieved customer evidence.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          confidence: data.confidence || 0.92,
+          confidence: data.confidence ?? 0.92,
           themes: ['UX Performance'],
           sources: retrievedSources
         };
