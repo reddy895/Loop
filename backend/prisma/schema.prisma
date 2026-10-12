@@ -92,6 +92,8 @@ model Feedback {
   @@index([workspaceId, themeId, isDeleted])
   @@index([workspaceId, status, isDeleted])
   @@index([workspaceId, channel, isDeleted])
+  @@index([workspaceId, sentiment, createdAt])
+  @@index([workspaceId, themeName, createdAt])
   @@map("feedbacks")
 }
 
@@ -106,6 +108,7 @@ model Theme {
   workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
+  @@index([workspaceId, name])
   @@map("themes")
 }
 
