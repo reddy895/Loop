@@ -279,6 +279,7 @@ export interface IFeedbackFilterOptions extends ISearchQuery {
   startDate?: string;
   endDate?: string;
   customer?: string;
+  cursor?: string;
 }
 
 export interface ICreateFeedbackInput {

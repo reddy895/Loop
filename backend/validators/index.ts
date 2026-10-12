@@ -109,6 +109,7 @@ export const feedbackQuerySchema = paginationQuerySchema.extend({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   customer: z.string().optional(),
+  cursor: z.string().optional(),
 });
 
 export const csvUploadSchema = z.object({
