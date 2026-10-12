@@ -1,8 +1,8 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export const Skeleton: React.FC<{ className?: string }> = ({ className }) => (
-  <div className={cn("animate-pulse bg-neutral-200/70 rounded-md", className)} />
+export const Skeleton: React.FC<{ className?: string; style?: React.CSSProperties }> = ({ className, style }) => (
+  <div className={cn("animate-pulse bg-neutral-200/70 rounded-md", className)} style={style} />
 );
 
 export const StatsCardSkeleton: React.FC = () => (

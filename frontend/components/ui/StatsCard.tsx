@@ -71,6 +71,6 @@ export const StatsCard: React.FC<StatsCardProps> = ({
           )}
         </div>
       )}
-    </Card>
+    </div>
   );
 };
