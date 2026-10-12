@@ -20,6 +20,7 @@ export async function runCsvSanitizerTests(): Promise<void> {
   assert.strictEqual(sanitizeFormulaInjection("-2+5"), "'-2+5", "Formula starting with '-' must be escaped");
   assert.strictEqual(sanitizeFormulaInjection("@SUM(A1:A10)"), "'@SUM(A1:A10)", "Formula starting with '@' must be escaped");
   assert.strictEqual(sanitizeFormulaInjection("\tcmd"), "'\tcmd", "Formula starting with tab must be escaped");
+  assert.strictEqual(sanitizeFormulaInjection("|calc.exe"), "'|calc.exe", "Formula starting with pipe must be escaped");
   console.log("  ✔ Formula prefix characters correctly neutralized");
 
   // Test 2: Standard non-formula text is left unaltered

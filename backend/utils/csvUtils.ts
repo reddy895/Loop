@@ -13,7 +13,7 @@ export const sanitizeFormulaInjection = (val: unknown): string => {
   if (val === null || val === undefined) return "";
   const raw = String(val);
 
-  if (/^[=+\-@\t\r]/.test(raw) || /^[=+\-@\t\r]/.test(raw.trim())) {
+  if (/^[=+\-@\t\r|]/.test(raw) || /^[=+\-@\t\r|]/.test(raw.trim())) {
     return `'${raw}`;
   }
   return raw;
