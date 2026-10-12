@@ -18,6 +18,7 @@ import { runRbacBoundariesTests } from "./integration/rbacBoundaries.test";
 import { runFeedbackCrudTests } from "./integration/feedbackCrud.test";
 import { runCsvImportTests } from "./integration/csvImport.test";
 import { runAiGracefulFallbackTests } from "./integration/aiGracefulFallback.test";
+import { runDateFilterAndRagTests } from "./integration/dateFilterAndRag.test";
 
 interface ISuiteResult {
   name: string;
@@ -49,6 +50,7 @@ async function runAllSuites(): Promise<void> {
     { name: "Feedback CRUD Lifecycle & IDOR Defense", category: "INTEGRATION", fn: runFeedbackCrudTests },
     { name: "CSV Ingestion & Multi-Tenant Batch Ingestion", category: "INTEGRATION", fn: runCsvImportTests },
     { name: "AI Fallback & Offline RAG Architecture", category: "INTEGRATION", fn: runAiGracefulFallbackTests },
+    { name: "Server-Side Date Filtering & RAG Grounding", category: "INTEGRATION", fn: runDateFilterAndRagTests },
   ];
 
   const results: ISuiteResult[] = [];
