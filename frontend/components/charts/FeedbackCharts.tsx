@@ -98,34 +98,56 @@ export const FeedbackVolumeChart: React.FC<{ data: Record<string, unknown>[] }> 
 
 /* 2. Sentiment Breakdown Pie Chart */
 export const SentimentPieChart: React.FC<{ data: Array<{ name: string; value: number; color?: string }> }> = ({ data }) => {
+  const total = data.reduce((acc, curr) => acc + (curr.value || 0), 0);
+  const isZeroState = total === 0;
+
+  // Fallback ring for clean 0-baseline representation
+  const chartData = isZeroState
+    ? [{ name: 'Awaiting Data', value: 1, color: '#E4E4E7' }]
+    : data;
+
   return (
     <PieChart>
       <Pie
-        data={data}
+        data={chartData}
         cx="50%"
-        cy="50%"
-        innerRadius={55}
-        outerRadius={85}
-        paddingAngle={4}
+        cy="48%"
+        innerRadius={58}
+        outerRadius={86}
+        paddingAngle={isZeroState ? 0 : 3}
         dataKey="value"
         nameKey="name"
         stroke="#FFFFFF"
         strokeWidth={2}
       >
-        {data.map((entry, index) => (
+        {chartData.map((entry, index) => (
           <Cell key={`cell-${index}`} fill={entry.color} />
         ))}
       </Pie>
-      <Tooltip
-        contentStyle={{
-          backgroundColor: '#FFFFFF',
-          borderColor: '#E5E7EB',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-          color: '#09090B'
-        }}
+      {!isZeroState && (
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#09090B',
+            borderColor: '#27272A',
+            borderRadius: '8px',
+            boxShadow: '0 8px 16px -2px rgba(0,0,0,0.2)',
+            color: '#FFFFFF',
+            fontSize: '12px',
+            fontFamily: 'var(--font-jetbrains), monospace'
+          }}
+          formatter={(value: any, name: any) => [
+            `${value} items (${Math.round((Number(value) / total) * 100)}%)`,
+            name
+          ]}
+          itemStyle={{ color: '#FFFFFF' }}
+        />
+      )}
+      <Legend
+        verticalAlign="bottom"
+        height={32}
+        iconType="circle"
+        formatter={(value) => <span className="text-xs font-sans text-neutral-600 font-medium">{value}</span>}
       />
-      <Legend verticalAlign="bottom" height={36} iconType="circle" />
     </PieChart>
   );
 };
