@@ -88,42 +88,43 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 font-sans">
       {/* ============================================================== */}
-      {/* TOP: Page Title, Workspace Context, Date/Filter Controls       */}
+      {/* 2. ANALYSIS HEADER: Fluid Title, Status, Filters & Actions     */}
       {/* ============================================================== */}
-      <div className="loop-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-2 border-b border-neutral-200/60">
         <div>
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest bg-neutral-900 text-white font-mono-numbers">
               Enterprise Workspace
             </span>
             {isRetrieved && (
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide bg-neutral-100 text-neutral-900 border border-neutral-300 font-mono-numbers">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide bg-neutral-100 text-neutral-800 border border-neutral-200 font-mono-numbers flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 Active Source: {datasetName}
               </span>
             )}
             <span className="text-xs font-mono-numbers text-neutral-500">
-              {isRetrieved ? `Retrieved ${lastRetrievedTime || 'just now'}` : 'Initialized at 0 (New User Session)'}
+              {isRetrieved ? `Synced ${lastRetrievedTime || 'just now'}` : 'Initialized at 0 (Clean Workspace)'}
             </span>
           </div>
 
           <h1 className="font-heading text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
             Customer Feedback Intelligence
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-600 font-sans mt-1">
-            Real-time synthesis of customer sentiment across Zendesk, Intercom, App Store, and survey channels.
+          <p className="text-xs sm:text-sm text-neutral-600 font-sans mt-0.5">
+            Cross-channel synthesis across Zendesk, Intercom, App Store reviews, and user surveys.
           </p>
         </div>
 
         {/* Date Filter & Quick Actions */}
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          <div className="flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200">
+          <div className="flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200/80">
             {(['7d', '30d', 'all'] as const).map((range) => (
               <button
                 key={range}
                 onClick={() => setDateRange(range)}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                   dateRange === range
-                    ? 'bg-neutral-900 text-white shadow-2xs'
+                    ? 'bg-neutral-900 text-white shadow-xs'
                     : 'text-neutral-600 hover:text-neutral-950'
                 }`}
               >
@@ -135,7 +136,7 @@ export default function DashboardPage() {
           <Button
             variant="primary"
             size="sm"
-            icon={<FileSpreadsheet className="w-4 h-4" />}
+            icon={<FileSpreadsheet className="w-3.5 h-3.5" />}
             onClick={openRetrieveModal}
           >
             Retrieve CSV
@@ -154,7 +155,7 @@ export default function DashboardPage() {
           )}
 
           <Link href="/ask-loop">
-            <Button variant="outline" size="sm" icon={<Sparkles className="w-4 h-4 text-neutral-900" />}>
+            <Button variant="outline" size="sm" icon={<Sparkles className="w-3.5 h-3.5 text-neutral-900" />}>
               Ask LOOP
             </Button>
           </Link>
