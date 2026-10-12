@@ -9,7 +9,12 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "tsx tests/runner.ts",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:switch:pg": "cp prisma/schema.postgresql.prisma prisma/schema.prisma && prisma generate",
+    "db:switch:sqlite": "git checkout prisma/schema.prisma && prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
