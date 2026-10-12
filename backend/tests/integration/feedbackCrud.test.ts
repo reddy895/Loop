@@ -70,10 +70,10 @@ export async function runFeedbackCrudTests(): Promise<void> {
 
   // 5. Update feedback status and sentiment
   const updated = await feedbackService.updateFeedback(created.id, workspace1Id, {
-    status: "PROCESSED",
+    status: "IN_PROGRESS",
     customerLabel: "Updated Enterprise VIP",
   });
-  assert.strictEqual(updated.status, "PROCESSED");
+  assert.strictEqual(updated.status, "IN_PROGRESS");
   assert.strictEqual(updated.customerLabel, "Updated Enterprise VIP");
   console.log("  ✔ Feedback status and attributes updated successfully");
 
@@ -81,7 +81,7 @@ export async function runFeedbackCrudTests(): Promise<void> {
   await assert.rejects(
     async () => {
       await feedbackService.updateFeedback(created.id, workspace2Id, {
-        status: "CLOSED",
+        status: "ARCHIVED",
       });
     },
     (err: unknown) => err instanceof NotFoundError,
@@ -91,7 +91,7 @@ export async function runFeedbackCrudTests(): Promise<void> {
 
   // 7. List feedback with filtering & pagination
   const listResult = await feedbackService.listFeedback(workspace1Id, {
-    status: "PROCESSED",
+    status: "IN_PROGRESS",
     page: 1,
     limit: 10,
   });

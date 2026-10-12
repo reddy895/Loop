@@ -57,8 +57,9 @@ const parseEnvVariables = (): IAppConfig => {
   const nodeEnv = (process.env.NODE_ENV || envData.NODE_ENV) as NodeEnvironment;
   const isProduction = nodeEnv === "production";
 
-  // Production security invariant: NEXTAUTH_SECRET cannot be the default development secret
-  if (isProduction && (!process.env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET.includes("development"))) {
+  // Production security invariant: NEXTAUTH_SECRET cannot be the default development secret at runtime
+  const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build" || process.env.npm_lifecycle_event === "build";
+  if (isProduction && !isBuildPhase && (!process.env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET.includes("development"))) {
     throw new Error("SECURITY FAULT: NEXTAUTH_SECRET must be configured with a unique secret in production.");
   }
 
