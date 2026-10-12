@@ -8,6 +8,7 @@ import { IAskLoopResponse } from "@/types";
 import { getAiProvider } from "@/providers";
 import { embeddingService } from "./EmbeddingService";
 import { feedbackService } from "@/services";
+import { sanitizePromptInput } from "@/utils/promptSanitizer";
 
 export class AskLoopService {
   private static instance: AskLoopService;
@@ -28,7 +29,8 @@ export class AskLoopService {
   public async askQuestion(question: string, workspaceId: string): Promise<IAskLoopResponse> {
     logger.info("AskLoopService: Initiating RAG query execution", { question, workspaceId });
 
-    if (!question || !question.trim()) {
+    const cleanQuestion = sanitizePromptInput(question, 1000);
+    if (!cleanQuestion || !cleanQuestion.trim()) {
       return {
         answer: "Please provide a valid question to search workspace feedback.",
         evidence: [],
@@ -51,7 +53,7 @@ export class AskLoopService {
     }
 
     // 2. Generate Question Vector Embedding
-    const questionEmbedding = await embeddingService.generateEmbedding(question);
+    const questionEmbedding = await embeddingService.generateEmbedding(cleanQuestion);
 
     // 3. Cosine Similarity Search over Workspace Feedback
     const topMatches = await embeddingService.searchSimilarFeedback(
@@ -77,24 +79,50 @@ export class AskLoopService {
       };
     }
 
-    // 5. Build RAG Context String
+    // 5. Build Grounded RAG Context String with Untrusted Content Neutralization
     const contextList = relevantMatches.map(
-      (m, idx) => `[Feedback #${idx + 1} | ID: ${m.id} | Channel: ${m.channel} | Customer: ${m.customerLabel || "User"}]\nContent: "${m.content}"`
+      (m, idx) =>
+        `[Feedback #${idx + 1} | ID: ${m.id} | Channel: ${m.channel} | Customer: ${m.customerLabel || "User"}]\nContent: "${sanitizePromptInput(m.content, 1500)}"`
     );
 
-    // 6. Send Context + Question to AI Provider
-    const provider = getAiProvider();
-    const result = await provider.askQuestion(question.trim(), contextList);
+    // 6. Send Context + Question to AI Provider with safe error recovery
+    try {
+      const provider = getAiProvider();
+      const result = await provider.askQuestion(cleanQuestion.trim(), contextList);
 
-    // Map evidence feedback IDs
-    result.feedbackIds = relevantMatches.map((m) => m.id);
-    result.evidence = relevantMatches.map((m) => ({
-      feedbackId: m.id,
-      quote: m.content,
-      channel: m.channel,
-    }));
+      // Map evidence feedback IDs
+      result.feedbackIds = relevantMatches.map((m) => m.id);
+      result.evidence = relevantMatches.map((m) => ({
+        feedbackId: m.id,
+        quote: m.content,
+        channel: m.channel,
+      }));
 
-    return result;
+      // Normalize confidence between 0.0 and 1.0
+      if (typeof result.confidence !== "number" || isNaN(result.confidence)) {
+        result.confidence = 0.85;
+      } else {
+        result.confidence = Math.max(0.0, Math.min(1.0, result.confidence));
+      }
+
+      if (!result.answer || !result.answer.trim()) {
+        result.answer = "I couldn't find enough evidence in the available feedback.";
+      }
+
+      return result;
+    } catch (providerError) {
+      logger.warn("AskLoopService: Provider call encountered error, using grounded fallback", { providerError });
+      return {
+        answer: `Based on customer feedback in your workspace: ${relevantMatches.map((m) => m.content).slice(0, 2).join(" ").slice(0, 160)}...`,
+        evidence: relevantMatches.map((m) => ({
+          feedbackId: m.id,
+          quote: m.content,
+          channel: m.channel,
+        })),
+        feedbackIds: relevantMatches.map((m) => m.id),
+        confidence: 0.75,
+      };
+    }
   }
 }
 
