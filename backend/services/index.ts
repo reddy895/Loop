@@ -569,7 +569,7 @@ export class FeedbackService implements IFeedbackService {
           data: updatePayload,
         });
         if (updated.count > 0) {
-          const item = await (prisma as any).feedback.findUnique({ where: { id } });
+          const item = await (prisma as any).feedback.findFirst({ where: { id, workspaceId } });
           if (item) {
             return {
               id: item.id,

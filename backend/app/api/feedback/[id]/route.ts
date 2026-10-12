@@ -16,6 +16,23 @@ interface RouteParams {
 }
 
 /**
+ * GET /api/feedback/:id
+ * Retrieve a single feedback record within authorized workspace.
+ */
+export async function GET(req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
+  requestLoggerMiddleware(req);
+
+  try {
+    const authContext = await resolveAuthContext(req);
+    const feedback = await feedbackService.getFeedbackById(params.id, authContext.workspaceId);
+
+    return createSuccessResponse(feedback, "Feedback record retrieved successfully.");
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+/**
  * PATCH /api/feedback/:id
  * Update an existing feedback record within authorized workspace.
  */
