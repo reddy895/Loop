@@ -155,27 +155,33 @@ export const SentimentPieChart: React.FC<{ data: Array<{ name: string; value: nu
 /* 3. Top Themes Bar Chart */
 export const TopThemesBarChart: React.FC<{ data: Record<string, unknown>[] }> = ({ data }) => {
   return (
-    <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 60 }}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+    <BarChart data={data} margin={{ top: 10, right: 15, left: -20, bottom: 45 }}>
+      <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
       <XAxis
         dataKey="theme"
-        stroke="#71717A"
+        stroke="#A1A1AA"
         tick={{ fill: '#71717A', fontSize: 11 }}
-        angle={-35}
+        angle={-30}
         textAnchor="end"
         interval={0}
+        tickLine={false}
+        axisLine={{ stroke: '#E4E4E7' }}
       />
-      <YAxis stroke="#71717A" tick={{ fill: '#71717A', fontSize: 12 }} />
+      <YAxis stroke="#A1A1AA" tick={{ fill: '#71717A', fontSize: 11 }} tickLine={false} axisLine={false} />
       <Tooltip
         contentStyle={{
-          backgroundColor: '#FFFFFF',
-          borderColor: '#E5E7EB',
+          backgroundColor: '#09090B',
+          borderColor: '#27272A',
           borderRadius: '8px',
-          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-          color: '#09090B'
+          boxShadow: '0 8px 16px -2px rgba(0,0,0,0.2)',
+          color: '#FFFFFF',
+          fontSize: '12px',
+          fontFamily: 'var(--font-jetbrains), monospace'
         }}
+        formatter={(val: any) => [`${val} items`, 'Feedback Volume']}
+        itemStyle={{ color: '#FFFFFF' }}
       />
-      <Bar dataKey="count" fill="#2563EB" radius={[4, 4, 0, 0]} name="Ticket Count" />
+      <Bar dataKey="count" fill="#18181B" radius={[4, 4, 0, 0]} name="Ticket Count" />
     </BarChart>
   );
 };
