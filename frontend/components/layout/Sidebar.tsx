@@ -194,20 +194,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Main Sidebar Component */}
       <aside
         className={cn(
-          'bg-white border-r border-neutral-200 flex flex-col justify-between shrink-0 h-screen sticky top-0 z-40 transition-all duration-300 ease-in-out',
-          // Desktop collapse width
-          isCollapsed ? 'lg:w-20' : 'lg:w-64',
+          'bg-white border-r border-neutral-200/80 flex flex-col justify-between shrink-0 h-screen sticky top-0 z-40 transition-all duration-200 ease-in-out',
+          // Desktop collapse width - compact footprint
+          isCollapsed ? 'lg:w-16' : 'lg:w-60',
           // Mobile drawer positioning
           isMobileOpen
-            ? 'fixed inset-y-0 left-0 w-72 shadow-2xl translate-x-0'
+            ? 'fixed inset-y-0 left-0 w-64 shadow-2xl translate-x-0'
             : '-translate-x-full lg:translate-x-0 fixed lg:sticky'
         )}
       >
         {/* Brand Header */}
         <div
           className={cn(
-            'border-b border-neutral-200 flex items-center shrink-0 h-16',
-            isCollapsed ? 'justify-center px-2' : 'justify-between px-4'
+            'border-b border-neutral-200/80 flex items-center shrink-0 h-14',
+            isCollapsed ? 'justify-center px-2' : 'justify-between px-3.5'
           )}
         >
           <Link
