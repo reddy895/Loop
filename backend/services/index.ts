@@ -23,6 +23,7 @@ import {
   IThemeDetailResult,
   IDashboardMetrics,
   IAnalyticsMetrics,
+  IDateRangeFilter,
   UserRole,
   MemberStatus,
   SentimentType,
@@ -1082,15 +1083,24 @@ export class MemberService implements IMemberService {
 export class AnalyticsService implements IAnalyticsService {
   public readonly serviceName = "AnalyticsService";
 
-  public async getDashboardMetrics(workspaceId: string): Promise<IDashboardMetrics> {
-    logger.info(`${this.serviceName}: Computing aggregate dashboard analytics`, { workspaceId });
+  public async getDashboardMetrics(workspaceId: string, options?: IDateRangeFilter): Promise<IDashboardMetrics> {
+    logger.info(`${this.serviceName}: Computing aggregate dashboard analytics`, { workspaceId, options });
 
     // ----------------------------------------------------------------
     // Prisma path — O(1) aggregation queries, no full-table scan in JS
     // ----------------------------------------------------------------
     if (prisma) {
       try {
-        const baseWhere = { workspaceId, isDeleted: false };
+        const baseWhere: any = { workspaceId, isDeleted: false };
+        if (options?.range === "7d") {
+          baseWhere.createdAt = { gte: new Date(Date.now() - 7 * 86400000) };
+        } else if (options?.range === "30d") {
+          baseWhere.createdAt = { gte: new Date(Date.now() - 30 * 86400000) };
+        } else if (options?.startDate || options?.endDate) {
+          baseWhere.createdAt = {};
+          if (options.startDate) baseWhere.createdAt.gte = new Date(options.startDate);
+          if (options.endDate) baseWhere.createdAt.lte = new Date(options.endDate);
+        }
 
         const [totalFeedback, sentimentGroups, recentDbRows] = await Promise.all([
           (prisma as any).feedback.count({ where: baseWhere }),
@@ -1204,12 +1214,21 @@ export class AnalyticsService implements IAnalyticsService {
     return { totalFeedback, positiveCount, neutralCount, negativeCount, newThisWeek, topThemes, recentFeedback, chartData: { volumeByDay, sentimentTrend } };
   }
 
-  public async getAnalyticsBreakdown(workspaceId: string): Promise<IAnalyticsMetrics> {
-    logger.info(`${this.serviceName}: Computing comprehensive analytics distribution`, { workspaceId });
+  public async getAnalyticsBreakdown(workspaceId: string, options?: IDateRangeFilter): Promise<IAnalyticsMetrics> {
+    logger.info(`${this.serviceName}: Computing comprehensive analytics distribution`, { workspaceId, options });
 
     if (prisma) {
       try {
-        const baseWhere = { workspaceId, isDeleted: false };
+        const baseWhere: any = { workspaceId, isDeleted: false };
+        if (options?.range === "7d") {
+          baseWhere.createdAt = { gte: new Date(Date.now() - 7 * 86400000) };
+        } else if (options?.range === "30d") {
+          baseWhere.createdAt = { gte: new Date(Date.now() - 30 * 86400000) };
+        } else if (options?.startDate || options?.endDate) {
+          baseWhere.createdAt = {};
+          if (options.startDate) baseWhere.createdAt.gte = new Date(options.startDate);
+          if (options.endDate) baseWhere.createdAt.lte = new Date(options.endDate);
+        }
         const [total, sentimentGroups, themeGroups] = await Promise.all([
           (prisma as any).feedback.count({ where: baseWhere }),
           (prisma as any).feedback.groupBy({

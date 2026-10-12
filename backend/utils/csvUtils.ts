@@ -113,7 +113,7 @@ export const validateCsvRow = (
 ): {
   valid: boolean;
   error?: { row: number; message: string; field?: string };
-  data?: { content: string; channel: string; customerLabel: string; source?: string; sentiment?: string };
+  data?: { content: string; channel: string; customerLabel: string; customerEmail?: string; themeName?: string; source?: string; sentiment?: string };
 } => {
   const content = row["content"] || row["feedback"] || row["text"] || row["message"];
   const channel = row["channel"] || row["source_channel"] || row["platform"] || "CSV Import";

@@ -404,9 +404,15 @@ export interface ICsvImportService extends IBaseService {
   importCsv(workspaceId: string, csvContent: string): Promise<ICsvImportResult>;
 }
 
+export interface IDateRangeFilter {
+  range?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 export interface IAnalyticsService extends IBaseService {
-  getDashboardMetrics(workspaceId: string): Promise<IDashboardMetrics>;
-  getAnalyticsBreakdown(workspaceId: string): Promise<IAnalyticsMetrics>;
+  getDashboardMetrics(workspaceId: string, options?: IDateRangeFilter): Promise<IDashboardMetrics>;
+  getAnalyticsBreakdown(workspaceId: string, options?: IDateRangeFilter): Promise<IAnalyticsMetrics>;
   getWorkspaceMetrics(workspaceId: string): Promise<unknown>;
   getSentimentDistribution(workspaceId: string): Promise<unknown>;
 }

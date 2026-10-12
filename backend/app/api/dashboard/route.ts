@@ -17,8 +17,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   try {
     const authContext = await resolveAuthContext(req);
+    const { searchParams } = new URL(req.url);
+    const range = searchParams.get("range") || undefined;
+    const startDate = searchParams.get("startDate") || undefined;
+    const endDate = searchParams.get("endDate") || undefined;
 
-    const dashboardMetrics = await analyticsService.getDashboardMetrics(authContext.workspaceId);
+    const dashboardMetrics = await analyticsService.getDashboardMetrics(authContext.workspaceId, {
+      range,
+      startDate,
+      endDate,
+    });
 
     return createSuccessResponse(dashboardMetrics, "Dashboard metrics retrieved successfully.");
   } catch (error) {

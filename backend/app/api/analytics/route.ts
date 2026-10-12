@@ -17,8 +17,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   try {
     const authContext = await resolveAuthContext(req);
+    const { searchParams } = new URL(req.url);
+    const range = searchParams.get("range") || undefined;
+    const startDate = searchParams.get("startDate") || undefined;
+    const endDate = searchParams.get("endDate") || undefined;
 
-    const analyticsBreakdown = await analyticsService.getAnalyticsBreakdown(authContext.workspaceId);
+    const analyticsBreakdown = await analyticsService.getAnalyticsBreakdown(authContext.workspaceId, {
+      range,
+      startDate,
+      endDate,
+    });
 
     return createSuccessResponse(analyticsBreakdown, "Detailed analytics metrics retrieved successfully.");
   } catch (error) {
