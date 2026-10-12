@@ -25,25 +25,30 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   className
 }) => {
   return (
-    <Card variant={variant} className={cn("relative overflow-hidden group transition-all duration-200 hover:border-neutral-400 hover:shadow-xs", className)}>
+    <div
+      className={cn(
+        "loop-card p-4 sm:p-5 relative overflow-hidden transition-all duration-150 hover:border-neutral-300 hover:shadow-xs",
+        className
+      )}
+    >
       <div className="flex items-start justify-between">
         <div>
           <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 font-mono-numbers block">
             {title}
           </span>
-          <div className="mt-2 text-2xl lg:text-3xl font-bold font-mono-numbers text-neutral-900 tracking-tight">
+          <div className="mt-1.5 text-2xl xl:text-3xl font-bold font-mono-numbers text-neutral-900 tracking-tight">
             {value}
           </div>
         </div>
         {icon && (
-          <div className="p-2.5 rounded-lg bg-neutral-100 border border-neutral-200 text-neutral-900 shrink-0 ml-2 group-hover:bg-neutral-200/80 transition-colors">
+          <div className="p-2 rounded-lg bg-neutral-50 border border-neutral-200/80 text-neutral-800 shrink-0 ml-2 transition-colors">
             {icon}
           </div>
         )}
       </div>
 
       {(change || description) && (
-        <div className="mt-4 pt-3 border-t border-neutral-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="mt-3 pt-2.5 border-t border-neutral-100 flex flex-wrap items-center justify-between gap-1.5 text-xs">
           {change && (
             <span
               className={cn(
