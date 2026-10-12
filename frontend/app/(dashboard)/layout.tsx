@@ -112,8 +112,8 @@ export default function DashboardLayout({
             onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
           />
 
-          {/* Dynamic Content Container */}
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+          {/* Full-Screen Dynamic Content Container */}
+          <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-5 max-w-[1920px] mx-auto space-y-6 transition-all duration-200">
             {children}
           </main>
         </div>
