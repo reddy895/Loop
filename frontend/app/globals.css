@@ -46,12 +46,12 @@
    Strict Black + White visual hierarchy (Grayscale only outside analytics)
    ========================================================================== */
 
-/* Modern Modular Cards */
+/* Modern Modular Cards — Clean Enterprise SaaS Styling */
 .loop-card,
 .skeuo-panel {
   background-color: #FFFFFF;
-  border: 1px solid #E4E4E7;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  border: 1px solid #EAEAEB;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
   border-radius: 0.75rem;
   transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
 }
@@ -59,22 +59,22 @@
 .loop-card-hover,
 .skeuo-card-cream {
   background-color: #FFFFFF;
-  border: 1px solid #E4E4E7;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  border: 1px solid #EAEAEB;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
   border-radius: 0.75rem;
   transition: all 0.15s ease-out;
 }
 
 .loop-card-hover:hover,
 .skeuo-card-cream:hover {
-  border-color: #A1A1AA;
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+  border-color: #D4D4D8;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
 }
 
 .loop-card-inset,
 .skeuo-inset {
-  background-color: #F4F4F5;
-  border: 1px solid #E4E4E7;
+  background-color: #F8F8FA;
+  border: 1px solid #EAEAEB;
   border-radius: 0.5rem;
 }
 

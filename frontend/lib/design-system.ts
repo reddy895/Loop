@@ -10,16 +10,16 @@ export const DESIGN_TOKENS = {
     // Monochromatic Canvas & Surfaces
     canvas: '#FFFFFF',
     surface: '#FAFAFA',
-    surfaceSubtle: '#F4F4F5',
-    surfaceMuted: '#ECECED',
+    surfaceSubtle: '#F4F4F6',
+    surfaceMuted: '#EDEDF0',
     surfaceDark: '#09090B',
     surfaceDarkElevated: '#18181B',
 
-    // Monochromatic Borders
-    borderSubtle: '#E4E4E7',
-    borderDefault: '#D4D4D8',
-    borderStrong: '#18181B',
-    borderBlack: '#000000',
+    // Restrained Enterprise Borders (No heavy or harsh outlines)
+    borderSubtle: '#F0F0F2',
+    borderDefault: '#E4E4E7',
+    borderStrong: '#D4D4D8',
+    borderBlack: '#09090B',
 
     // Monochromatic Typography
     textPrimary: '#09090B',
