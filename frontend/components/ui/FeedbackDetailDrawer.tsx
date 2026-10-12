@@ -258,7 +258,7 @@ export const FeedbackDetailDrawer: React.FC<FeedbackDetailDrawerProps> = ({
                       {onStatusChange && (
                         <select
                           value={item.status}
-                          onChange={(e) => onStatusChange(item.id, e.target.value)}
+                          onChange={(e) => onStatusChange(item.id, e.target.value as FeedbackItem['status'])}
                           className="text-[11px] font-sans border border-neutral-300 rounded px-2 py-1 bg-white text-neutral-800"
                         >
                           <option value="New">New</option>

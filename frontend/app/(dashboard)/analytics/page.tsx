@@ -231,25 +231,25 @@ export default function AnalyticsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {channelPerformanceList.map((ch, idx) => (
+            {channelPerformanceList.map((ch: any, idx) => (
               <TableRow key={idx}>
                 <TableCell className="font-bold text-xs whitespace-nowrap text-neutral-900">
-                  {ch.channel}
+                  {String(ch.channel ?? '')}
                 </TableCell>
                 <TableCell className="font-mono-numbers text-xs font-semibold whitespace-nowrap text-neutral-800">
-                  {ch.total}
+                  {String(ch.total ?? 0)}
                 </TableCell>
                 <TableCell className="font-mono-numbers text-xs text-neutral-900 font-bold whitespace-nowrap">
-                  {ch.positivePct}
+                  {String(ch.positivePct ?? '')}
                 </TableCell>
                 <TableCell className="font-mono-numbers text-xs text-neutral-900 font-bold whitespace-nowrap">
-                  {ch.negativePct}
+                  {String(ch.negativePct ?? '')}
                 </TableCell>
                 <TableCell className="font-mono-numbers text-xs font-bold text-neutral-900 whitespace-nowrap">
-                  {ch.csat}
+                  {String(ch.csat ?? '')}
                 </TableCell>
                 <TableCell className="font-mono-numbers text-xs text-neutral-500 whitespace-nowrap">
-                  {ch.avgRes}
+                  {String(ch.avgRes ?? '')}
                 </TableCell>
               </TableRow>
             ))}
