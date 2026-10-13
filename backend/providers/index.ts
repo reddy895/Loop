@@ -34,12 +34,19 @@ export class GeminiProvider implements IAiProvider {
   }
 
   public async generateText(prompt: string): Promise<string> {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelName}:generateContent?key=${this.apiKey}`;
-    const payload = {
-      contents: [{ parts: [{ text: prompt }] }],
-    };
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelName}:generateContent?key=${this.apiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+      };
 
-    return await this.callGeminiApi(endpoint, payload);
+      return await this.callGeminiApi(endpoint, payload);
+    } catch (error) {
+      logger.warn("GeminiProvider: generateText failed, using fallback heuristic summary", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+      return new FallbackAiProvider().summarize(prompt);
+    }
   }
 
   public async classifyFeedback(content: string): Promise<IClassificationResult> {
@@ -172,6 +179,7 @@ export class GeminiProvider implements IAiProvider {
   }
 
   private async callGeminiApi(endpoint: string, payload: unknown, retryCount: number = 1): Promise<string> {
+    const sanitizedEndpoint = endpoint.replace(/key=[^&]+/, "key=[REDACTED]");
     for (let attempt = 0; attempt <= retryCount; attempt++) {
       try {
         const controller = new AbortController();
@@ -187,6 +195,10 @@ export class GeminiProvider implements IAiProvider {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
+          // Do not retry authorization or rate limit exhaustion errors
+          if ([401, 403, 429].includes(response.status)) {
+            throw new Error(`Gemini HTTP Error [${response.status}] (non-retryable): ${response.statusText}`);
+          }
           throw new Error(`Gemini HTTP Error [${response.status}]: ${response.statusText}`);
         }
 
@@ -197,10 +209,13 @@ export class GeminiProvider implements IAiProvider {
         }
         return text;
       } catch (err) {
-        if (attempt === retryCount) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        if (attempt === retryCount || errMsg.includes("non-retryable")) {
           throw err;
         }
-        logger.warn(`GeminiProvider: Retry attempt ${attempt + 1} after error`, { error: err });
+        logger.warn(`GeminiProvider: Retry attempt ${attempt + 1} after error targeting ${sanitizedEndpoint}`, {
+          error: errMsg,
+        });
       }
     }
     throw new Error("Gemini API call failed after retries.");
@@ -529,13 +544,24 @@ export class AiProviderFactory {
       return this.cachedProvider;
     }
 
-    if (config.geminiApiKey) {
+    const isPlaceholder = (val?: string) => {
+      if (!val || !val.trim()) return true;
+      const lower = val.toLowerCase().trim();
+      return (
+        lower === "dummy" ||
+        lower.includes("placeholder") ||
+        lower.startsWith("your_") ||
+        lower.startsWith("your-")
+      );
+    };
+
+    if (config.geminiApiKey && !isPlaceholder(config.geminiApiKey)) {
       logger.info("AiProviderFactory: Selected Gemini AI Provider.");
       this.cachedProvider = new GeminiProvider(config.geminiApiKey);
       return this.cachedProvider;
     }
 
-    if (config.ollamaBaseUrl) {
+    if (config.ollamaBaseUrl && !isPlaceholder(config.ollamaBaseUrl)) {
       logger.info("AiProviderFactory: Selected Ollama AI Provider.");
       this.cachedProvider = new OllamaProvider(config.ollamaBaseUrl);
       return this.cachedProvider;
