@@ -18,14 +18,17 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  useSecureCookies: config.isProduction && (process.env.NEXTAUTH_URL?.startsWith("https://") ?? false),
   cookies: {
     sessionToken: {
-      name: config.isProduction ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+      name: (config.isProduction && (process.env.NEXTAUTH_URL?.startsWith("https://") ?? false))
+        ? "__Secure-next-auth.session-token"
+        : "next-auth.session-token",
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: config.isProduction,
+        secure: config.isProduction && (process.env.NEXTAUTH_URL?.startsWith("https://") ?? false),
       },
     },
   },
