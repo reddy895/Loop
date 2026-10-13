@@ -430,8 +430,8 @@ ${activeReport.recommendations.map((r: string) => `- ${r}`).join('\n')}
             <Button variant="secondary" size="sm" onClick={() => setIsGenerateModalOpen(false)}>
               Cancel
             </Button>
-            <Button variant="primary" size="sm" onClick={handleGenerateReport} icon={<Sparkles className="w-4 h-4" />}>
-              Synthesize Brief
+            <Button variant="primary" size="sm" onClick={handleGenerateReport} disabled={isGenerating} icon={<Sparkles className="w-4 h-4" />}>
+              {isGenerating ? 'Synthesizing...' : 'Synthesize Brief'}
             </Button>
           </>
         }
