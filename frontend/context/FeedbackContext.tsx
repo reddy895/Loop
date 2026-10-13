@@ -116,18 +116,18 @@ interface FeedbackContextType {
 const FeedbackContext = createContext<FeedbackContextType | undefined>(undefined);
 
 export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isRetrieved, setIsRetrieved] = useState<boolean>(false);
+  const [isRetrieved, setIsRetrieved] = useState<boolean>(true);
   const [isServerMode, setIsServerMode] = useState<boolean>(false); // true = data is in DB
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [activeDatasetType, setActiveDatasetType] = useState<DatasetType>('enterprise');
-  const [currentBundle, setCurrentBundle] = useState<ReturnType<typeof getDatasetBundle> | null>(null);
+  const [currentBundle, setCurrentBundle] = useState<ReturnType<typeof getDatasetBundle> | null>(() => getDatasetBundle('enterprise'));
   const [serverStats, setServerStats] = useState<any>(null);
   const [serverFeedback, setServerFeedback] = useState<FeedbackItem[]>([]);
   const [serverVolumeData, setServerVolumeData] = useState<Record<string, unknown>[] | null>(null);
   const [serverSentimentPie, setServerSentimentPie] = useState<Array<{ name: string; value: number; color?: string }> | null>(null);
   const [serverTopThemes, setServerTopThemes] = useState<Record<string, unknown>[] | null>(null);
   const [isRetrieveModalOpen, setIsRetrieveModalOpen] = useState<boolean>(false);
-  const [lastRetrievedTime, setLastRetrievedTime] = useState<string | null>(null);
+  const [lastRetrievedTime, setLastRetrievedTime] = useState<string | null>('Just now');
   const [customItemsList, setCustomItemsList] = useState<FeedbackItem[] | null>(null);
 
   const openRetrieveModal = () => setIsRetrieveModalOpen(true);
