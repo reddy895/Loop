@@ -14,6 +14,7 @@ import {
   TopThemesBarChart
 } from '@/components/charts/FeedbackCharts';
 import { FeedbackDetailDrawer } from '@/components/ui/FeedbackDetailDrawer';
+import { StatsCardSkeleton, ChartSkeleton, TableSkeleton } from '@/components/ui/Skeletons';
 import { useFeedbackContext } from '@/context/FeedbackContext';
 import { FeedbackItem } from '@/types';
 import {
@@ -37,6 +38,7 @@ import {
 export default function DashboardPage() {
   const {
     isRetrieved,
+    isLoading,
     datasetName,
     feedbackList,
     stats,
@@ -215,18 +217,45 @@ export default function DashboardPage() {
       )}
 
       {/* ============================================================== */}
-      {/* SECOND ROW: 4 Modular Intelligence KPI Cards                   */}
+      {/* SECOND ROW: 4 Modular Intelligence KPI Cards / Skeletons       */}
       {/* ============================================================== */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Total Feedback */}
-        <StatsCard
-          title="Total Feedback"
-          value={stats.totalFeedback.toLocaleString()}
-          change={isRetrieved ? '+14% vs last cycle' : '0 records'}
-          trend={isRetrieved ? 'up' : 'neutral'}
-          description={isRetrieved ? 'Ingested across 6 channels' : 'No records retrieved yet'}
-          icon={<MessageSquare className="w-5 h-5" />}
-        />
+      {isLoading ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <ChartSkeleton height={280} />
+            </div>
+            <div>
+              <ChartSkeleton height={280} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div>
+              <ChartSkeleton height={280} />
+            </div>
+            <div className="lg:col-span-2">
+              <TableSkeleton rows={5} />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Card 1: Total Feedback */}
+            <StatsCard
+              title="Total Feedback"
+              value={stats.totalFeedback.toLocaleString()}
+              change={isRetrieved ? '+14% vs last cycle' : '0 records'}
+              trend={isRetrieved ? 'up' : 'neutral'}
+              description={isRetrieved ? 'Ingested across 6 channels' : 'No records retrieved yet'}
+              icon={<MessageSquare className="w-5 h-5" />}
+            />
 
         {/* Card 2: Average Sentiment */}
         <StatsCard
@@ -402,6 +431,8 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* ============================================================== */}
       {/* 5. DETAILED INTELLIGENCE: AI Synthesis, Reports & Pipeline     */}
