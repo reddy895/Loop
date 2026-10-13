@@ -55,7 +55,7 @@ export default function DashboardPage() {
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const recentFeedback = feedbackList.slice(0, 5);
+  const recentFeedback = feedbackList.slice(0, 6);
 
   const handleOpenDetail = (item: FeedbackItem) => {
     setSelectedFeedback(item);
@@ -298,12 +298,19 @@ export default function DashboardPage() {
           <div className="loop-card p-4 sm:p-5 h-full flex flex-col justify-between transition-all duration-150">
             <div className="flex flex-row items-center justify-between pb-2.5 mb-2 border-b border-neutral-100">
               <div>
-                <h3 className="font-heading text-sm sm:text-base font-bold text-neutral-900 tracking-tight">
-                  Recent Customer Feedback
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-heading text-sm sm:text-base font-bold text-neutral-900 tracking-tight">
+                    Recent Customer Feedback
+                  </h3>
+                  {isRetrieved && (
+                    <span className="font-mono-numbers text-[10px] font-bold px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-700 border border-neutral-200">
+                      {feedbackList.length} total
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-neutral-500 font-sans mt-0.5">
                   {isRetrieved
-                    ? `Latest incoming items (${recentFeedback.length} displayed)`
+                    ? `Displaying latest verified items across active channels`
                     : '0 customer records retrieved'}
                 </p>
               </div>
