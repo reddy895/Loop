@@ -109,18 +109,21 @@ npm test
 3. `[UNIT] Sliding-Window Rate Limiting & Brute-Force`
 4. `[UNIT] Spreadsheet Formula Injection Neutralization`
 5. `[UNIT] Prompt Injection Neutralization & Fencing`
-6. `[INTEGRATION] Authentication Lifecycle & Sessions`
-7. `[INTEGRATION] Password Reset Lifecycle & Replay Prevention`
-8. `[INTEGRATION] Multi-Tenant Isolation & Privilege Spoofing`
-9. `[INTEGRATION] Server-Side RBAC Boundaries & Hierarchy`
-10. `[INTEGRATION] Feedback CRUD Lifecycle & IDOR Defense`
-11. `[INTEGRATION] CSV Ingestion & Multi-Tenant Batch Ingestion`
-12. `[INTEGRATION] AI Fallback & Offline RAG Architecture`
-13. `[INTEGRATION] Server-Side Date Filtering & RAG Grounding`
+6. `[UNIT] Deployment Configuration & Production Invariants`
+7. `[INTEGRATION] Authentication Lifecycle & Sessions`
+8. `[INTEGRATION] Password Reset Lifecycle & Replay Prevention`
+9. `[INTEGRATION] Multi-Tenant Isolation & Privilege Spoofing`
+10. `[INTEGRATION] Server-Side RBAC Boundaries & Hierarchy`
+11. `[INTEGRATION] Feedback CRUD Lifecycle & IDOR Defense`
+12. `[INTEGRATION] CSV Ingestion & Multi-Tenant Batch Ingestion`
+13. `[INTEGRATION] AI Fallback & Offline RAG Architecture`
+14. `[INTEGRATION] Server-Side Date Filtering & RAG Grounding`
 
 ---
 
 ## ☁️ Vercel Production Deployment
+
+> **Detailed Guide:** See [docs/DEPLOYMENT_GUIDE.md](file:///home/reddy895/Downloads/Loop-main/docs/DEPLOYMENT_GUIDE.md) for complete step-by-step instructions, environment variable tables, and troubleshooting.
 
 ### Option A: Monorepo Root Deployment (One-Click)
 1. Import the repository directly to [Vercel](https://vercel.com/new).
