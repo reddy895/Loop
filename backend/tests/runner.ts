@@ -10,6 +10,7 @@ import { runValidationSchemaTests } from "./unit/validationSchemas.test";
 import { runRateLimiterTests } from "./unit/rateLimiter.test";
 import { runCsvSanitizerTests } from "./unit/csvFormulaSanitizer.test";
 import { runPromptInjectionTests } from "./unit/promptInjection.test";
+import { runDeploymentConfigTests } from "./unit/deploymentConfig.test";
 
 import { runAuthFlowIntegrationTests } from "./integration/authFlow.test";
 import { runPasswordResetFlowTests } from "./integration/passwordResetFlow.test";
@@ -41,6 +42,7 @@ async function runAllSuites(): Promise<void> {
     { name: "Sliding-Window Rate Limiting & Brute-Force", category: "UNIT", fn: runRateLimiterTests },
     { name: "Spreadsheet Formula Injection Neutralization", category: "UNIT", fn: runCsvSanitizerTests },
     { name: "Prompt Injection Neutralization & Fencing", category: "UNIT", fn: runPromptInjectionTests },
+    { name: "Deployment Configuration & Production Invariants", category: "UNIT", fn: runDeploymentConfigTests },
 
     // Integration Suites
     { name: "Authentication Lifecycle & Sessions", category: "INTEGRATION", fn: runAuthFlowIntegrationTests },
