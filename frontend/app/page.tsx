@@ -176,17 +176,17 @@ export default function LandingPage() {
 
           {/* Nav Links */}
           <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-neutral-600">
-            <a href="#pipeline" className="hover:text-neutral-950 transition-colors">
-              Intelligence Pipeline
-            </a>
+            <Link href="/dashboard" className="hover:text-neutral-950 transition-colors">
+              Dashboard
+            </Link>
+            <Link href="/analytics" className="hover:text-neutral-950 transition-colors">
+              Analytics
+            </Link>
+            <Link href="/ask-loop" className="hover:text-neutral-950 transition-colors">
+              Ask LOOP (RAG)
+            </Link>
             <a href="#how-it-works" className="hover:text-neutral-950 transition-colors">
               How It Works
-            </a>
-            <a href="#ask-loop" className="hover:text-neutral-950 transition-colors">
-              Ask LOOP (RAG)
-            </a>
-            <a href="#analytics" className="hover:text-neutral-950 transition-colors">
-              Analytics
             </a>
             <a href="#enterprise" className="hover:text-neutral-950 transition-colors">
               Enterprise
@@ -202,7 +202,7 @@ export default function LandingPage() {
               Sign In
             </Link>
 
-            <Link href="/login">
+            <Link href="/dashboard">
               <Button
                 variant="primary"
                 size="sm"
@@ -243,7 +243,7 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row sm:gap-4">
-              <Link href="/login" className="w-full sm:w-auto">
+              <Link href="/dashboard" className="w-full sm:w-auto">
                 <Button
                   variant="primary"
                   size="lg"
@@ -254,15 +254,15 @@ export default function LandingPage() {
                 </Button>
               </Link>
 
-              <a href="#how-it-works" className="w-full sm:w-auto">
+              <Link href="/analytics" className="w-full sm:w-auto">
                 <Button
                   variant="secondary"
                   size="lg"
                   className="w-full sm:w-auto px-6 py-3.5 text-sm font-semibold"
                 >
-                  Explore LOOP
+                  Explore Analytics
                 </Button>
-              </a>
+              </Link>
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 pt-3 font-mono-numbers text-xs text-neutral-500">
@@ -664,7 +664,7 @@ export default function LandingPage() {
           </p>
 
           <div className="pt-4">
-            <Link href="/login">
+            <Link href="/dashboard">
               <Button
                 variant="primary"
                 size="lg"
