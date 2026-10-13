@@ -115,13 +115,56 @@ interface FeedbackContextType {
 
 const FeedbackContext = createContext<FeedbackContextType | undefined>(undefined);
 
+interface ServerStatsState {
+  totalFeedback: number;
+  positivePct: string;
+  negativePct: string;
+  newThisWeek: number;
+  csat: string;
+  nps: string;
+}
+
+interface ServerRawFeedback {
+  id: string;
+  customerLabel?: string;
+  customerEmail?: string;
+  channel?: string;
+  content: string;
+  sentiment?: string;
+  themeName?: string;
+  createdAt?: string;
+}
+
+interface ServerVolumeItem {
+  date: string;
+  count: number;
+}
+
+interface ServerThemeItem {
+  name: string;
+  count: number;
+}
+
+interface DashboardApiPayload {
+  totalFeedback?: number;
+  newThisWeek?: number;
+  sentimentBreakdown?: {
+    positive?: number;
+    negative?: number;
+    neutral?: number;
+  };
+  recentFeedback?: ServerRawFeedback[];
+  volumeTrend?: ServerVolumeItem[];
+  topThemes?: ServerThemeItem[];
+}
+
 export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isRetrieved, setIsRetrieved] = useState<boolean>(true);
   const [isServerMode, setIsServerMode] = useState<boolean>(false); // true = data is in DB
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [activeDatasetType, setActiveDatasetType] = useState<DatasetType>('enterprise');
   const [currentBundle, setCurrentBundle] = useState<ReturnType<typeof getDatasetBundle> | null>(() => getDatasetBundle('enterprise'));
-  const [serverStats, setServerStats] = useState<any>(null);
+  const [serverStats, setServerStats] = useState<ServerStatsState | null>(null);
   const [serverFeedback, setServerFeedback] = useState<FeedbackItem[]>([]);
   const [serverVolumeData, setServerVolumeData] = useState<Record<string, unknown>[] | null>(null);
   const [serverSentimentPie, setServerSentimentPie] = useState<Array<{ name: string; value: number; color?: string }> | null>(null);
@@ -138,7 +181,7 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
     setIsLoading(true);
     try {
       const { api } = await import('@/lib/api');
-      const res = await api.get('/dashboard');
+      const res = await api.get<DashboardApiPayload>('/dashboard');
       if (res.success && res.data) {
         const d = res.data;
         if (typeof d.totalFeedback === 'number' && d.totalFeedback > 0) {
@@ -158,14 +201,14 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
           });
 
           if (d.recentFeedback && Array.isArray(d.recentFeedback)) {
-            const mappedRecent: FeedbackItem[] = d.recentFeedback.map((f: any) => ({
+            const mappedRecent: FeedbackItem[] = d.recentFeedback.map((f: ServerRawFeedback) => ({
               id: f.id.slice(0, 8),
               customerName: f.customerLabel || 'Verified Customer',
               customerEmail: f.customerEmail || 'user@example.com',
-              channel: f.channel || 'CSV Import',
+              channel: (f.channel as FeedbackItem['channel']) || 'CSV Import',
               feedback: f.content,
-              sentiment: (f.sentiment === 'POSITIVE' ? 'Positive' : f.sentiment === 'NEGATIVE' ? 'Negative' : 'Neutral') as any,
-              theme: f.themeName || 'General',
+              sentiment: (f.sentiment === 'POSITIVE' ? 'Positive' : f.sentiment === 'NEGATIVE' ? 'Negative' : 'Neutral') as FeedbackItem['sentiment'],
+              theme: (f.themeName as FeedbackItem['theme']) || 'UX Performance',
               status: 'New',
               date: f.createdAt ? new Date(f.createdAt).toLocaleDateString() : 'Today'
             }));
@@ -173,7 +216,7 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
           }
 
           if (d.volumeTrend && Array.isArray(d.volumeTrend)) {
-            setServerVolumeData(d.volumeTrend.map((v: any) => ({ date: v.date, volume: v.count })));
+            setServerVolumeData(d.volumeTrend.map((v: ServerVolumeItem) => ({ date: v.date, volume: v.count })));
           }
 
           if (d.sentimentBreakdown) {
@@ -185,7 +228,7 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
           }
 
           if (d.topThemes && Array.isArray(d.topThemes)) {
-            setServerTopThemes(d.topThemes.map((t: any) => ({ theme: t.name, count: t.count })));
+            setServerTopThemes(d.topThemes.map((t: ServerThemeItem) => ({ theme: t.name, count: t.count })));
           }
 
           setLastRetrievedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
