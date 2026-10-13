@@ -154,9 +154,9 @@ export const SentimentPieChart: React.FC<{ data: Array<{ name: string; value: nu
           fontSize: '12px',
           fontFamily: 'var(--font-jetbrains), monospace'
         }}
-        formatter={(value: any, name: any) => [
-          `${value} items (${Math.round((Number(value) / chartTotal) * 100)}%)`,
-          name
+        formatter={(value: unknown, name: unknown) => [
+          `${value ?? 0} items (${Math.round((Number(value ?? 0) / chartTotal) * 100)}%)`,
+          String(name ?? '')
         ]}
         itemStyle={{ color: '#FFFFFF' }}
       />
