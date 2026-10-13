@@ -146,17 +146,17 @@ export const resolveAuthContext = async (
     const sessionUser = await authService.validateSessionToken(token);
     if (sessionUser) {
       authenticatedUser = sessionUser;
-    } else if (token.startsWith("loop_token_") || token.startsWith("loop_sess_") || token.startsWith("loop_session_")) {
+    } else if (!config.isProduction && (token.startsWith("loop_token_") || token.startsWith("loop_sess_") || token.startsWith("loop_session_"))) {
       // In development fallback, look up default user
       const defaultUser = await authService.getUserById("usr_praveen_1");
       if (defaultUser) authenticatedUser = defaultUser;
     }
   }
 
-  // 2. Automated test runner or development test override
-  const isTestOrDev = config.isTest || config.isDevelopment;
-  const testUserId = req.headers.get("x-user-id");
-  const testBypass = req.headers.get("x-test-bypass-auth");
+  // 2. Automated test runner or development test override (strictly disabled in production)
+  const isTestOrDev = (config.isTest || config.isDevelopment) && !config.isProduction;
+  const testUserId = isTestOrDev ? req.headers.get("x-user-id") : null;
+  const testBypass = isTestOrDev ? req.headers.get("x-test-bypass-auth") : null;
 
   if (!authenticatedUser && isTestOrDev && (testUserId || testBypass)) {
     const userToFind = testUserId || "usr_praveen_1";
@@ -303,11 +303,12 @@ export const extractAuthContext = (
   allowedRoles?: UserRole[]
 ): IAuthContext => {
   const workspaceId = req.headers.get(SYSTEM_CONSTANTS.WORKSPACE_ID_HEADER) || "ws_default";
-  const rawRole = (req.headers.get("x-user-role") || "ADMIN").toUpperCase() as UserRole;
-  const userId = req.headers.get("x-user-id") || "usr_default";
+  const defaultRole: UserRole = config.isProduction ? "VIEWER" : "ADMIN";
+  const rawRole = (req.headers.get("x-user-role") || defaultRole).toUpperCase() as UserRole;
+  const userId = req.headers.get("x-user-id") || (config.isProduction ? "usr_anonymous" : "usr_default");
 
   const validRoles: UserRole[] = ["OWNER", "ADMIN", "ANALYST", "MEMBER", "VIEWER"];
-  const userRole = validRoles.includes(rawRole) ? rawRole : "ADMIN";
+  const userRole = validRoles.includes(rawRole) ? rawRole : defaultRole;
 
   if (userRole === "VIEWER" && ["POST", "PATCH", "PUT", "DELETE"].includes(req.method)) {
     throw new ForbiddenError("User with VIEWER role is restricted to read-only operations.");
