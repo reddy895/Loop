@@ -99,11 +99,24 @@ Visit **http://localhost:3001/dashboard** in your browser.
 LOOP includes 13 automated test suites covering cryptographic security, schema validation, rate limiting, formula injection, tenant boundaries, CRUD lifecycle, and RAG grounding:
 
 ```bash
-cd backend
-npm test
+# Run all frontend unit tests
+npm run test:frontend
+
+# Run all backend unit & integration tests
+npm run test
+
+# Run entire monorepo quality suite
+npm run test:all
+
+# Validate frontend linting compliance
+npm run lint
+
+# Validate frontend production build
+npm run build
 ```
 
 ### Test Suite Inventory:
+**Backend Test Suites (14 Suites):**
 1. `[UNIT] Cryptographic Password & Token Salting`
 2. `[UNIT] Authentication & Validation Schemas`
 3. `[UNIT] Sliding-Window Rate Limiting & Brute-Force`
@@ -118,6 +131,11 @@ npm test
 12. `[INTEGRATION] CSV Ingestion & Multi-Tenant Batch Ingestion`
 13. `[INTEGRATION] AI Fallback & Offline RAG Architecture`
 14. `[INTEGRATION] Server-Side Date Filtering & RAG Grounding`
+
+**Frontend Test Suites (3 Suites):**
+1. `[UNIT] FeedbackCharts Data & Fallback Invariants`
+2. `[UNIT] Environment Resolution & API URL Normalization`
+3. `[UNIT] Dataset Schema & Seed Integrity Constraints`
 
 ---
 
