@@ -267,7 +267,9 @@ function AskLoopContent() {
     'What are customers most unhappy about?',
     'What are top complaints regarding billing & pricing?',
     'Summarize sentiment feedback regarding UX performance',
-    'Which integration connectors are most requested by teams?'
+    'Which integration connectors are most requested by teams?',
+    'How do App Store reviews compare with Zendesk tickets?',
+    'What positive aspects do delighted customers highlight most?'
   ];
 
   return (
