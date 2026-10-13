@@ -63,6 +63,14 @@ const INITIAL_SESSIONS: ChatSession[] = [
   }
 ];
 
+function createMessageId() {
+  return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function getCurrentTimeLabel() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 function AskLoopContent() {
   const searchParams = useSearchParams();
   const { isRetrieved, feedbackList, openRetrieveModal, datasetName } = useFeedbackContext();
@@ -150,10 +158,10 @@ function AskLoopContent() {
     if (!textToSend || isTyping) return;
 
     const userMsg: ExtendedChatMessage = {
-      id: `msg-${Date.now()}`,
+      id: createMessageId(),
       sender: 'user',
       text: textToSend,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp: getCurrentTimeLabel()
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -177,10 +185,10 @@ function AskLoopContent() {
         }));
 
         const aiMsg: ExtendedChatMessage = {
-          id: `msg-${Date.now() + 1}`,
+          id: createMessageId(),
           sender: 'assistant',
           text: data.answer || 'Query completed based on retrieved customer evidence.',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: getCurrentTimeLabel(),
           confidence: data.confidence ?? 0.92,
           themes: ['UX Performance'],
           sources: retrievedSources
@@ -242,10 +250,10 @@ function AskLoopContent() {
       }
 
       const aiMsg: ExtendedChatMessage = {
-        id: `msg-${Date.now() + 1}`,
+        id: createMessageId(),
         sender: 'assistant',
         text: synthesizedAnswer,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: getCurrentTimeLabel(),
         confidence: 0.95,
         themes: detectedThemes,
         sources: generatedSources
