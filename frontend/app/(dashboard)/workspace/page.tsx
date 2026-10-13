@@ -22,6 +22,24 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
+interface WorkspaceApiData {
+  id?: string;
+  name?: string;
+}
+
+interface MemberApiItem {
+  id: string;
+  name?: string;
+  email: string;
+  role?: string;
+  status?: string;
+  createdAt?: string;
+}
+
+interface MembersApiData {
+  items?: MemberApiItem[];
+}
+
 function WorkspaceContent() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'details' | 'members'>(() => {
@@ -43,19 +61,20 @@ function WorkspaceContent() {
     async function loadWorkspaceAndMembers() {
       try {
         const [wsRes, memRes] = await Promise.allSettled([
-          api.get<any>('/workspace'),
-          api.get<any>('/members')
+          api.get<WorkspaceApiData>('/workspace'),
+          api.get<MembersApiData | MemberApiItem[]>('/members')
         ]);
 
         if (mounted && wsRes.status === 'fulfilled' && wsRes.value?.data) {
-          const ws = wsRes.value.data;
+          const ws = wsRes.value.data as WorkspaceApiData;
           if (ws.name) setWorkspaceName(ws.name);
         }
 
         if (mounted && memRes.status === 'fulfilled' && memRes.value?.data) {
-          const rawItems = Array.isArray(memRes.value.data) ? memRes.value.data : memRes.value.data.items || [];
+          const memData = memRes.value.data;
+          const rawItems: MemberApiItem[] = Array.isArray(memData) ? memData : (memData as MembersApiData).items || [];
           if (rawItems.length > 0) {
-            setMembersList(rawItems.map((m: any) => ({
+            setMembersList(rawItems.map((m: MemberApiItem) => ({
               id: m.id,
               name: m.name || m.email?.split('@')[0] || 'Member',
               email: m.email,
