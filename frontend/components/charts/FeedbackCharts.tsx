@@ -28,6 +28,8 @@ interface ChartContainerProps {
   height?: number;
 }
 
+const emptySubscribe = () => () => {};
+
 export const ChartContainer: React.FC<ChartContainerProps> = ({
   title,
   description,
@@ -35,11 +37,7 @@ export const ChartContainer: React.FC<ChartContainerProps> = ({
   action,
   height = 280
 }) => {
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = React.useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   return (
     <div className="loop-card p-4 sm:p-5 w-full flex flex-col justify-between transition-all duration-150">
