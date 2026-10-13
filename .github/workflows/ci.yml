@@ -45,6 +45,12 @@ jobs:
           NODE_ENV: test
           NEXTAUTH_SECRET: ci-test-secret-min-32-chars-long-12345
 
+      - name: Validate Frontend Lint & Style
+        run: npm --prefix frontend run lint
+
+      - name: Run Frontend Unit Test Suites
+        run: npm run test:frontend
+
       - name: Validate Frontend Production Build
         run: npm --prefix frontend run build
         env:
