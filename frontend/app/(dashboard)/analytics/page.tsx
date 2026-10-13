@@ -68,14 +68,14 @@ export default function AnalyticsPage() {
         <div className="flex items-center gap-2">
           {/* Quick dataset switcher */}
           <div className="hidden sm:flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200/80">
-            {[
+            {([
               { id: 'enterprise', label: 'Enterprise Q3' },
               { id: 'appstore', label: 'App Store' },
               { id: 'zendesk', label: 'Zendesk' },
-            ].map((ds) => (
+            ] as const).map((ds) => (
               <button
                 key={ds.id}
-                onClick={() => retrieveCSV(ds.id as any)}
+                onClick={() => retrieveCSV(ds.id)}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                   activeDatasetType === ds.id
                     ? 'bg-neutral-900 text-white shadow-xs'
