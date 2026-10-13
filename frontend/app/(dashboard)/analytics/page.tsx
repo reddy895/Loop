@@ -262,7 +262,7 @@ export default function AnalyticsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {channelPerformanceList.map((ch: any, idx) => (
+            {channelPerformanceList.map((ch, idx) => (
               <TableRow key={idx}>
                 <TableCell className="font-bold text-xs whitespace-nowrap text-neutral-900">
                   {String(ch.channel ?? '')}
