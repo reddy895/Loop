@@ -1,0 +1,23 @@
+{
+  "name": "project-loop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Project LOOP — Enterprise AI Customer Feedback Intelligence Platform",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd frontend && npm run start",
+    "lint": "cd frontend && npm run lint",
+    "test": "cd backend && npm test"
+  },
+  "keywords": [
+    "customer-feedback",
+    "ai-intelligence",
+    "rag",
+    "sentiment-analysis",
+    "nextjs",
+    "vercel"
+  ],
+  "author": "reddy895",
+  "license": "MIT"
+}
