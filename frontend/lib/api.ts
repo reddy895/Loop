@@ -5,7 +5,7 @@
  * token authentication, normalized URLs (no double /api/api), and unified error handling.
  */
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -100,7 +100,7 @@ export const buildApiUrl = (endpoint: string): string => {
 /**
  * Performs a typed HTTP request with standard headers and error handling.
  */
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
@@ -114,9 +114,9 @@ export async function apiRequest<T = any>(
     });
 
     const contentType = res.headers.get('content-type') || '';
-    let json: any = {};
+    let json: Record<string, unknown> = {};
     if (contentType.includes('application/json')) {
-      json = await res.json().catch(() => ({}));
+      json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     } else {
       const text = await res.text();
       return {
@@ -129,46 +129,47 @@ export async function apiRequest<T = any>(
     if (!res.ok) {
       return {
         success: false,
-        error: json.error || json.message || `Request failed with status ${res.status}`,
-        message: json.message,
+        error: (json.error as string) || (json.message as string) || `Request failed with status ${res.status}`,
+        message: json.message as string | undefined,
       };
     }
 
     return {
-      success: json.success ?? true,
-      data: json.data !== undefined ? json.data : json,
-      message: json.message,
-      meta: json.meta,
+      success: (json.success as boolean) ?? true,
+      data: (json.data !== undefined ? json.data : json) as T,
+      message: json.message as string | undefined,
+      meta: json.meta as Record<string, unknown> | undefined,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Network communication failed with backend server';
     return {
       success: false,
-      error: err?.message || 'Network communication failed with backend server',
+      error: errorMsg,
     };
   }
 }
 
 export const api = {
-  get: <T = any>(endpoint: string, options?: RequestInit) =>
+  get: <T = unknown>(endpoint: string, options?: RequestInit) =>
     apiRequest<T>(endpoint, { ...options, method: 'GET' }),
-  post: <T = any>(endpoint: string, body?: unknown, options?: RequestInit) =>
+  post: <T = unknown>(endpoint: string, body?: unknown, options?: RequestInit) =>
     apiRequest<T>(endpoint, {
       ...options,
       method: 'POST',
       body: body !== undefined ? JSON.stringify(body) : undefined,
     }),
-  put: <T = any>(endpoint: string, body?: unknown, options?: RequestInit) =>
+  put: <T = unknown>(endpoint: string, body?: unknown, options?: RequestInit) =>
     apiRequest<T>(endpoint, {
       ...options,
       method: 'PUT',
       body: body !== undefined ? JSON.stringify(body) : undefined,
     }),
-  patch: <T = any>(endpoint: string, body?: unknown, options?: RequestInit) =>
+  patch: <T = unknown>(endpoint: string, body?: unknown, options?: RequestInit) =>
     apiRequest<T>(endpoint, {
       ...options,
       method: 'PATCH',
       body: body !== undefined ? JSON.stringify(body) : undefined,
     }),
-  delete: <T = any>(endpoint: string, options?: RequestInit) =>
+  delete: <T = unknown>(endpoint: string, options?: RequestInit) =>
     apiRequest<T>(endpoint, { ...options, method: 'DELETE' }),
 };
