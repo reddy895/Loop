@@ -63,3 +63,22 @@ The codebase is organized as a multi-project monorepo containing:
 - **Phase C (Commits 19–29):** Backend integration, CSV ingestion hardening, real analytics, Ask LOOP workspace, reports.
 - **Phase D (Commits 30–34):** API standardization, tenant isolation, query optimization, pagination, formula sanitization.
 - **Phase E (Commits 35–40):** Security headers, Prisma migration workflows, Vercel readiness, automated tests, documentation, release audit.
+
+---
+
+## 5. TypeScript Build Fix Audit — FeedbackCharts.tsx & React 19 Type Alignment
+
+### Error Signature
+- **File:** `frontend/components/charts/FeedbackCharts.tsx:61:13`
+- **Error:** `TS2322: Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'ReactNode'. Property 'children' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type 'ReactPortal'.`
+
+### Root Cause Analysis
+1. **Unnecessary Type Assertion**: `ChartContainerProps` already typed `children: React.ReactNode`, and Recharts 3.x's `ResponsiveContainer` prop expects `children: ReactNode`. The historical cast `{children as React.ReactElement}` forced TypeScript to narrow `ReactNode` into a generic `ReactElement` type argument tuple.
+2. **React 19 Union Variance**: Under React 19 (`@types/react@19.2.18`), `ReactElement` definition differs subtly in portal child covariance. Casting `children` to `ReactElement` triggered a failure against `ReactPortal` requiring explicit `children`.
+3. **Cascading State Updates in Effects**: The hydration flag `useState(false)` with `useEffect(() => setMounted(true))` triggered ESLint `react-hooks/set-state-in-effect` errors.
+
+### Applied Resolution
+- **Removed Cast**: Replaced `{children as React.ReactElement}` with clean `{children}`, allowing natural structural type matching between `ChartContainerProps.children` and `ResponsiveContainer.props.children`.
+- **Pure Hydration Mount**: Replaced `useState` + `useEffect` with `React.useSyncExternalStore(emptySubscribe, () => true, () => false)`, eliminating cascading renders completely.
+- **Strict Typing**: Removed all explicit `any` usages in `FeedbackCharts.tsx` (e.g., in tooltip formatters and safeData fallback checks) in favor of strict `unknown` and numeric checks.
+- **No Compromises**: Fix applied without `@ts-ignore`, without type casts, without `skipLibCheck: false` hacks, fully validated against Next.js 16 TurboPack production builds and ESLint 9.
