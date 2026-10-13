@@ -77,10 +77,20 @@ function AskLoopContent() {
 
   const [sessions, setSessions] = useState<ChatSession[]>(INITIAL_SESSIONS);
   const [activeSessionId, setActiveSessionId] = useState<string>('ses-1');
-  const [inputQuery, setInputQuery] = useState('');
+  const [inputQuery, setInputQuery] = useState(() => searchParams.get('query') || '');
   const [isTyping, setIsTyping] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeSourceId, setActiveSourceId] = useState<string | null>(null);
+
+  // Sync pre-filled query when URL query changes without cascading effect renders
+  const [prevUrlQuery, setPrevUrlQuery] = useState(() => searchParams.get('query'));
+  const currentUrlQuery = searchParams.get('query');
+  if (currentUrlQuery !== prevUrlQuery) {
+    setPrevUrlQuery(currentUrlQuery);
+    if (currentUrlQuery) {
+      setInputQuery(currentUrlQuery);
+    }
+  }
 
   // Initial Seed Messages
   const [messages, setMessages] = useState<ExtendedChatMessage[]>([
@@ -144,13 +154,6 @@ function AskLoopContent() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Support pre-filled query from URL (e.g. from Theme or Feedback Detail click)
-  useEffect(() => {
-    const urlQuery = searchParams.get('query');
-    if (urlQuery && urlQuery !== inputQuery) {
-      setInputQuery(urlQuery);
-    }
-  }, [searchParams]);
 
   // Execute RAG query against API with robust local fallback
   const handleSendMessage = async (queryText?: string) => {
