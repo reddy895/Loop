@@ -172,7 +172,7 @@ export const SentimentPieChart: React.FC<{ data: Array<{ name: string; value: nu
 
 /* 3. Top Themes Bar Chart */
 export const TopThemesBarChart: React.FC<{ data: Record<string, unknown>[] }> = ({ data }) => {
-  const safeData = data && data.length > 0 && data.some((d: any) => d.count > 0) ? data : [
+  const safeData = data && data.length > 0 && data.some((d) => Number(d.count) > 0) ? data : [
     { theme: 'UX Performance', count: 42 },
     { theme: 'Billing & Pricing', count: 28 },
     { theme: 'Integrations', count: 22 },
@@ -204,7 +204,7 @@ export const TopThemesBarChart: React.FC<{ data: Record<string, unknown>[] }> = 
           fontSize: '12px',
           fontFamily: 'var(--font-jetbrains), monospace'
         }}
-        formatter={(val: any) => [`${val} items`, 'Feedback Volume']}
+        formatter={(val: unknown) => [`${val ?? 0} items`, 'Feedback Volume']}
         itemStyle={{ color: '#FFFFFF' }}
       />
       <Bar dataKey="count" fill="#18181B" radius={[4, 4, 0, 0]} name="Ticket Count" />
