@@ -34,6 +34,34 @@ export const handleApiError = (error: unknown): NextResponse => {
     return createErrorResponse(error.message, error.errors, error.statusCode);
   }
 
+  // Handle schema validation errors gracefully
+  if (error instanceof z.ZodError) {
+    const errorDetails = error.issues.map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`);
+    logger.warn("Validation error caught in API handler", { errors: errorDetails });
+    return createErrorResponse(ERROR_MESSAGES.VALIDATION_ERROR, errorDetails, HTTP_STATUS_CODES.BAD_REQUEST);
+  }
+
+  // Handle Prisma Database Known Errors without exposing connection strings or schema internals
+  const maybePrisma = error as { code?: string; name?: string; message?: string };
+  if (maybePrisma && typeof maybePrisma === "object" && maybePrisma.code) {
+    if (maybePrisma.code === "P2002") {
+      logger.warn("Database unique constraint violation", { code: maybePrisma.code });
+      return createErrorResponse(ERROR_MESSAGES.CONFLICT, [ERROR_MESSAGES.CONFLICT], HTTP_STATUS_CODES.CONFLICT);
+    }
+    if (maybePrisma.code === "P2025") {
+      logger.warn("Database record not found", { code: maybePrisma.code });
+      return createErrorResponse(ERROR_MESSAGES.NOT_FOUND, [ERROR_MESSAGES.NOT_FOUND], HTTP_STATUS_CODES.NOT_FOUND);
+    }
+    if (maybePrisma.code === "P1001" || maybePrisma.code === "P1002") {
+      logger.error("Database connectivity error", { code: maybePrisma.code });
+      return createErrorResponse(
+        ERROR_MESSAGES.DATABASE_CONNECTION_FAILED,
+        [ERROR_MESSAGES.DATABASE_CONNECTION_FAILED],
+        HTTP_STATUS_CODES.SERVICE_UNAVAILABLE
+      );
+    }
+  }
+
   // Handle generic / unexpected exceptions
   logger.error("Unhandled API exception occurred", error);
 

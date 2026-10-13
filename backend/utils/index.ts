@@ -124,15 +124,26 @@ export const createSuccessResponse = <T>(
   return res;
 };
 
+const sanitizeErrorMessage = (msg: string): string => {
+  if (!msg || typeof msg !== "string") return "";
+  return msg
+    .replace(/(?:postgres|postgresql|mysql|mongodb|redis):\/\/[^\s@]+@[^\s/]+/gi, "[REDACTED_CREDENTIALS]")
+    .replace(/(?:Bearer\s+)[a-zA-Z0-9_\-\.]+/gi, "Bearer [REDACTED_TOKEN]");
+};
+
 export const createErrorResponse = (
   message: string = "An error occurred",
   errors: string[] = [],
   statusCode: HttpStatusCode = HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR
 ): NextResponse<IApiErrorResponse> => {
+  const cleanMessage = sanitizeErrorMessage(message);
+  const rawErrors = errors.length > 0 ? errors : [message];
+  const cleanErrors = rawErrors.map((err) => sanitizeErrorMessage(err));
+
   const payload: IApiErrorResponse = {
     success: false,
-    message,
-    errors: errors.length > 0 ? errors : [message],
+    message: cleanMessage,
+    errors: cleanErrors,
   };
 
   const res = NextResponse.json(payload, { status: statusCode });
