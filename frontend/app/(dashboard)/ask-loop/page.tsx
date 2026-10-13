@@ -71,6 +71,17 @@ function getCurrentTimeLabel() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+interface AiAskPayload {
+  answer?: string;
+  confidence?: number;
+  evidence?: Array<{
+    feedbackId?: string;
+    customer?: string;
+    channel?: string;
+    quote?: string;
+  }>;
+}
+
 function AskLoopContent() {
   const searchParams = useSearchParams();
   const { isRetrieved, feedbackList, openRetrieveModal, datasetName } = useFeedbackContext();
@@ -173,11 +184,12 @@ function AskLoopContent() {
 
     try {
       // 1. Attempt call to existing /api/ai/ask backend endpoint via unified client
-      const json: any = await api.post('/ai/ask', { question: textToSend });
-      const data = json?.data || json;
+      const rawRes = await api.post('/ai/ask', { question: textToSend });
+      const resObj = rawRes as { data?: AiAskPayload } & AiAskPayload;
+      const data: AiAskPayload = resObj?.data || resObj;
 
       if (data && data.answer) {
-        const retrievedSources: RetrievedSource[] = (data.evidence || []).map((e: any) => ({
+        const retrievedSources: RetrievedSource[] = (data.evidence || []).map((e) => ({
           id: e.feedbackId || 'FB-SRC',
           customer: e.customer || 'Customer',
           channel: e.channel || 'Zendesk',
