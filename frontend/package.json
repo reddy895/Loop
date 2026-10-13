@@ -8,7 +8,8 @@
     "build": "next build",
     "build:vercel": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "npx --prefix ../backend tsx tests/runner.ts"
   },
   "dependencies": {
     "lucide-react": "^1.28.0",

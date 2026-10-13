@@ -16,7 +16,9 @@
     "prisma:generate": "npm --prefix backend run db:generate",
     "start": "npm --prefix frontend run start",
     "lint": "npm --prefix frontend run lint",
-    "test": "npm --prefix backend test"
+    "test": "npm --prefix backend test",
+    "test:frontend": "npm --prefix frontend run test",
+    "test:all": "npm run test && npm run test:frontend"
   },
   "dependencies": {
     "next": "^16.3.6"
