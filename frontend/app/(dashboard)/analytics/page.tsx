@@ -33,7 +33,10 @@ export default function AnalyticsPage() {
     themeComparisonData,
     sentimentDistributionData,
     channelPerformanceList,
-    openRetrieveModal
+    openRetrieveModal,
+    datasetName,
+    activeDatasetType,
+    retrieveCSV
   } = useFeedbackContext();
 
   const [timeRange, setTimeRange] = useState('30d');
@@ -45,6 +48,15 @@ export default function AnalyticsPage() {
       {/* Header Banner */}
       <div className="loop-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest bg-neutral-900 text-white font-mono-numbers">
+              Deep Analytics
+            </span>
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide bg-neutral-100 text-neutral-800 border border-neutral-200 font-mono-numbers flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Source: {datasetName}
+            </span>
+          </div>
           <h1 className="font-heading text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
             Analytics & Deep Intelligence
           </h1>
@@ -54,13 +66,32 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {!isRetrieved && (
-            <Button variant="primary" size="sm" icon={<FileSpreadsheet className="w-4 h-4" />} onClick={openRetrieveModal}>
-              Retrieve CSV
-            </Button>
-          )}
+          {/* Quick dataset switcher */}
+          <div className="hidden sm:flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200/80">
+            {[
+              { id: 'enterprise', label: 'Enterprise Q3' },
+              { id: 'appstore', label: 'App Store' },
+              { id: 'zendesk', label: 'Zendesk' },
+            ].map((ds) => (
+              <button
+                key={ds.id}
+                onClick={() => retrieveCSV(ds.id as any)}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  activeDatasetType === ds.id
+                    ? 'bg-neutral-900 text-white shadow-xs'
+                    : 'text-neutral-600 hover:text-neutral-950'
+                }`}
+              >
+                {ds.label}
+              </button>
+            ))}
+          </div>
+
+          <Button variant="primary" size="sm" icon={<FileSpreadsheet className="w-4 h-4" />} onClick={openRetrieveModal}>
+            Retrieve CSV
+          </Button>
           <Button variant="secondary" size="sm" icon={<Download className="w-4 h-4" />}>
-            Export Analytics PDF
+            Export PDF
           </Button>
         </div>
       </div>
