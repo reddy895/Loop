@@ -12,20 +12,11 @@ import {
   BarChart3,
   FileText,
   ShieldCheck,
-  CheckCircle2,
-  AlertTriangle,
-  Quote,
   UploadCloud,
-  Users,
-  Search,
-  ChevronRight,
-  Database,
   Lock,
   Zap,
-  Terminal,
   MessageSquare,
-  Activity,
-  Check
+  Activity
 } from 'lucide-react';
 
 export default function LandingPage() {
