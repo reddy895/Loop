@@ -11,6 +11,9 @@
   "scripts": {
     "dev": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "prisma:generate": "npm --prefix backend run db:generate",
     "start": "npm --prefix frontend run start",
     "lint": "npm --prefix frontend run lint",
     "test": "npm --prefix backend test"
