@@ -122,25 +122,25 @@ npm test
 
 ## ☁️ Vercel Production Deployment
 
-### Option A: Monorepo Root Deployment
-- Connect the repository to Vercel.
-- The root `vercel.json` automatically handles building the Next.js application.
+### Option A: Monorepo Root Deployment (One-Click)
+1. Import the repository directly to [Vercel](https://vercel.com/new).
+2. The root `vercel.json` and `package.json` automatically detect and build the Next.js frontend application.
+3. No environment variables required for instant demo exploration — the Analysis Dashboard comes preloaded with full intelligence!
 
-### Option B: Independent Microservices (Recommended for Scale)
-1. **Frontend App:**
+### Option B: Independent Microservices Deployment
+1. **Frontend UI (Edge / Serverless):**
    - Root Directory: `frontend`
+   - Framework Preset: `Next.js`
    - Build Command: `npm run build`
    - Output Directory: `.next`
-   - Environment Variables:
-     - `NEXT_PUBLIC_API_URL`: `https://your-loop-backend.vercel.app/api`
-     - `NEXT_PUBLIC_APP_URL`: `https://your-loop-frontend.vercel.app`
+   - Instant Analysis Dashboard: Preloaded with 1,482 customer intelligence records, sentiment clustering, and RAG assistant citations.
 
-2. **Backend API:**
+2. **Backend API (Optional / Cloud Scale):**
    - Root Directory: `backend`
    - Build Command: `npm run postinstall && next build`
    - Output Directory: `.next`
    - Environment Variables:
-     - `DATABASE_URL`: `postgresql://user:password@host/db?sslmode=require` (Neon, Supabase, RDS)
+     - `DATABASE_URL`: `postgresql://...` (Neon, Supabase, RDS)
      - `NEXTAUTH_SECRET`: Strong 32+ character random string
      - `GEMINI_API_KEY`: Google Generative AI API key
      - `NODE_ENV`: `production`
