@@ -83,37 +83,39 @@ export const safeValidateData = <T>(schema: z.ZodSchema<T>, data: unknown): IVal
 
 // Domain Validation Schemas
 export const createFeedbackSchema = z.object({
-  content: z.string({ required_error: "Feedback content is required." }).min(1, "Feedback content cannot be empty."),
-  channel: z.string({ required_error: "Channel is required." }).min(1, "Channel cannot be empty."),
-  customerLabel: z.string({ required_error: "Customer label is required." }).min(1, "Customer label cannot be empty."),
-  source: z.string().optional(),
+  content: z.string({ required_error: "Feedback content is required." }).min(1, "Feedback content cannot be empty.").max(50000, "Content cannot exceed 50,000 characters."),
+  channel: z.string({ required_error: "Channel is required." }).min(1, "Channel cannot be empty.").max(100, "Channel cannot exceed 100 characters."),
+  customerLabel: z.string({ required_error: "Customer label is required." }).min(1, "Customer label cannot be empty.").max(200, "Customer label cannot exceed 200 characters."),
+  customerEmail: z.string().email("Must be a valid email format.").max(255).optional(),
+  source: z.string().max(100).optional(),
   sentiment: z.enum(["POSITIVE", "NEUTRAL", "NEGATIVE"]).optional(),
   themeId: z.string().optional(),
 });
 
 export const updateFeedbackSchema = z.object({
-  content: z.string().min(1, "Feedback content cannot be empty.").optional(),
+  content: z.string().min(1, "Feedback content cannot be empty.").max(50000).optional(),
   status: z.enum(["NEW", "UNDER_REVIEW", "IN_PROGRESS", "RESOLVED", "ARCHIVED"]).optional(),
-  channel: z.string().min(1, "Channel cannot be empty.").optional(),
-  customerLabel: z.string().min(1, "Customer label cannot be empty.").optional(),
+  channel: z.string().min(1, "Channel cannot be empty.").max(100).optional(),
+  customerLabel: z.string().min(1, "Customer label cannot be empty.").max(200).optional(),
+  customerEmail: z.string().email().max(255).optional(),
   sentiment: z.enum(["POSITIVE", "NEUTRAL", "NEGATIVE"]).optional(),
   themeId: z.string().optional(),
 });
 
 export const feedbackQuerySchema = paginationQuerySchema.extend({
-  search: z.string().optional(),
-  channel: z.string().optional(),
+  search: z.string().max(500).optional(),
+  channel: z.string().max(100).optional(),
   status: z.enum(["NEW", "UNDER_REVIEW", "IN_PROGRESS", "RESOLVED", "ARCHIVED"]).optional(),
   sentiment: z.enum(["POSITIVE", "NEUTRAL", "NEGATIVE"]).optional(),
   themeId: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-  customer: z.string().optional(),
+  customer: z.string().max(200).optional(),
   cursor: z.string().optional(),
 });
 
 export const csvUploadSchema = z.object({
-  csvContent: z.string({ required_error: "CSV content string is required." }).min(1, "CSV content cannot be empty."),
+  csvContent: z.string({ required_error: "CSV content string is required." }).min(1, "CSV content cannot be empty.").max(10 * 1024 * 1024, "CSV content cannot exceed 10MB."),
 });
 
 export const simulateFeedbackSchema = z.object({

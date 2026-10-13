@@ -86,16 +86,21 @@ export const parseCsvString = (csvContent: string): Record<string, string>[] => 
     return result;
   };
 
-  const headers = parseLine(lines[0]).map((h) => h.toLowerCase().replace(/[^a-z0-9_]/g, ""));
+  const forbiddenKeys = new Set(["__proto__", "constructor", "prototype"]);
+  const headers = parseLine(lines[0])
+    .map((h) => h.toLowerCase().replace(/[^a-z0-9_]/g, ""))
+    .filter((h) => !forbiddenKeys.has(h));
   const records: Record<string, string>[] = [];
 
   for (let i = 1; i < lines.length; i++) {
     const values = parseLine(lines[i]);
     if (values.every((v) => !v)) continue;
 
-    const row: Record<string, string> = {};
+    const row: Record<string, string> = Object.create(null);
     headers.forEach((header, index) => {
-      row[header] = values[index] || "";
+      if (header && !forbiddenKeys.has(header)) {
+        row[header] = values[index] || "";
+      }
     });
 
     records.push(row);
