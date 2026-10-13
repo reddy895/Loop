@@ -70,7 +70,7 @@ export const ChartContainer: React.FC<ChartContainerProps> = ({
 
 /* 1. Feedback Volume Area Chart */
 export const FeedbackVolumeChart: React.FC<{ data: Record<string, unknown>[] }> = ({ data }) => {
-  const safeData = data && data.length > 0 && data.some((d: any) => d.volume > 0) ? data : [
+  const safeData = data && data.length > 0 && data.some((d) => Number(d.volume) > 0) ? data : [
     { date: 'Jul 29', volume: 12 },
     { date: 'Jul 30', volume: 19 },
     { date: 'Jul 31', volume: 15 },
