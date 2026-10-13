@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getApiBaseUrl } from '@/lib/api';
 
 export interface UserProfile {
   id: string;
@@ -42,7 +43,7 @@ const DEFAULT_USER: UserProfile = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_BASE = getApiBaseUrl();
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const router = useRouter();

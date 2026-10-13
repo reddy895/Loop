@@ -30,15 +30,16 @@ export const StatusBadge: React.FC<{ status: FeedbackStatus; className?: string 
   status,
   className
 }) => {
-  const styles = {
+  const styles: Record<FeedbackStatus, string> = {
     New: 'bg-neutral-900 text-white border border-neutral-900',
     'Under Review': 'bg-neutral-100 text-neutral-800 border border-neutral-300',
     Processed: 'bg-neutral-200 text-neutral-900 border border-neutral-300 font-medium',
+    Resolved: 'bg-emerald-50 text-emerald-800 border border-emerald-300 font-medium',
     Archived: 'bg-neutral-50 text-neutral-500 border border-neutral-200'
   };
 
   return (
-    <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono-numbers font-semibold uppercase tracking-wider', styles[status], className)}>
+    <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono-numbers font-semibold uppercase tracking-wider', styles[status] || styles.New, className)}>
       {status}
     </span>
   );

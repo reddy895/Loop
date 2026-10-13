@@ -19,9 +19,15 @@ export interface ApiResponse<T = unknown> {
  * Handles environment configurations whether NEXT_PUBLIC_API_URL includes '/api' or not.
  */
 export const getApiBaseUrl = (): string => {
-  const envUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-  const cleanUrl = envUrl.replace(/\/+$/, '');
-  return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl && envUrl.trim()) {
+    const cleanUrl = envUrl.trim().replace(/\/+$/, '');
+    return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+  }
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+    return '/api';
+  }
+  return 'http://localhost:3000/api';
 };
 
 /**
