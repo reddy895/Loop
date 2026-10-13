@@ -30,6 +30,26 @@ function LoginContent() {
     setErrorMsg('');
   };
 
+  const handleInstantDemo = async () => {
+    setSubmitting(true);
+    setErrorMsg('');
+    try {
+      const res = await login('praveen@acmesaas.com', 'password123');
+      if (res.success) {
+        setIsPreparing(true);
+        setTimeout(() => {
+          router.push(redirectTarget);
+        }, 400);
+      } else {
+        router.push(redirectTarget);
+      }
+    } catch {
+      router.push(redirectTarget);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -186,10 +206,23 @@ function LoginContent() {
               Sign In
             </Button>
 
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              onClick={handleInstantDemo}
+              loading={submitting}
+              disabled={submitting}
+              className="w-full justify-center font-bold border-neutral-900 text-neutral-950 hover:bg-neutral-100"
+              icon={<Sparkles className="w-4 h-4 text-neutral-900" />}
+            >
+              Enter Workspace (Instant Demo)
+            </Button>
+
             <Link href="/signup" className="block w-full">
               <Button
                 type="button"
-                variant="secondary"
+                variant="outline"
                 size="lg"
                 className="w-full justify-center"
               >
