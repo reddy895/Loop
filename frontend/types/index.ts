@@ -1,6 +1,6 @@
 export type SentimentType = 'Positive' | 'Negative' | 'Neutral';
 export type FeedbackChannel = 'Zendesk' | 'Intercom' | 'App Store' | 'Discourse' | 'Email' | 'CSV Import';
-export type FeedbackStatus = 'New' | 'Under Review' | 'Processed' | 'Archived';
+export type FeedbackStatus = 'New' | 'Under Review' | 'Processed' | 'Resolved' | 'Archived';
 export type FeedbackTheme = 
   | 'UX Performance' 
   | 'Billing & Pricing' 
