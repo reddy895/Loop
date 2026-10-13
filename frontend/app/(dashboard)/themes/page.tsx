@@ -2,16 +2,14 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import { SentimentBadge, ThemeBadge } from '@/components/ui/Badges';
+import { SentimentBadge } from '@/components/ui/Badges';
 import { Button } from '@/components/ui/Button';
 import { ChartContainer, ThemeTrendLineChart } from '@/components/charts/FeedbackCharts';
 import { useFeedbackContext } from '@/context/FeedbackContext';
 import { mockThemeTrendLineData, mockThemeSummaries as defaultSummaries } from '@/lib/mockData';
-import { FeedbackTheme, ThemeSummary } from '@/types';
+import { ThemeSummary } from '@/types';
 import {
   Quote,
-  ArrowRight,
   FileSpreadsheet,
   DownloadCloud,
   ChevronDown,
@@ -20,12 +18,9 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  MessageSquare,
-  AlertTriangle,
   Lightbulb,
   ExternalLink,
-  Search,
-  Filter
+  Search
 } from 'lucide-react';
 
 const zeroThemeTrendLineData = [
