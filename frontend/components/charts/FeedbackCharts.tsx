@@ -58,7 +58,7 @@ export const ChartContainer: React.FC<ChartContainerProps> = ({
       <div className="w-full" style={{ height: `${height}px`, minHeight: `${height}px`, position: 'relative' }}>
         {mounted ? (
           <ResponsiveContainer width="100%" height={height} minWidth={0} minHeight={height}>
-            {children as React.ReactElement}
+            {children}
           </ResponsiveContainer>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-neutral-50/50 rounded-lg">
