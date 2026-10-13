@@ -10,21 +10,16 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { FeedbackDetailDrawer } from '@/components/ui/FeedbackDetailDrawer';
 import { useFeedbackContext } from '@/context/FeedbackContext';
-import { FeedbackItem, FeedbackStatus, SentimentType, FeedbackTheme, FeedbackChannel } from '@/types';
+import { FeedbackItem, SentimentType, FeedbackTheme, FeedbackChannel } from '@/types';
 import { getApiBaseUrl } from '@/lib/api';
 import {
   FileSpreadsheet,
   Plus,
   RefreshCw,
   CheckCircle2,
-  Sparkles,
-  Inbox,
   Database,
   Loader2,
   Search,
-  Filter,
-  ArrowUpDown,
-  SlidersHorizontal,
   Eye,
   X
 } from 'lucide-react';
