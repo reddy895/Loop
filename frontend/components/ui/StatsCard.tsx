@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card } from './Card';
 import { cn } from '@/lib/utils';
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 
@@ -21,7 +20,6 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   trend = 'neutral',
   description,
   icon,
-  variant = 'panel',
   className
 }) => {
   return (

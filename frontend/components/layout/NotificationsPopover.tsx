@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   TrendingUp,
   FileText,
-  CheckCircle2,
   Check,
   ExternalLink
 } from 'lucide-react';

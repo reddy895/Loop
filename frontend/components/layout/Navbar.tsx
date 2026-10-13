@@ -13,7 +13,6 @@ import {
   Settings,
   LogOut,
   ChevronDown,
-  Sparkles,
   Command
 } from 'lucide-react';
 

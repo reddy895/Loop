@@ -1,7 +1,6 @@
 import React from 'react';
 import { AlertCircle, Inbox, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import { Button } from './Button';
-import { Card } from './Card';
 
 export const LoadingSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => {
   return (
