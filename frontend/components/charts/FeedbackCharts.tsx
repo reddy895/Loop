@@ -18,7 +18,6 @@ import {
   Legend,
   CartesianGrid
 } from 'recharts';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 
 interface ChartContainerProps {
   title: string;
