@@ -46,7 +46,9 @@ export default function DashboardPage() {
     reportsList,
     openRetrieveModal,
     resetToZero,
-    lastRetrievedTime
+    lastRetrievedTime,
+    activeDatasetType,
+    retrieveCSV
   } = useFeedbackContext();
 
   const [dateRange, setDateRange] = useState<'7d' | '30d' | 'all'>('7d');
@@ -117,6 +119,28 @@ export default function DashboardPage() {
 
         {/* Date Filter & Quick Actions */}
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {/* Quick Dataset Selector */}
+          <div className="hidden sm:flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200/80">
+            {[
+              { id: 'enterprise', label: 'Enterprise Q3' },
+              { id: 'appstore', label: 'App Store' },
+              { id: 'zendesk', label: 'Zendesk' },
+            ].map((ds) => (
+              <button
+                key={ds.id}
+                onClick={() => retrieveCSV(ds.id as any)}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  activeDatasetType === ds.id
+                    ? 'bg-neutral-900 text-white shadow-xs'
+                    : 'text-neutral-600 hover:text-neutral-950'
+                }`}
+                title={`Switch to ${ds.label} dataset`}
+              >
+                {ds.label}
+              </button>
+            ))}
+          </div>
+
           <div className="flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200/80">
             {(['7d', '30d', 'all'] as const).map((range) => (
               <button
