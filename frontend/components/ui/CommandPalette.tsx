@@ -56,7 +56,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
     }
   }, [isOpen]);
 
-  const defaultNavigationItems: CommandItem[] = [
+  const defaultNavigationItems: CommandItem[] = useMemo(() => [
     {
       id: 'nav-overview',
       category: 'Navigation',
@@ -169,9 +169,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         onClose();
       }
     }
-  ];
+  ], [router, onClose]);
 
-  const defaultActionItems: CommandItem[] = [
+  const defaultActionItems: CommandItem[] = useMemo(() => [
     {
       id: 'act-retrieve',
       category: 'Actions',
@@ -196,10 +196,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         onClose();
       }
     }
-  ];
+  ], [router, onClose, openRetrieveModal]);
 
   // Dynamic feedback matches if query has >= 2 characters
-  const feedbackItems: CommandItem[] = query.trim().length >= 2
+  const feedbackItems: CommandItem[] = useMemo(() => query.trim().length >= 2
     ? feedbackList
         .filter((fb) =>
           fb.feedback.toLowerCase().includes(query.toLowerCase()) ||
@@ -219,7 +219,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
             onClose();
           }
         }))
-    : [];
+    : [], [query, feedbackList, router, onClose]);
 
   const allFilteredItems = useMemo(() => [
     ...defaultNavigationItems.filter((i) =>
