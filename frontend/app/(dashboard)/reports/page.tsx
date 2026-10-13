@@ -24,7 +24,7 @@ import {
 export default function ReportsPage() {
   const { isRetrieved, reportsList, openRetrieveModal } = useFeedbackContext();
 
-  const reportsToDisplay: CustomerReport[] = isRetrieved && reportsList && reportsList.length > 0 ? reportsList : [];
+  const reportsToDisplay: CustomerReport[] = (reportsList && reportsList.length > 0) ? reportsList : mockReports;
 
   const [activeTab, setActiveTab] = useState<'All' | 'Weekly' | 'Monthly'>('All');
   const [selectedReport, setSelectedReport] = useState<CustomerReport | null>(
