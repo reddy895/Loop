@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { UploadProgress } from './UploadProgress';
@@ -22,14 +22,21 @@ import {
 type DatasetId = 'enterprise' | 'appstore' | 'zendesk' | 'custom';
 
 export const RetrieveCSVModal: React.FC = () => {
-  const { isRetrieveModalOpen, closeRetrieveModal, retrieveCSV, refreshData } = useFeedbackContext();
+  const { isRetrieveModalOpen, closeRetrieveModal, retrieveCSV, refreshData, activeDatasetType } = useFeedbackContext();
   const { token } = useAuth();
 
-  const [selectedDataset, setSelectedDataset] = useState<DatasetId>('enterprise');
+  const [selectedDataset, setSelectedDataset] = useState<DatasetId>(() => activeDatasetType || 'enterprise');
   const [customCsvContent, setCustomCsvContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isRetrieving, setIsRetrieving] = useState(false);
   const [retrievalStep, setRetrievalStep] = useState<number>(0);
+
+  // Sync selected dataset whenever activeDatasetType changes or modal opens
+  useEffect(() => {
+    if (activeDatasetType) {
+      setSelectedDataset(activeDatasetType);
+    }
+  }, [activeDatasetType, isRetrieveModalOpen]);
 
   // Streaming upload state
   const [uploadProgress, setUploadProgress] = useState<UploadProgressEvent | null>(null);
