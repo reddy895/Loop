@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
-import { SentimentBadge, ThemeBadge } from '@/components/ui/Badges';
+import { SentimentBadge } from '@/components/ui/Badges';
 import { LoadingSkeleton } from '@/components/ui/FeedbackStates';
 import { useFeedbackContext } from '@/context/FeedbackContext';
 import { ChatMessage, RetrievedSource, FeedbackItem } from '@/types';
@@ -12,21 +12,11 @@ import {
   Send,
   Sparkles,
   Quote,
-  Bot,
-  User,
-  RefreshCw,
   FileSpreadsheet,
   Copy,
   Check,
-  Search,
   Plus,
-  Layers,
   ShieldCheck,
-  ChevronRight,
-  ExternalLink,
-  MessageSquare,
-  Clock,
-  Terminal,
   Database
 } from 'lucide-react';
 
