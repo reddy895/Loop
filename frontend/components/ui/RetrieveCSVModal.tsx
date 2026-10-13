@@ -31,12 +31,14 @@ export const RetrieveCSVModal: React.FC = () => {
   const [isRetrieving, setIsRetrieving] = useState(false);
   const [retrievalStep, setRetrievalStep] = useState<number>(0);
 
-  // Sync selected dataset whenever activeDatasetType changes or modal opens
-  useEffect(() => {
+  // Adjust selected dataset when activeDatasetType changes without cascading effect renders
+  const [prevDatasetType, setPrevDatasetType] = useState(activeDatasetType);
+  if (activeDatasetType !== prevDatasetType) {
+    setPrevDatasetType(activeDatasetType);
     if (activeDatasetType) {
       setSelectedDataset(activeDatasetType);
     }
-  }, [activeDatasetType, isRetrieveModalOpen]);
+  }
 
   // Streaming upload state
   const [uploadProgress, setUploadProgress] = useState<UploadProgressEvent | null>(null);
