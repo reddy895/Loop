@@ -21,6 +21,16 @@ import {
   DownloadCloud
 } from 'lucide-react';
 
+interface GeneratedReportData {
+  title?: string;
+  totalFeedbackAnalyzed?: number;
+  sentimentScore?: number;
+  keyTakeaways?: string[];
+  topStrengths?: string[];
+  frictionAreas?: string[];
+  actionItems?: string[];
+}
+
 export default function ReportsPage() {
   const { isRetrieved, reportsList, openRetrieveModal } = useFeedbackContext();
 
@@ -82,7 +92,7 @@ ${activeReport.recommendations.map((r: string) => `- ${r}`).join('\n')}
       const { api } = await import('@/lib/api');
       const res = await api.post('/ai/report', { forceRefresh: true });
       if (res.success && res.data) {
-        const d = (res.data || {}) as Record<string, any>;
+        const d = (res.data || {}) as GeneratedReportData;
         const newReport: CustomerReport = {
           id: `rep_${Date.now()}`,
           title: reportTitle || d.title || 'Executive VoC Intelligence Brief',
