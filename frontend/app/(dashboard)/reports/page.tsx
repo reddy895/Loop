@@ -82,7 +82,7 @@ ${activeReport.recommendations.map((r: string) => `- ${r}`).join('\n')}
       const { api } = await import('@/lib/api');
       const res = await api.post('/ai/report', { forceRefresh: true });
       if (res.success && res.data) {
-        const d = res.data;
+        const d = (res.data || {}) as Record<string, any>;
         const newReport: CustomerReport = {
           id: `rep_${Date.now()}`,
           title: reportTitle || d.title || 'Executive VoC Intelligence Brief',

@@ -129,7 +129,7 @@ function FeedbackInboxContent() {
         setServerLoading(false);
       }
     }, 300);
-  }, [isServerMode, currentPage, pageSize, searchQuery, statusFilter, sentimentFilter, channelFilter, themeFilter, BACKEND_URL]);
+  }, [isServerMode, currentPage, pageSize, searchQuery, statusFilter, sentimentFilter, channelFilter, themeFilter]);
 
   // Client-side filtering & sorting logic
   const filteredAndSortedData = useMemo(() => {

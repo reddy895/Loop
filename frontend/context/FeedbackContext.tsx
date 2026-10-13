@@ -208,6 +208,8 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
               channel: (f.channel as FeedbackItem['channel']) || 'CSV Import',
               feedback: f.content,
               sentiment: (f.sentiment === 'POSITIVE' ? 'Positive' : f.sentiment === 'NEGATIVE' ? 'Negative' : 'Neutral') as FeedbackItem['sentiment'],
+              sentimentScore: f.sentiment === 'POSITIVE' ? 88 : f.sentiment === 'NEGATIVE' ? 24 : 50,
+              features: [],
               theme: (f.themeName as FeedbackItem['theme']) || 'UX Performance',
               status: 'New',
               date: f.createdAt ? new Date(f.createdAt).toLocaleDateString() : 'Today'
