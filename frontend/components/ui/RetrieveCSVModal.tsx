@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { UploadProgress } from './UploadProgress';
