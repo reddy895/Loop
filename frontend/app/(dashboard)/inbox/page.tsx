@@ -11,6 +11,7 @@ import { Modal } from '@/components/ui/Modal';
 import { FeedbackDetailDrawer } from '@/components/ui/FeedbackDetailDrawer';
 import { useFeedbackContext } from '@/context/FeedbackContext';
 import { FeedbackItem, FeedbackStatus, SentimentType, FeedbackTheme, FeedbackChannel } from '@/types';
+import { getApiBaseUrl } from '@/lib/api';
 import {
   FileSpreadsheet,
   Plus,
@@ -75,7 +76,6 @@ function FeedbackInboxContent() {
   }, [searchParams, openRetrieveModal]);
 
   // Server-side fetch for big data mode (debounced 300ms)
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
   useEffect(() => {
     if (!isServerMode) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -90,7 +90,8 @@ function FeedbackInboxContent() {
         if (sentimentFilter) params.set('sentiment', sentimentFilter.toUpperCase());
         if (channelFilter) params.set('channel', channelFilter);
         if (themeFilter) params.set('themeId', themeFilter);
-        const res = await fetch(`${BACKEND_URL}/api/feedback?${params.toString()}`);
+        const apiBase = getApiBaseUrl();
+        const res = await fetch(`${apiBase}/feedback?${params.toString()}`);
         if (res.ok) {
           const json = await res.json();
           const items = (json.data?.items || json.items || []).map((f: {
