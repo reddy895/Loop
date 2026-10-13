@@ -43,14 +43,9 @@ export default function ThemeClusteringPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [trendFilter, setTrendFilter] = useState<'all' | 'up' | 'down' | 'stable'>('all');
 
-  const summariesToUse: ThemeSummary[] = isRetrieved && themeSummaries.length > 0
+  const summariesToUse: ThemeSummary[] = (isRetrieved && themeSummaries.length > 0)
     ? themeSummaries
-    : defaultSummaries.map((s) => ({
-        ...s,
-        count: 0,
-        sentimentBreakdown: { positive: 0, negative: 0, neutral: 0 },
-        topQuotes: []
-      }));
+    : defaultSummaries;
 
   const toggleExpand = (id: string) => {
     setExpandedThemeIds((prev) => ({ ...prev, [id]: !prev[id] }));
