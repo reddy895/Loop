@@ -1,175 +1,250 @@
-# 🔁 Project LOOP — AI Customer Feedback Intelligence Platform
+# LOOP — AI Customer Feedback Intelligence Platform
 
-> **LOOP** is an enterprise-grade, full-screen AI customer feedback intelligence workspace. It aggregates, parses, and classifies multi-channel customer feedback, identifies emerging thematic clusters, generates executive Voice of Customer (VoC) briefs, and powers evidence-backed Q&A via an offline-resilient Retrieval-Augmented Generation (RAG) assistant.
+**Turn customer feedback into actionable intelligence.**
 
----
+LOOP is an AI-powered Customer Feedback Intelligence Platform that transforms unstructured customer reviews, surveys, support conversations, and feature requests into structured insights. It combines sentiment analysis, theme discovery, semantic search, and Retrieval-Augmented Generation (RAG) to help teams understand customer needs and make evidence-based decisions.
 
-## 🏗️ Monorepo Architecture Overview
+Instead of manually analyzing thousands of feedback entries, teams can use LOOP to identify recurring issues, understand customer sentiment, discover emerging trends, and ask natural-language questions about customer experiences.
 
+## Core Capabilities
+
+- **AI-Powered Sentiment Analysis** — Classify feedback and identify positive, negative, and neutral sentiment.
+- **Theme Discovery** — Group semantically similar feedback into recurring themes and customer pain points.
+- **Ask LOOP** — Ask natural-language questions and receive answers grounded in retrieved feedback.
+- **Semantic Search** — Find relevant customer feedback by meaning rather than exact keyword matches.
+- **Voice of Customer Reports** — Generate structured summaries of customer concerns, recurring requests, and emerging trends.
+- **Feedback Analytics** — Explore sentiment distributions, theme trends, and customer insights through interactive dashboards.
+- **Feedback Ingestion** — Import and process customer feedback from supported data sources, including CSV files.
+- **Workspace Access Control** — Organize users and control access through role-based permissions.
+
+## System Architecture
+
+The following diagram illustrates the end-to-end architecture, from feedback ingestion to AI-powered insights and grounded question answering.
+
+```mermaid
+flowchart TB
+    USER["Product Teams / Analysts"]
+    
+    subgraph PRESENTATION["Presentation Layer"]
+        UI["LOOP Dashboard"]
+        FEEDBACK_UI["Feedback Explorer"]
+        ASK_UI["Ask LOOP Interface"]
+        REPORT_UI["VoC Reports"]
+    end
+
+    subgraph APPLICATION["Application Layer — Next.js"]
+        API["API Routes / Route Handlers"]
+        AUTH["Authentication & RBAC"]
+        VALIDATE["Request Validation"]
+        SERVICES["Application Service Layer"]
+    end
+
+    subgraph INGESTION["Feedback Ingestion Pipeline"]
+        SOURCES["Reviews / Surveys / Support / CSV"]
+        IMPORT["Import & Parsing"]
+        CLEAN["Validation & Normalization"]
+        CHUNK["Feedback Preparation & Chunking"]
+    end
+
+    subgraph AI["AI Intelligence Layer"]
+        SENTIMENT["Sentiment Classification"]
+        THEMES["Theme Discovery & Clustering"]
+        EMBED["Embedding Generation"]
+        SUMMARY["Summarization & Insight Extraction"]
+        MODEL["LLM Provider Adapter"]
+        GEMINI["Gemini"]
+        OLLAMA["Ollama — Local Models"]
+    end
+
+    subgraph RAG["Ask LOOP — RAG Pipeline"]
+        QUESTION["Natural-Language Question"]
+        QUERY_EMBED["Query Embedding"]
+        RETRIEVE["Semantic Retrieval — Top K"]
+        CONTEXT["Relevant Feedback Context"]
+        GROUNDED["Grounded Answer Generation"]
+        SOURCES_OUT["Answer with Supporting Evidence"]
+    end
+
+    subgraph DATA["Data Layer"]
+        PRISMA["Prisma ORM"]
+        POSTGRES[("PostgreSQL")]
+        VECTOR[("Vector Search / pgvector, if configured")]
+    end
+
+    subgraph INSIGHTS["Insights & Reporting"]
+        ANALYTICS["Analytics Aggregation"]
+        TRENDS["Sentiment & Theme Trends"]
+        REPORTS["Voice of Customer Reports"]
+    end
+
+    USER --> UI
+    UI --> FEEDBACK_UI
+    UI --> ASK_UI
+    UI --> REPORT_UI
+
+    FEEDBACK_UI --> API
+    ASK_UI --> API
+    REPORT_UI --> API
+
+    API --> AUTH
+    AUTH --> VALIDATE
+    VALIDATE --> SERVICES
+
+    SOURCES --> IMPORT
+    IMPORT --> CLEAN
+    CLEAN --> CHUNK
+    CHUNK --> SERVICES
+
+    SERVICES --> SENTIMENT
+    SERVICES --> THEMES
+    SERVICES --> EMBED
+    SERVICES --> SUMMARY
+
+    SENTIMENT --> MODEL
+    THEMES --> MODEL
+    SUMMARY --> MODEL
+    MODEL --> GEMINI
+    MODEL --> OLLAMA
+
+    CHUNK --> EMBED
+    EMBED --> VECTOR
+
+    SERVICES --> PRISMA
+    PRISMA --> POSTGRES
+    EMBED --> PRISMA
+
+    ASK_UI --> QUESTION
+    QUESTION --> QUERY_EMBED
+    QUERY_EMBED --> RETRIEVE
+    VECTOR --> RETRIEVE
+    POSTGRES --> RETRIEVE
+    RETRIEVE --> CONTEXT
+    CONTEXT --> GROUNDED
+    MODEL --> GROUNDED
+    GROUNDED --> SOURCES_OUT
+    SOURCES_OUT --> ASK_UI
+
+    POSTGRES --> ANALYTICS
+    ANALYTICS --> TRENDS
+    ANALYTICS --> REPORTS
+    TRENDS --> UI
+    REPORTS --> REPORT_UI
+
+    classDef frontend fill:#dbeafe,stroke:#2563eb,color:#172554
+    classDef backend fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef intelligence fill:#f3e8ff,stroke:#9333ea,color:#581c87
+    classDef storage fill:#ffedd5,stroke:#ea580c,color:#7c2d12
+    classDef retrieval fill:#fef3c7,stroke:#d97706,color:#78350f
+
+    class UI,FEEDBACK_UI,ASK_UI,REPORT_UI frontend
+    class API,AUTH,VALIDATE,SERVICES backend
+    class SENTIMENT,THEMES,EMBED,SUMMARY,MODEL,GEMINI,OLLAMA intelligence
+    class PRISMA,POSTGRES,VECTOR storage
+    class QUESTION,QUERY_EMBED,RETRIEVE,CONTEXT,GROUNDED,SOURCES_OUT retrieval
 ```
-LOOP-main/
-├── backend/    # Next.js 14 API server · Prisma ORM · NextAuth · Gemini / Ollama RAG
-├── frontend/   # Next.js 16 (React 19) UI · Tailwind CSS v4 · Recharts · Lucide Icons
-├── docs/       # Architecture audit, baseline inventory & production hardening logs
-└── vercel.json # Vercel cloud deployment specification
-```
 
----
+*Architecture note: Gemini and Ollama represent the supported model directions discussed for LOOP. The actual configured provider, vector-search implementation, and deployed services depend on the repository configuration.*
 
-## ✨ Core Product Capabilities
+## Ask LOOP: Retrieval-Augmented Generation
 
-| Module | Capability & Specification |
+Ask LOOP enables users to ask questions about their customer feedback without relying solely on a model's general knowledge.
+
+The intended workflow is:
+
+1. **Ingest:** Collect and normalize customer feedback.
+2. **Embed:** Generate vector representations of feedback entries.
+3. **Retrieve:** Convert a user's question into an embedding and retrieve the most relevant feedback.
+4. **Construct context:** Prepare the retrieved evidence for the language model.
+5. **Generate:** Produce an answer grounded in the available feedback.
+6. **Present evidence:** Return the answer alongside supporting feedback where supported.
+
+This approach helps users investigate questions such as:
+
+- What are the most common complaints this month?
+- Why are customers dissatisfied with onboarding?
+- Which product features are customers requesting most frequently?
+- What recurring issues appear in negative feedback?
+- Has sentiment around a particular feature changed over time?
+
+## Technology Stack
+
+| Layer | Technologies |
 |---|---|
-| **Full-Screen Workspace** | Fluid, responsive intelligence layout reclaiming horizontal screen real estate, removing heavy border clutter and card nesting. |
-| **Data Ingestion & CSV Engine** | High-performance streaming CSV parser with strict MIME/size validation, formula injection (`=,+,-,@,\|`) neutralization, and batch database loading. |
-| **Multi-Tenant Isolation & RBAC** | Strict tenant scoping (`workspaceId`) on all server-side queries. Role-Based Access Control enforcing `OWNER`, `ADMIN`, `ANALYST`, and `MEMBER` permissions. |
-| **Real Analytics Engine** | Server-backed calculations for volume trends, sentiment breakdown, active theme distribution, and date-range filtering (`7d`, `30d`, `all`). |
-| **Ask LOOP (RAG Assistant)** | Vector cosine similarity search over tenant customer tickets, strict prompt injection fencing, and evidence grounding with zero hallucinations. |
-| **VoC Executive Briefs** | Automated generation of Voice of Customer summaries, top friction drivers, customer quote citations, and CSV/PDF report exports. |
-| **Resilient AI Pipeline** | Dual-provider support (Google Gemini 1.5 Flash & Ollama) with a deterministic heuristic fallback engine ensuring 100% uptime during external API outages. |
+| Frontend | Next.js, React, TypeScript |
+| Styling | Tailwind CSS |
+| Backend | Next.js API Routes / Route Handlers, Node.js |
+| Data access | Prisma ORM |
+| Database | PostgreSQL |
+| Vector search | pgvector, where configured |
+| AI models | Gemini and Ollama/local models |
+| AI techniques | Embeddings, semantic search, sentiment analysis, RAG |
+| Visualization | Recharts |
+| Validation | Zod |
+| Deployment | Vercel-compatible deployment, depending on configuration |
+
+## Data Flow
+
+### Feedback analysis
+
+Customer feedback → ingestion → validation and normalization → AI classification and theme discovery → persistence → analytics and reports.
+
+### Question answering
+
+User question → query embedding → semantic retrieval → relevant feedback context → LLM response → answer with supporting evidence.
+
+### Analytics and reporting
+
+Persisted feedback and analysis results → aggregation → trend analysis → dashboard visualizations and Voice of Customer reports.
+
+## Security and Access Control
+
+LOOP is designed around workspace-oriented access and role-based permissions.
+
+- Authentication and authorization at the application boundary.
+- Workspace isolation for customer data.
+- Role-based access for administrative and analytical operations.
+- Server-side execution of model requests and protected credentials.
+- Request validation and structured error handling.
+- Careful handling of customer feedback and other potentially sensitive information.
+
+The exact enforcement mechanisms should match the application's implemented authentication and database authorization logic.
+
+## Project Goals
+
+LOOP aims to make customer feedback more useful by helping teams:
+
+- Reduce manual feedback analysis.
+- Discover recurring customer pain points.
+- Understand sentiment and feature demand.
+- Support product decisions with real customer evidence.
+- Investigate feedback using natural-language questions.
+- Turn unstructured feedback into measurable, actionable insights.
+
+## Roadmap
+
+Potential areas for continued development include:
+
+- Additional feedback-source integrations.
+- Improved theme quality and cluster evaluation.
+- Historical trend comparisons and anomaly detection.
+- More comprehensive evaluation of RAG answer quality and groundedness.
+- Feedback prioritization based on frequency, severity, and business impact.
+- Advanced workspace-level analytics and reporting.
+
+## Contributing
+
+Contributions should maintain clear separation between application logic, AI services, data access, and presentation.
+
+1. Review the existing architecture and coding conventions.
+2. Create focused changes with appropriate tests.
+3. Validate model integrations and error handling.
+4. Avoid exposing credentials or sensitive customer data.
+5. Update documentation when behavior or configuration changes.
+
+## License
+
+Refer to the repository's `LICENSE` file for applicable licensing terms.
 
 ---
 
-## 🛠️ Technology Stack
-
-### Backend (`/backend`)
-- **Runtime & Framework:** Next.js 14 (App Router), Node.js 18+
-- **Language:** TypeScript 5 (Strict Mode)
-- **Database & ORM:** Prisma 5 (Dual-compatible: SQLite for zero-setup local dev; PostgreSQL for production cloud)
-- **Authentication & Security:** NextAuth v4, Bcrypt password hashing, sliding-window rate limiting, IDOR prevention
-- **AI & Retrieval:** Cosine vector embeddings, PromptManager templates, prompt injection fences
-- **Testing:** Custom TSX runner, 13 automated unit & integration test suites
-
-### Frontend (`/frontend`)
-- **Runtime & Framework:** Next.js 16 (App Router), React 19
-- **Styling & Tokens:** Tailwind CSS v4, bespoke design tokens, subtle borders, high contrast
-- **Visualizations:** Recharts (responsive, client-mounted, resilient zero-state handling)
-- **Client Architecture:** Unified `@/lib/api` client with automatic tenant header injection and error handling
-
----
-
-## 🚀 Local Development Setup
-
-### 1. Prerequisites
-- Node.js 18.x or 20.x
-- npm 9+
-
-### 2. Installation
-```bash
-# Clone and install dependencies
-git clone https://github.com/reddy895/Loop.git
-cd Loop
-
-# Install Backend
-cd backend && npm install
-
-# Install Frontend
-cd ../frontend && npm install
-```
-
-### 3. Environment Setup
-```bash
-# Configure Backend
-cd backend
-cp .env.example .env
-npm run db:generate
-
-# Configure Frontend
-cd ../frontend
-cp .env.example .env.local
-```
-
-### 4. Running the Development Servers
-```bash
-# Terminal 1: Start Backend (Port 3000)
-cd backend
-npm run dev
-
-# Terminal 2: Start Frontend (Port 3001)
-cd frontend
-npm run dev
-```
-
-Visit **http://localhost:3001/dashboard** in your browser.
-
----
-
-## 🧪 Quality Gates & Automated Tests
-
-LOOP includes 13 automated test suites covering cryptographic security, schema validation, rate limiting, formula injection, tenant boundaries, CRUD lifecycle, and RAG grounding:
-
-```bash
-# Run all frontend unit tests
-npm run test:frontend
-
-# Run all backend unit & integration tests
-npm run test
-
-# Run entire monorepo quality suite
-npm run test:all
-
-# Validate frontend linting compliance
-npm run lint
-
-# Validate frontend production build
-npm run build
-```
-
-### Test Suite Inventory:
-**Backend Test Suites (14 Suites):**
-1. `[UNIT] Cryptographic Password & Token Salting`
-2. `[UNIT] Authentication & Validation Schemas`
-3. `[UNIT] Sliding-Window Rate Limiting & Brute-Force`
-4. `[UNIT] Spreadsheet Formula Injection Neutralization`
-5. `[UNIT] Prompt Injection Neutralization & Fencing`
-6. `[UNIT] Deployment Configuration & Production Invariants`
-7. `[INTEGRATION] Authentication Lifecycle & Sessions`
-8. `[INTEGRATION] Password Reset Lifecycle & Replay Prevention`
-9. `[INTEGRATION] Multi-Tenant Isolation & Privilege Spoofing`
-10. `[INTEGRATION] Server-Side RBAC Boundaries & Hierarchy`
-11. `[INTEGRATION] Feedback CRUD Lifecycle & IDOR Defense`
-12. `[INTEGRATION] CSV Ingestion & Multi-Tenant Batch Ingestion`
-13. `[INTEGRATION] AI Fallback & Offline RAG Architecture`
-14. `[INTEGRATION] Server-Side Date Filtering & RAG Grounding`
-
-**Frontend Test Suites (3 Suites):**
-1. `[UNIT] FeedbackCharts Data & Fallback Invariants`
-2. `[UNIT] Environment Resolution & API URL Normalization`
-3. `[UNIT] Dataset Schema & Seed Integrity Constraints`
-
----
-
-## ☁️ Vercel Production Deployment
-
-> **Detailed Guide:** See [docs/DEPLOYMENT_GUIDE.md](file:///home/reddy895/Downloads/Loop-main/docs/DEPLOYMENT_GUIDE.md) for complete step-by-step instructions, environment variable tables, and troubleshooting.
-
-### Option A: Monorepo Root Deployment (One-Click)
-1. Import the repository directly to [Vercel](https://vercel.com/new).
-2. The root `vercel.json` and `package.json` automatically detect and build the Next.js frontend application.
-3. No environment variables required for instant demo exploration — the Analysis Dashboard comes preloaded with full intelligence!
-
-### Option B: Independent Microservices Deployment
-1. **Frontend UI (Edge / Serverless):**
-   - Root Directory: `frontend`
-   - Framework Preset: `Next.js`
-   - Build Command: `npm run build`
-   - Output Directory: `.next`
-   - Instant Analysis Dashboard: Preloaded with 1,482 customer intelligence records, sentiment clustering, and RAG assistant citations.
-
-2. **Backend API (Optional / Cloud Scale):**
-   - Root Directory: `backend`
-   - Build Command: `npm run postinstall && next build`
-   - Output Directory: `.next`
-   - Environment Variables:
-     - `DATABASE_URL`: `postgresql://...` (Neon, Supabase, RDS)
-     - `NEXTAUTH_SECRET`: Strong 32+ character random string
-     - `GEMINI_API_KEY`: Google Generative AI API key
-     - `NODE_ENV`: `production`
-
----
-
-## 🔒 Security Best Practices
-- **No Client Secrets:** AI keys and database credentials remain strictly server-side.
-- **Formula Injection Immunity:** All CSV inputs and exports sanitize leading `=,+,-,@,\|, \t, \r`.
-- **Tenant Scoping:** All database operations strictly mandate `where: { workspaceId }`.
-- **Prompt Fencing:** External customer feedback strings are neutralized and bounded before inclusion in LLM prompts.
+**LOOP — Listen to your customers. Understand the patterns. Make better decisions.**
